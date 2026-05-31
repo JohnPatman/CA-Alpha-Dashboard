@@ -38,7 +38,7 @@ section[data-testid="stSidebar"] [aria-current="page"],
 section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:var(--accent-dim)!important;border-left:2px solid var(--accent)!important;}
 section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
 section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
-[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"],[data-testid="stSidebarNavCollapseButton"]{display:none!important;opacity:0!important;pointer-events:none!important;width:0!important;}
+
 
 h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
 h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.6rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
@@ -82,6 +82,24 @@ hr{border-color:var(--border-mid)!important;margin:0.4rem 0!important;}
 ::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border-bright);}
+
+/* hide sidebar collapse button — all variants */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarNavCollapseButton"],
+button[data-testid="baseButton-headerNoPadding"] {
+    display:none!important;
+    visibility:hidden!important;
+    width:0!important;
+    height:0!important;
+    min-width:0!important;
+    max-width:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    position:absolute!important;
+    left:-9999px!important;
+    opacity:0!important;
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)

@@ -64,12 +64,26 @@ section[data-testid="stSidebar"] > div:first-child {
     width:200px!important;min-width:200px!important;max-width:200px!important;
 }
 /* hide ALL collapse controls */
+
+
+
+/* hide sidebar collapse button — all variants */
 [data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"],
-[data-testid="stSidebarNavCollapseButton"] {
-    display:none!important;opacity:0!important;pointer-events:none!important;width:0!important;
+[data-testid="stSidebarNavCollapseButton"],
+button[data-testid="baseButton-headerNoPadding"] {
+    display:none!important;
+    visibility:hidden!important;
+    width:0!important;
+    height:0!important;
+    min-width:0!important;
+    max-width:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    position:absolute!important;
+    left:-9999px!important;
+    opacity:0!important;
 }
-
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
