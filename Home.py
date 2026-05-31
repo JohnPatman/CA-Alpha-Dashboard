@@ -67,40 +67,40 @@ section[data-testid="stSidebar"] > div:first-child {
 
 
 
-/* hide sidebar collapse button — all variants */
-[data-testid="stSidebarCollapseButton"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarNavCollapseButton"],
-button[data-testid="baseButton-headerNoPadding"] {
-    display:none!important;
-    visibility:hidden!important;
-    width:0!important;
-    height:0!important;
-    min-width:0!important;
-    max-width:0!important;
-    overflow:hidden!important;
-    pointer-events:none!important;
-    position:absolute!important;
-    left:-9999px!important;
-    opacity:0!important;
-}
-
-/* colour trick — make collapse handle invisible against background */
-[data-testid="collapsedControl"],
-[data-testid="collapsedControl"] * {
-    color:#04060a!important;
-    background:#04060a!important;
-    border-color:#04060a!important;
-    box-shadow:none!important;
-}
 [data-testid="collapsedControl"]:hover,
 [data-testid="collapsedControl"]:hover * {
     color:#04060a!important;
     background:#04060a!important;
 }
+
+/* sidebar collapse — maximum specificity + every hiding property */
+html body [data-testid="stSidebarCollapseButton"],
+html body [data-testid="collapsedControl"],
+html body [data-testid="stSidebarNavCollapseButton"] {
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    width:0!important;height:0!important;
+    max-width:0!important;max-height:0!important;
+    min-width:0!important;min-height:0!important;
+    overflow:hidden!important;
+    padding:0!important;margin:0!important;
+    border:0!important;outline:0!important;
+    position:fixed!important;
+    top:-9999px!important;left:-9999px!important;
+    pointer-events:none!important;
+    transform:scale(0)!important;
+    clip-path:inset(100%)!important;
+    font-size:0!important;
+    color:transparent!important;
+    background:transparent!important;
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
+
+
 
 DB = "data/events.db"
 
