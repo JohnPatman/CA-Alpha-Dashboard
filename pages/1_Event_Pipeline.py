@@ -100,6 +100,20 @@ button[data-testid="baseButton-headerNoPadding"] {
     left:-9999px!important;
     opacity:0!important;
 }
+
+/* colour trick — make collapse handle invisible against background */
+[data-testid="collapsedControl"],
+[data-testid="collapsedControl"] * {
+    color:#04060a!important;
+    background:#04060a!important;
+    border-color:#04060a!important;
+    box-shadow:none!important;
+}
+[data-testid="collapsedControl"]:hover,
+[data-testid="collapsedControl"]:hover * {
+    color:#04060a!important;
+    background:#04060a!important;
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
