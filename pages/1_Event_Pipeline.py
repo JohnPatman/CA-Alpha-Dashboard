@@ -126,6 +126,16 @@ section[data-testid="stSidebar"]::before {
     pointer-events:none;
 }
 
+
+/* kill ( bracket — it's a ::before pseudo-element on sidebar nav */
+section[data-testid="stSidebar"] *::before,
+section[data-testid="stSidebar"] *::after {
+    content:none!important;
+    display:none!important;
+    width:0!important;
+    height:0!important;
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
