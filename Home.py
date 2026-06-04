@@ -114,7 +114,7 @@ section[data-testid="stSidebar"]::before {
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
-# ── JS: kill sidebar collapse bracket ────────────────────────────────────────
+# ── JS: kill sidebar collapse bracket by text content ────────────────────────
 import streamlit.components.v1 as _c
 _c.html("""
 <script>
@@ -122,30 +122,35 @@ _c.html("""
     function kill() {
         try {
             var d = window.parent.document;
-            var selectors = [
-                '[data-testid="stSidebarCollapseButton"]',
-                '[data-testid="collapsedControl"]',
-                '[data-testid="stSidebarNavCollapseButton"]'
-            ];
-            selectors.forEach(function(sel) {
-                d.querySelectorAll(sel).forEach(function(el) {
-                    el.style.cssText = 'display:none!important;width:0!important;height:0!important;overflow:hidden!important;position:absolute!important;left:-9999px!important;';
+            // Hide by data-testid
+            ['stSidebarCollapseButton','collapsedControl','stSidebarNavCollapseButton'].forEach(function(id) {
+                d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el) {
+                    el.style.cssText = 'display:none!important;';
                 });
+            });
+            // Hide by text content — find any leaf element containing only "("
+            d.querySelectorAll('button, span, div, a').forEach(function(el) {
+                if (el.children.length === 0 && el.textContent.trim() === '(') {
+                    el.style.cssText = 'display:none!important;';
+                    el.parentElement && (el.parentElement.style.cssText = 'display:none!important;');
+                }
             });
         } catch(e) {}
     }
     kill();
-    setTimeout(kill, 100);
-    setTimeout(kill, 500);
-    setTimeout(kill, 1500);
-    var obs = new MutationObserver(kill);
+    [100,300,800,2000].forEach(function(t){ setTimeout(kill, t); });
     try {
-        obs.observe(window.parent.document.body, {childList:true, subtree:true});
+        new MutationObserver(kill).observe(
+            window.parent.document.body,
+            {childList:true, subtree:true}
+        );
     } catch(e) {}
 })();
 </script>
-""", height=0)
+""", height=1)
 # ─────────────────────────────────────────────────────────────────────────────
+
+
 
 
 
