@@ -35,7 +35,7 @@ section[data-testid="stSidebar"] > div:first-child{
     width:200px!important;min-width:200px!important;max-width:200px!important;}
 section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
 section[data-testid="stSidebar"] [aria-current="page"],
-section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:var(--accent-dim)!important;border-left:2px solid var(--accent)!important;border-radius:0!important;}
+section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:var(--accent-dim)!important;border-left:none!important;border-radius:0!important;}
 section[data-testid="stSidebar"] a,
 section[data-testid="stSidebar"] li,
 section[data-testid="stSidebar"] [role="listitem"]{border-radius:0!important;}
@@ -148,6 +148,17 @@ html body section[data-testid="stSidebar"] *::after {
     width:0!important;
     height:0!important;
     visibility:hidden!important;
+}
+
+
+/* kill both active indicator bars */
+html body section[data-testid="stSidebar"] *[aria-current="page"]::before,
+html body section[data-testid="stSidebar"] *[aria-current="page"]::after,
+html body section[data-testid="stSidebar"] [aria-current="page"] > *:first-child {
+    display:none!important;
+    width:0!important;
+    border:none!important;
+    content:none!important;
 }
 
 </style>
