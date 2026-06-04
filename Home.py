@@ -120,6 +120,17 @@ section[data-testid="stSidebar"] *::after {
     height:0!important;
 }
 
+
+/* beat emotion specificity — kill ( bracket pseudo-element */
+html body section[data-testid="stSidebar"] *::before,
+html body section[data-testid="stSidebar"] *::after {
+    content:none!important;
+    display:none!important;
+    width:0!important;
+    height:0!important;
+    visibility:hidden!important;
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
