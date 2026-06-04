@@ -114,6 +114,40 @@ section[data-testid="stSidebar"]::before {
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
+# ── JS: kill sidebar collapse bracket ────────────────────────────────────────
+import streamlit.components.v1 as _c
+_c.html("""
+<script>
+(function() {
+    function kill() {
+        try {
+            var d = window.parent.document;
+            var selectors = [
+                '[data-testid="stSidebarCollapseButton"]',
+                '[data-testid="collapsedControl"]',
+                '[data-testid="stSidebarNavCollapseButton"]'
+            ];
+            selectors.forEach(function(sel) {
+                d.querySelectorAll(sel).forEach(function(el) {
+                    el.style.cssText = 'display:none!important;width:0!important;height:0!important;overflow:hidden!important;position:absolute!important;left:-9999px!important;';
+                });
+            });
+        } catch(e) {}
+    }
+    kill();
+    setTimeout(kill, 100);
+    setTimeout(kill, 500);
+    setTimeout(kill, 1500);
+    var obs = new MutationObserver(kill);
+    try {
+        obs.observe(window.parent.document.body, {childList:true, subtree:true});
+    } catch(e) {}
+})();
+</script>
+""", height=0)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 
 
 DB = "data/events.db"
