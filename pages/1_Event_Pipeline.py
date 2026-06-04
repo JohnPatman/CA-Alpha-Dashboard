@@ -35,7 +35,10 @@ section[data-testid="stSidebar"] > div:first-child{
     width:200px!important;min-width:200px!important;max-width:200px!important;}
 section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
 section[data-testid="stSidebar"] [aria-current="page"],
-section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:var(--accent-dim)!important;border-left:2px solid var(--accent)!important;}
+section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:var(--accent-dim)!important;border-left:2px solid var(--accent)!important;border-radius:0!important;}
+section[data-testid="stSidebar"] a,
+section[data-testid="stSidebar"] li,
+section[data-testid="stSidebar"] [role="listitem"]{border-radius:0!important;}
 section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
 section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
 
