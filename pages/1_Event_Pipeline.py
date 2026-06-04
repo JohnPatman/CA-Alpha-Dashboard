@@ -112,6 +112,20 @@ html body [data-testid="stSidebarNavCollapseButton"] {
     background:transparent!important;
 }
 
+
+/* cover the ( bracket with a same-colour overlay */
+section[data-testid="stSidebar"]::before {
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    width:18px;
+    height:100vh;
+    background:#04060a;
+    z-index:99999;
+    pointer-events:none;
+}
+
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
