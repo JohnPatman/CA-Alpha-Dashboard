@@ -401,9 +401,6 @@ if is_fixed and pro_exp==1 and proration and tp and cur_px:
                 marker_color=["#00d4aa" if abs(p-proration)<3 else "#243548" for p in pcts],
                 marker_line_width=0,
                 hovertemplate="Fill: %{x}<br>P&L: %{y:,.0f}<extra></extra>"))
-            fig.add_vline(x=f"{int(proration)}%", line_color="#6a8090", line_width=1, line_dash="dot",
-                annotation_text=f"Est ~{proration:.0f}%",
-                annotation_font=dict(color="#6a8090",size=9,family="IBM Plex Mono"))
             fig.update_layout(
                 paper_bgcolor="#04060a", plot_bgcolor="#080c12",
                 font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
