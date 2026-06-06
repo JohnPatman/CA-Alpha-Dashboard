@@ -89,6 +89,27 @@ def dark_table(rows, headers, highlights=None, height=None):
     h_px = height or min(len(rows)*32+52, 560)
     _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
 
+def migrate_db():
+    """Add rate_pre_deadline column if DB is on old schema."""
+    conn = sqlite3.connect(DB)
+    try:
+        conn.execute("ALTER TABLE scrip_details ADD COLUMN rate_pre_deadline INTEGER DEFAULT 0")
+        conn.commit()
+        # Flag known pre-deadline tickers
+        pre_deadline = ['AAF.L','STAN.L','RIO.L','AAL.L','ANTO.L','BHP.JO','HSBA.L','BHP.AX','RIO.AX']
+        for ticker in pre_deadline:
+            conn.execute("""UPDATE scrip_details SET rate_pre_deadline=1
+                WHERE event_id IN (
+                    SELECT event_id FROM events WHERE ticker=? AND event_type='fx_election'
+                )""", (ticker,))
+        conn.commit()
+    except Exception:
+        pass  # column already exists
+    finally:
+        conn.close()
+
+migrate_db()
+
 @st.cache_data(ttl=300)
 def load_ccy():
     conn = sqlite3.connect(DB)
