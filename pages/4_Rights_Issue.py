@@ -323,8 +323,8 @@ with st.expander("◆  Take-up vs Sell Rights — P&L at Different Share Prices"
             font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
             height=295, margin=dict(l=8,r=8,t=20,b=30),
             legend=dict(font=dict(color="#6a8090",size=9),bgcolor="transparent",y=0.98),
-            xaxis=dict(title=f"Share price ({ev['currency']})",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
-            yaxis=dict(title="P&L per right",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+            xaxis=dict(title=dict(text=f"Share price ({ev['currency']})"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+            yaxis=dict(title=dict(text="P&L per right"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
         )
         st.plotly_chart(fig, use_container_width=True)
         st.markdown(

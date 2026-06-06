@@ -385,7 +385,7 @@ with st.expander(f"◆  Currency Analysis — {ev['ticker']} / {ev['company_name
                 height=280, margin=dict(l=8,r=8,t=20,b=30), barmode="group", bargap=0.3,
                 legend=dict(font=dict(color="#6a8090",size=9), bgcolor="transparent"),
                 xaxis=dict(gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=11,color="#c8d8e8")),
-                yaxis=dict(title="Div/sh (net WHT)",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                yaxis=dict(title=dict(text="Div/sh (net WHT)"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -465,8 +465,8 @@ with st.expander("◆  FX Sensitivity Analysis", expanded=True):
                 paper_bgcolor="#04060a", plot_bgcolor="#080c12",
                 font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
                 height=280, margin=dict(l=8,r=8,t=20,b=30),
-                xaxis=dict(title="USD/GBP Spot",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
-                yaxis=dict(title="Arb % vs USD",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                xaxis=dict(title=dict(text="USD/GBP Spot"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                yaxis=dict(title=dict(text="Arb % vs USD"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
                 showlegend=False
             )
             st.plotly_chart(fig2, use_container_width=True)

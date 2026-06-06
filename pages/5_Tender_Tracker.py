@@ -408,8 +408,8 @@ if is_fixed and pro_exp==1 and proration and tp and cur_px:
                 paper_bgcolor="#04060a", plot_bgcolor="#080c12",
                 font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
                 height=310, margin=dict(l=8,r=8,t=20,b=30),
-                xaxis=dict(title="Proration fill rate",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=8,color="#6a8090")),
-                yaxis=dict(title=f"P&L ({ev['currency']})",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                xaxis=dict(title=dict(text="Proration fill rate"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=8,color="#6a8090")),
+                yaxis=dict(title=dict(text=f"P&L ({ev['currency']})"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
                 showlegend=False
             )
             st.plotly_chart(fig, use_container_width=True)
@@ -446,8 +446,8 @@ if is_dutch and tp_lo and tp_hi:
                 paper_bgcolor="#04060a", plot_bgcolor="#080c12",
                 font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
                 height=260, margin=dict(l=8,r=8,t=20,b=30),
-                xaxis=dict(title=f"Clearing price ({ev['currency']})",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
-                yaxis=dict(title="Proceeds",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                xaxis=dict(title=dict(text=f"Clearing price ({ev['currency']})"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+                yaxis=dict(title=dict(text="Proceeds"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
                 showlegend=False
             )
             st.plotly_chart(fig, use_container_width=True)

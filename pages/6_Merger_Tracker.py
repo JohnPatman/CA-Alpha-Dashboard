@@ -391,8 +391,8 @@ with st.expander("◆  Deal Universe — Spread vs Implied Probability", expande
             font=dict(family="IBM Plex Mono",size=10,color="#6a8090"),
             height=320, margin=dict(l=8,r=8,t=20,b=30),
             legend=dict(font=dict(color="#6a8090",size=9),bgcolor="transparent"),
-            xaxis=dict(title=f"Implied completion probability (break={break_assume}%)",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9),range=[50,102]),
-            yaxis=dict(title="Spread to terms (%)",gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
+            xaxis=dict(title=dict(text=f"Implied completion probability (break={break_assume}%)"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9),range=[50,102]),
+            yaxis=dict(title=dict(text="Spread to terms (%)"),gridcolor="#0e1825",linecolor="#182436",tickfont=dict(size=9)),
         )
         st.plotly_chart(fig, use_container_width=True)
         st.markdown(
