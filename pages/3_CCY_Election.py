@@ -101,15 +101,35 @@ def load_ccy():
         FROM events e JOIN scrip_details s ON e.event_id=s.event_id
         WHERE e.event_type='fx_election'
         AND e.status IN ('LIVE','UPCOMING')
+        AND s.rate_pre_deadline=1
         ORDER BY s.fx_arbitrage_pct DESC NULLS LAST
     """, conn)
     conn.close()
     return df
 
+@st.cache_data(ttl=300)
+def load_excluded_count():
+    conn = sqlite3.connect(DB)
+    n = conn.execute("SELECT COUNT(*) FROM events e JOIN scrip_details s ON e.event_id=s.event_id WHERE e.event_type='fx_election' AND e.status IN ('LIVE','UPCOMING') AND s.rate_pre_deadline=0").fetchone()[0]
+    conn.close()
+    return n
+
 df = load_ccy()
+excluded_n = load_excluded_count()
+
 if df.empty:
     st.title("◆ CCY Election Optimiser")
-    st.info("No live CCY election events found.")
+    total_ccy = excluded_n
+    st.markdown(
+        f"<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;"
+        f"border:1px solid #182436;background:#080c12;padding:0.7rem 1rem;margin-top:0.5rem'>"
+        f"<strong style='color:#c8d8e8'>No confirmed pre-deadline fixed rate events in dataset.</strong><br><br>"
+        f"This module only shows CCY elections where the company announces a fixed FX reference rate "
+        f"before the election deadline — creating a genuine arb vs spot. "
+        f"<br><span style='color:#304050'>{total_ccy} events excluded — rate set at or after deadline (no locked-in arb).</span>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
     st.stop()
 
 # Pre-compute action_required: default != optimal
@@ -163,6 +183,19 @@ uplift_bps = uplift / mkt_gbp * 10000 if uplift and mkt_gbp else None
 
 # ── page header ───────────────────────────────────────────────────────────────
 st.title("◆ CCY Election Optimiser")
+
+# Pre-deadline filter banner
+total_ccy = len(df) + excluded_n
+st.markdown(
+    f"<div style='font-family:IBM Plex Mono;font-size:0.68rem;color:#6a8090;"
+    f"border:1px solid #182436;background:#080c12;padding:0.35rem 0.8rem;margin-bottom:0.6rem'>"
+    f"◆ &nbsp;Showing <strong style='color:#c8d8e8'>{len(df)} of {total_ccy} CCY elections</strong> where the company"
+    f" <strong style='color:#c8d8e8'>fixes the FX reference rate before the election deadline</strong>"
+    f" — genuine arb vs spot. "
+    f"<span style='color:#304050'>{excluded_n} events excluded (rate set at/after deadline — no locked-in arb).</span>"
+    f"</div>",
+    unsafe_allow_html=True
+)
 
 # Action required banner
 action_n = int(df["_action"].sum())

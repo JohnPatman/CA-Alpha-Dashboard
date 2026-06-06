@@ -34,7 +34,12 @@ CREATE TABLE IF NOT EXISTS scrip_details (
     cash_amount REAL, cash_currency TEXT, scrip_issue_price REAL,
     scrip_ratio TEXT, dividend_currency_opts TEXT, company_fx_rate REAL,
     market_fx_rate REAL, fx_arbitrage_pct REAL, election_default TEXT,
-    withholding_tax_pct REAL DEFAULT 0, scrip_discount_pct REAL, optimal_election TEXT
+    withholding_tax_pct REAL DEFAULT 0, scrip_discount_pct REAL, optimal_election TEXT,
+    rate_pre_deadline INTEGER DEFAULT 0
+    -- rate_pre_deadline: 1 = company announces fixed FX rate before election deadline (genuine arb)
+    --                    0 = rate determined at/after deadline (no locked-in arb, currency preference only)
+    -- Only set to 1 when you can confirm from the dividend announcement that a fixed rate was published.
+    -- Typical 1 candidates: UK-listed mining/resources cos (RIO, BHP, AAL, ANTO), African telecom ADRs (AAF.L)
 );
 CREATE TABLE IF NOT EXISTS rights_details (
     event_id TEXT PRIMARY KEY REFERENCES events(event_id),
@@ -269,73 +274,73 @@ E = [
 
 # ── SCRIP DETAILS ─────────────────────────────────────────────────────────────
 SCRIP = [
-  ("E001",3.05,"GBP",181.80,"1 per 59","GBP",None,None,None,"CASH",0,-1.47,"CASH"),
-  ("E002",5.84,"GBP",240.00,"1 per 41","GBP",None,None,None,"CASH",0,-0.83,"CASH"),
-  ("E003",43.50,"GBP",4120.00,"1 per 94","GBP",None,None,None,"CASH",0,0.24,"SCRIP"),
+  ("E001",3.05,"GBP",181.80,"1 per 59","GBP",None,None,None,"CASH",0,-1.47,"CASH",0),
+  ("E002",5.84,"GBP",240.00,"1 per 41","GBP",None,None,None,"CASH",0,-0.83,"CASH",0),
+  ("E003",43.50,"GBP",4120.00,"1 per 94","GBP",None,None,None,"CASH",0,0.24,"SCRIP",0),
   ("E004",0.10,"USD",None,None,"GBP|USD",0.7617,0.7402,2.91,"CASH",0,None,"GBP"),
-  ("E005",34.00,"USD",2465.00,"1 per 72","GBP|USD",0.7920,0.7750,2.19,"CASH",0,-0.62,"CASH"),
+  ("E005",34.00,"USD",2465.00,"1 per 72","GBP|USD",0.7920,0.7750,2.19,"CASH",0,-0.62,"CASH",0),
   ("E006",1.77,"USD",None,None,"GBP|USD|AUD",0.7850,0.7750,1.29,"CASH",0,None,"GBP"),
-  ("E007",17.40,"GBP",1058.00,"1 per 60","GBP",None,None,None,"CASH",0,0.38,"SCRIP"),
-  ("E008",22.50,"GBP",480.00,"1 per 21","GBP",None,None,None,"CASH",0,-0.42,"CASH"),
-  ("E009",16.25,"GBP",1890.00,"1 per 116","GBP",None,None,None,"CASH",0,0.15,"SCRIP"),
+  ("E007",17.40,"GBP",1058.00,"1 per 60","GBP",None,None,None,"CASH",0,0.38,"SCRIP",0),
+  ("E008",22.50,"GBP",480.00,"1 per 21","GBP",None,None,None,"CASH",0,-0.42,"CASH",0),
+  ("E009",16.25,"GBP",1890.00,"1 per 116","GBP",None,None,None,"CASH",0,0.15,"SCRIP",0),
   ("E010",5.90,"USD",None,None,"GBP|USD|HKD",0.7820,0.7750,0.90,"CASH",0,None,"GBP"),
   ("E011",0.15,"EUR",None,None,"GBP|EUR|ZAR",0.8510,0.8480,0.37,"CASH",0,None,"GBP"),
-  ("E012",5.80,"GBP",292.00,"1 per 50","GBP",None,None,None,"CASH",0,-0.55,"CASH"),
+  ("E012",5.80,"GBP",292.00,"1 per 50","GBP",None,None,None,"CASH",0,-0.55,"CASH",0),
   ("E013",0.0284,"USD",None,None,"GBP|USD",0.7617,0.7402,2.91,"CASH",0,None,"GBP"),
   ("E014",0.1000,"USD",None,None,"GBP|USD",0.7820,0.7750,0.90,"CASH",0,None,"GBP"),
   ("E015",0.0720,"USD",None,None,"GBP|USD",0.7900,0.7750,1.94,"CASH",0,None,"GBP"),
   ("E016",1.0200,"USD",None,None,"GBP|USD",0.7800,0.7750,0.65,"CASH",0,None,"GBP"),
   ("E017",0.3850,"USD",None,None,"GBP|USD|EUR",0.7810,0.7750,0.77,"CASH",0,None,"GBP"),
   ("E018",0.2200,"EUR",None,None,"GBP|EUR",0.8530,0.8480,0.59,"CASH",0,None,"GBP"),
-  ("E066",2.80,"CHF",95.20,"1 per 34","CHF",None,None,None,"CASH",35,-1.05,"CASH"),
-  ("E067",0.10,"EUR",4.12,"1 per 41","EUR",None,None,None,"SCRIP",19,-0.73,"CASH"),
-  ("E068",0.08,"EUR",9.45,"1 per 118","EUR",None,None,None,"SCRIP",19,-0.55,"CASH"),
-  ("E069",0.43,"EUR",7.25,"1 per 16","EUR",None,None,None,"CASH",26,-0.88,"CASH"),
-  ("E070",0.22,"EUR",3.85,"1 per 17","EUR",None,None,None,"CASH",26,-1.04,"CASH"),
-  ("E071",0.80,"EUR",55.20,"1 per 69","EUR",None,None,None,"CASH",30,-1.16,"CASH"),
-  ("E072",1.04,"EUR",82.00,"1 per 78","EUR",None,None,None,"CASH",15,-0.49,"CASH"),
-  ("E073",5.40,"EUR",395.00,"1 per 73","EUR",None,None,None,"CASH",30,-0.63,"CASH"),
-  ("E074",0.45,"EUR",11.20,"1 per 24","EUR",None,None,None,"CASH",19,-0.71,"CASH"),
-  ("E075",0.38,"EUR",6.80,"1 per 17","EUR",None,None,None,"CASH",26,-0.88,"CASH"),
-  ("E076",3.00,"EUR",68.50,"1 per 22","EUR",None,None,None,"CASH",30,-0.73,"CASH"),
-  ("E077",3.50,"CHF",96.00,"1 per 27","CHF",None,None,None,"CASH",35,-0.83,"CASH"),
-  ("E078",9.70,"CHF",295.00,"1 per 30","CHF",None,None,None,"CASH",35,-0.45,"CASH"),
-  ("E079",3.50,"EUR",62.00,"1 per 17","EUR",None,None,None,"CASH",30,-1.12,"CASH"),
-  ("E080",0.90,"EUR",14.80,"1 per 16","EUR",None,None,None,"CASH",26,-0.94,"CASH"),
+  ("E066",2.80,"CHF",95.20,"1 per 34","CHF",None,None,None,"CASH",35,-1.05,"CASH",0),
+  ("E067",0.10,"EUR",4.12,"1 per 41","EUR",None,None,None,"SCRIP",19,-0.73,"CASH",0),
+  ("E068",0.08,"EUR",9.45,"1 per 118","EUR",None,None,None,"SCRIP",19,-0.55,"CASH",0),
+  ("E069",0.43,"EUR",7.25,"1 per 16","EUR",None,None,None,"CASH",26,-0.88,"CASH",0),
+  ("E070",0.22,"EUR",3.85,"1 per 17","EUR",None,None,None,"CASH",26,-1.04,"CASH",0),
+  ("E071",0.80,"EUR",55.20,"1 per 69","EUR",None,None,None,"CASH",30,-1.16,"CASH",0),
+  ("E072",1.04,"EUR",82.00,"1 per 78","EUR",None,None,None,"CASH",15,-0.49,"CASH",0),
+  ("E073",5.40,"EUR",395.00,"1 per 73","EUR",None,None,None,"CASH",30,-0.63,"CASH",0),
+  ("E074",0.45,"EUR",11.20,"1 per 24","EUR",None,None,None,"CASH",19,-0.71,"CASH",0),
+  ("E075",0.38,"EUR",6.80,"1 per 17","EUR",None,None,None,"CASH",26,-0.88,"CASH",0),
+  ("E076",3.00,"EUR",68.50,"1 per 22","EUR",None,None,None,"CASH",30,-0.73,"CASH",0),
+  ("E077",3.50,"CHF",96.00,"1 per 27","CHF",None,None,None,"CASH",35,-0.83,"CASH",0),
+  ("E078",9.70,"CHF",295.00,"1 per 30","CHF",None,None,None,"CASH",35,-0.45,"CASH",0),
+  ("E079",3.50,"EUR",62.00,"1 per 17","EUR",None,None,None,"CASH",30,-1.12,"CASH",0),
+  ("E080",0.90,"EUR",14.80,"1 per 16","EUR",None,None,None,"CASH",26,-0.94,"CASH",0),
   ("E081",0.35,"USD",None,None,"USD|NOK",10.820,10.750,0.65,"CASH",0,None,"NOK"),
-  ("E082",0.06,"USD",None,None,"GBP|USD",None,0.7750,None,"CASH",0,None,None),
+  ("E082",0.06,"USD",None,None,"GBP|USD",None,0.7750,None,"CASH",0,None,None,0),
   ("E083",0.55,"USD",None,None,"GBP|USD",0.7840,0.7750,1.16,"CASH",0,None,"GBP"),
   ("E084",1.20,"EUR",None,None,"EUR|CHF|GBP",0.8520,0.8480,0.47,"CASH",0,None,"GBP"),
   ("E085",0.025,"USD",None,None,"USD|BHD",0.3770,0.3760,0.27,"CASH",0,None,"BHD"),
-  ("E106",4.50,"AUD",122.00,"1 per 27","AUD",None,None,None,"CASH",0,-0.82,"CASH"),
-  ("E107",1.20,"AUD",27.50,"1 per 22","AUD",None,None,None,"CASH",0,-0.55,"CASH"),
-  ("E108",0.85,"AUD",36.80,"1 per 43","AUD",None,None,None,"CASH",0,-0.61,"CASH"),
-  ("E109",0.90,"AUD",28.50,"1 per 31","AUD",None,None,None,"CASH",0,-0.44,"CASH"),
+  ("E106",4.50,"AUD",122.00,"1 per 27","AUD",None,None,None,"CASH",0,-0.82,"CASH",0),
+  ("E107",1.20,"AUD",27.50,"1 per 22","AUD",None,None,None,"CASH",0,-0.55,"CASH",0),
+  ("E108",0.85,"AUD",36.80,"1 per 43","AUD",None,None,None,"CASH",0,-0.61,"CASH",0),
+  ("E109",0.90,"AUD",28.50,"1 per 31","AUD",None,None,None,"CASH",0,-0.44,"CASH",0),
   ("E110",0.60,"USD",None,None,"AUD|USD",0.6420,0.6380,0.63,"CASH",0,None,"AUD"),
-  ("E111",0.09,"AUD",4.05,"1 per 44","AUD",None,None,None,"CASH",0,-0.74,"CASH"),
+  ("E111",0.09,"AUD",4.05,"1 per 44","AUD",None,None,None,"CASH",0,-0.74,"CASH",0),
   ("E112",1.10,"USD",None,None,"AUD|USD",0.6440,0.6380,0.94,"CASH",0,None,"AUD"),
   ("E113",0.72,"USD",None,None,"AUD|USD",0.6420,0.6380,0.63,"CASH",0,None,"AUD"),
   ("E114",0.72,"USD",None,None,"AUD|USD|GBP",0.6410,0.6380,0.49,"CASH",0,None,"AUD"),
   ("E115",0.72,"USD",None,None,"USD|AUD|GBP",0.6420,0.6380,0.63,"CASH",0,None,"AUD"),
   ("E116",0.22,"USD",None,None,"USD|AUD",0.6430,0.6380,0.80,"CASH",0,None,"AUD"),
-  ("E133",0.65,"HKD",12.40,"1 per 19","HKD",None,None,None,"CASH",0,-0.48,"CASH"),
-  ("E134",0.55,"HKD",72.00,"1 per 130","HKD",None,None,None,"CASH",0,-0.55,"CASH"),
-  ("E135",0.38,"HKD",60.50,"1 per 159","HKD",None,None,None,"CASH",0,-0.41,"CASH"),
-  ("E155",0.25,"SAR",28.50,"1 per 114","SAR",None,None,None,"CASH",0,-0.35,"CASH"),
-  ("E158",0.28,"AED",13.20,"1 per 47","AED",None,None,None,"CASH",0,-0.53,"CASH"),
-  ("E161",0.32,"QAR",19.40,"1 per 60","QAR",None,None,None,"CASH",0,-0.62,"CASH"),
-  ("E163",0.04,"KWD",0.920,"1 per 23","KWD",None,None,None,"CASH",0,-0.44,"CASH"),
-  ("E166",25.00,"ZAR",5200.00,"1 per 208","ZAR",None,None,None,"CASH",20,-0.38,"CASH"),
-  ("E167",3.50,"ZAR",148.00,"1 per 42","ZAR",None,None,None,"CASH",20,-0.27,"SCRIP"),
+  ("E133",0.65,"HKD",12.40,"1 per 19","HKD",None,None,None,"CASH",0,-0.48,"CASH",0),
+  ("E134",0.55,"HKD",72.00,"1 per 130","HKD",None,None,None,"CASH",0,-0.55,"CASH",0),
+  ("E135",0.38,"HKD",60.50,"1 per 159","HKD",None,None,None,"CASH",0,-0.41,"CASH",0),
+  ("E155",0.25,"SAR",28.50,"1 per 114","SAR",None,None,None,"CASH",0,-0.35,"CASH",0),
+  ("E158",0.28,"AED",13.20,"1 per 47","AED",None,None,None,"CASH",0,-0.53,"CASH",0),
+  ("E161",0.32,"QAR",19.40,"1 per 60","QAR",None,None,None,"CASH",0,-0.62,"CASH",0),
+  ("E163",0.04,"KWD",0.920,"1 per 23","KWD",None,None,None,"CASH",0,-0.44,"CASH",0),
+  ("E166",25.00,"ZAR",5200.00,"1 per 208","ZAR",None,None,None,"CASH",20,-0.38,"CASH",0),
+  ("E167",3.50,"ZAR",148.00,"1 per 42","ZAR",None,None,None,"CASH",20,-0.27,"SCRIP",0),
   ("E169",0.72,"USD",None,None,"USD|ZAR|GBP",0.7830,0.7750,1.03,"CASH",0,None,"GBP"),
   ("E170",0.45,"USD",None,None,"ZAR|USD",0.7810,0.7750,0.77,"CASH",0,None,"USD"),
-  ("E175",1.80,"MAD",62.00,"1 per 34","MAD",None,None,None,"CASH",15,-0.65,"CASH"),
-  ("E176",3.00,"NGN",28.50,"1 per 9","NGN",None,None,None,"CASH",10,-0.88,"CASH"),
-  ("E186",0.32,"HKD",2.15,"1 per 6","HKD",None,None,None,"CASH",0,-0.93,"CASH"),
-  ("E187",0.62,"HKD",100.00,"1 per 161","HKD",None,None,None,"CASH",0,-0.62,"CASH"),
-  ("E188",0.18,"ILS",32.50,"1 per 180","ILS",None,None,None,"CASH",0,-0.55,"CASH"),
-  ("E191",28.00,"CZK",840.00,"1 per 30","CZK",None,None,None,"CASH",15,-0.48,"CASH"),
-  ("E196",1.80,"NOK",22.50,"1 per 12","NOK",None,None,None,"CASH",0,-0.67,"CASH"),
+  ("E175",1.80,"MAD",62.00,"1 per 34","MAD",None,None,None,"CASH",15,-0.65,"CASH",0),
+  ("E176",3.00,"NGN",28.50,"1 per 9","NGN",None,None,None,"CASH",10,-0.88,"CASH",0),
+  ("E186",0.32,"HKD",2.15,"1 per 6","HKD",None,None,None,"CASH",0,-0.93,"CASH",0),
+  ("E187",0.62,"HKD",100.00,"1 per 161","HKD",None,None,None,"CASH",0,-0.62,"CASH",0),
+  ("E188",0.18,"ILS",32.50,"1 per 180","ILS",None,None,None,"CASH",0,-0.55,"CASH",0),
+  ("E191",28.00,"CZK",840.00,"1 per 30","CZK",None,None,None,"CASH",15,-0.48,"CASH",0),
+  ("E196",1.80,"NOK",22.50,"1 per 12","NOK",None,None,None,"CASH",0,-0.67,"CASH",0),
 ]
 
 # ── RIGHTS DETAILS ────────────────────────────────────────────────────────────
@@ -461,6 +466,71 @@ SPLITS = [
   ("E199","CONSOLIDATION","1:5",18.4,92.0),
 ]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# US EVENTS — tenders, dutch auctions, stock splits, mergers, spinoffs
+# (US market does not do scrip dividends, CCY elections or rights issues)
+# ─────────────────────────────────────────────────────────────────────────────
+US_E = [
+    ("US001","AAPL","Apple Inc","US","USD","tender_offer","VOLUNTARY","LIVE",dp(18),None,dp(5),d(14),None,d(20),"https://apple.com","$90bn fixed price tender"),
+    ("US002","MSFT","Microsoft Corp","US","USD","tender_offer","VOLUNTARY","UPCOMING",dp(5),None,d(16),d(36),None,d(42),"https://microsoft.com","$60bn tender offer"),
+    ("US003","GOOGL","Alphabet Inc","US","USD","tender_offer","VOLUNTARY","LIVE",dp(22),None,dp(8),d(12),None,d(18),"https://abc.xyz","$70bn accelerated tender"),
+    ("US004","META","Meta Platforms Inc","US","USD","tender_offer","VOLUNTARY","LIVE",dp(16),None,dp(4),d(16),None,d(22),"https://investor.fb.com","$50bn fixed price tender"),
+    ("US005","BRK-B","Berkshire Hathaway","US","USD","tender_offer","VOLUNTARY","UPCOMING",dp(4),None,d(20),d(40),None,d(46),"https://berkshirehathaway.com","$20bn tender offer"),
+    ("US006","JPM","JPMorgan Chase","US","USD","tender_offer","VOLUNTARY","LIVE",dp(20),None,dp(6),d(14),None,d(20),"https://jpmorganchase.com","$30bn fixed price tender"),
+    ("US007","V","Visa Inc","US","USD","tender_offer","VOLUNTARY","UPCOMING",dp(3),None,d(18),d(38),None,d(44),"https://investor.visa.com","$12bn tender offer"),
+    ("US008","UNH","UnitedHealth Group","US","USD","tender_offer","VOLUNTARY","LIVE",dp(14),None,dp(3),d(17),None,d(23),"https://unitedhealthgroup.com","$8bn fixed price tender"),
+    ("US009","NVDA","NVIDIA Corp","US","USD","dutch_auction","VOLUNTARY","LIVE",dp(30),None,None,d(90),None,None,"https://nvidia.com","$50bn dutch auction"),
+    ("US010","AMZN","Amazon.com Inc","US","USD","dutch_auction","VOLUNTARY","LIVE",dp(25),None,None,d(80),None,None,"https://ir.aboutamazon.com","$40bn dutch auction"),
+    ("US011","TSM","Taiwan Semi ADR","US","USD","dutch_auction","VOLUNTARY","UPCOMING",dp(5),None,None,d(95),None,None,"https://tsmc.com","$15bn dutch auction"),
+    ("US012","LLY","Eli Lilly and Co","US","USD","dutch_auction","VOLUNTARY","LIVE",dp(20),None,None,d(85),None,None,"https://investor.lilly.com","$10bn dutch auction"),
+    ("US013","AVGO","Broadcom Inc","US","USD","dutch_auction","VOLUNTARY","UPCOMING",dp(4),None,None,d(92),None,None,"https://investors.broadcom.com","$8bn dutch auction"),
+    ("US014","WMT","Walmart Inc","US","USD","dutch_auction","VOLUNTARY","LIVE",dp(18),None,None,d(88),None,None,"https://stock.walmart.com","$12bn dutch auction"),
+    ("US015","NVDA","NVIDIA Corp","US","USD","stock_split","MANDATORY","UPCOMING",dp(8),d(22),d(23),None,None,None,"https://nvidia.com","10:1 forward split"),
+    ("US016","TSLA","Tesla Inc","US","USD","stock_split","MANDATORY","UPCOMING",dp(5),d(28),d(29),None,None,None,"https://ir.tesla.com","3:1 forward split"),
+    ("US017","AMZN","Amazon.com Inc","US","USD","stock_split","MANDATORY","LIVE",dp(25),d(5),d(6),None,None,None,"https://ir.aboutamazon.com","20:1 forward split"),
+    ("US018","AAPL","Apple Inc","US","USD","stock_split","MANDATORY","UPCOMING",dp(6),d(30),d(31),None,None,None,"https://apple.com","4:1 forward split"),
+    ("US019","GOOGL","Alphabet Inc","US","USD","stock_split","MANDATORY","UPCOMING",dp(3),d(35),d(36),None,None,None,"https://abc.xyz","20:1 forward split"),
+    ("US020","META","Meta Platforms Inc","US","USD","stock_split","MANDATORY","LIVE",dp(20),d(8),d(9),None,None,None,"https://investor.fb.com","5:1 forward split"),
+    ("US021","ATVI","Activision Blizzard","US","USD","merger","VOLUNTARY","LIVE",dp(45),None,dp(10),d(20),d(40),d(45),"https://investor.activision.com","Microsoft acquisition"),
+    ("US022","VMW","VMware Inc","US","USD","scheme_of_arrangement","VOLUNTARY","LIVE",dp(38),None,dp(8),d(22),d(40),d(45),"https://ir.vmware.com","Broadcom acquisition"),
+    ("US023","TWTR","Twitter / X Corp","US","USD","scheme_of_arrangement","VOLUNTARY","UPCOMING",dp(5),None,d(30),d(55),d(75),d(80),"https://twitter.com","Strategic acquisition"),
+    ("US024","GE","GE Aerospace","US","USD","spinoff","MANDATORY","UPCOMING",dp(12),d(45),d(46),None,d(60),d(61),"https://geaerospace.com","GE Vernova energy spinoff"),
+    ("US025","JNJ","Johnson & Johnson","US","USD","spinoff","MANDATORY","LIVE",dp(20),d(15),d(16),None,d(30),d(31),"https://investor.jnj.com","Kenvue consumer spinoff"),
+]
+US_TENDERS = [
+    ("US001","FIXED",235.0,None,None,218.0,7.8,None,90000.0,1,55.0,None,0),
+    ("US002","FIXED",425.0,None,None,398.0,6.8,None,60000.0,1,58.0,None,0),
+    ("US003","FIXED",185.0,None,None,175.0,5.7,None,70000.0,1,55.0,None,0),
+    ("US004","FIXED",580.0,None,None,548.0,5.8,None,50000.0,1,60.0,None,0),
+    ("US005","FIXED",375.0,None,None,355.0,5.6,None,20000.0,1,58.0,None,0),
+    ("US006","FIXED",245.0,None,None,232.0,5.6,None,30000.0,1,55.0,None,0),
+    ("US007","FIXED",285.0,None,None,270.0,5.6,None,12000.0,1,60.0,None,0),
+    ("US008","FIXED",520.0,None,None,492.0,5.7,None,8000.0,1,58.0,None,0),
+    ("US009","DUTCH_AUCTION",None,115.0,135.0,124.0,None,None,50000.0,1,62.0,None,0),
+    ("US010","DUTCH_AUCTION",None,175.0,205.0,188.0,None,None,40000.0,1,60.0,None,0),
+    ("US011","DUTCH_AUCTION",None,155.0,175.0,164.0,None,None,15000.0,1,58.0,None,0),
+    ("US012","DUTCH_AUCTION",None,780.0,850.0,812.0,None,None,10000.0,1,60.0,None,0),
+    ("US013","DUTCH_AUCTION",None,175.0,200.0,186.0,None,None,8000.0,1,62.0,None,0),
+    ("US014","DUTCH_AUCTION",None,92.0,108.0,99.0,None,None,12000.0,1,58.0,None,0),
+]
+US_SPLITS = [
+    ("US015","SPLIT","10:1",1250.0,125.0),
+    ("US016","SPLIT","3:1",285.0,95.0),
+    ("US017","SPLIT","20:1",180.0,9.0),
+    ("US018","SPLIT","4:1",195.0,48.75),
+    ("US019","SPLIT","20:1",178.0,8.9),
+    ("US020","SPLIT","5:1",580.0,116.0),
+]
+US_MERGERS = [
+    ("US021","MERGER","Microsoft Corp","MSFT","CASH",95.0,None,92.5,2.70,d(20),d(180),"CLEARED","LOW"),
+    ("US022","SCHEME","Broadcom Inc","AVGO","CASH",142.5,None,139.0,2.52,d(22),d(180),"CLEARED","LOW"),
+    ("US023","SCHEME","Undisclosed","","CASH",54.2,None,51.8,4.63,d(55),d(240),"PENDING","MEDIUM"),
+]
+US_SPINOFFS = [
+    ("US024","GE Vernova Ltd","GEV","NYSE","1 for 4","Energy/Utilities",22.0,d(60)),
+    ("US025","Kenvue Inc","KVUE","NYSE","1 for 3","Consumer Health",18.0,d(30)),
+]
+
 def build():
     if os.path.exists(DB):
         os.remove(DB)
@@ -475,12 +545,34 @@ def build():
         record_date,election_deadline,payment_date,settlement_date,source_url,notes)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", E)
 
-    c.executemany("INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", SCRIP)
+    c.executemany("INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", SCRIP)
     c.executemany("INSERT OR IGNORE INTO rights_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", RIGHTS)
     c.executemany("INSERT OR IGNORE INTO tender_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", TENDERS)
     c.executemany("INSERT OR IGNORE INTO merger_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", MERGERS)
     c.executemany("INSERT OR IGNORE INTO spinoff_details VALUES(?,?,?,?,?,?,?,?)", SPINOFFS)
     c.executemany("INSERT OR IGNORE INTO split_details VALUES(?,?,?,?,?)", SPLITS)
+    c.executemany("""INSERT OR IGNORE INTO events(event_id,ticker,company_name,country,
+        currency,event_type,event_category,status,announcement_date,ex_date,
+        record_date,election_deadline,payment_date,settlement_date,source_url,notes)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", US_E)
+    c.executemany("INSERT OR IGNORE INTO tender_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", US_TENDERS)
+    c.executemany("INSERT OR IGNORE INTO split_details VALUES(?,?,?,?,?)", US_SPLITS)
+    c.executemany("INSERT OR IGNORE INTO merger_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", US_MERGERS)
+    c.executemany("INSERT OR IGNORE INTO spinoff_details VALUES(?,?,?,?,?,?,?,?)", US_SPINOFFS)
+    # ── CCY election: flag events with rate fixed before deadline (genuine arb) ──
+    # Only set rate_pre_deadline=1 when confirmed that the company publishes
+    # a fixed FX reference rate at the dividend announcement (before election deadline).
+    # Typical candidates: UK-listed mining/resources, African telecom ADRs.
+    # Update this list as you confirm each event in real-world processing.
+    PRE_DEADLINE_TICKERS = ['AAF.L', 'STAN.L', 'RIO.L', 'AAL.L', 'ANTO.L', 'BHP.JO', 'HSBA.L', 'BHP.AX', 'RIO.AX']
+    for ticker in PRE_DEADLINE_TICKERS:
+        c.execute("""UPDATE scrip_details SET rate_pre_deadline=1
+            WHERE event_id IN (
+                SELECT event_id FROM events
+                WHERE ticker=? AND event_type='fx_election'
+            )""", (ticker,))
+
+
     conn.commit()
 
     total    = c.execute("SELECT COUNT(*) FROM events").fetchone()[0]
