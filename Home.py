@@ -54,7 +54,7 @@ p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:
 strong{color:var(--text-primary)!important;font-weight:500!important;}
 
 /* metrics — tighter, no gap below title */
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
+[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;min-height:5.5rem!important;}
 [data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
 [data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.35rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
 [data-testid="stMetricDelta"] svg{display:none!important;}
@@ -349,9 +349,9 @@ st.markdown(
 )
 st.markdown(
     "<div style='font-family:IBM Plex Mono,monospace;font-size:0.56rem;"
-    "color:#243548;line-height:1.7;margin-top:0.6rem;padding:0.5rem 0;"
+    "color:#6a8090;line-height:1.7;margin-top:0.6rem;padding:0.5rem 0;"
     "border-top:1px solid #0e1825'>"
-    "<strong style='color:#304050'>DISCLAIMER</strong> &nbsp;·&nbsp; "
+    "<strong style='color:#c8d8e8'>DISCLAIMER</strong> &nbsp;·&nbsp; "
     "All data on this dashboard is <strong style='color:#304050'>entirely fictional and generated for "
     "illustrative purposes only</strong>. Company names, tickers, event details, prices, rates, "
     "and deadlines do not represent real corporate actions and should not be relied upon for "
