@@ -269,13 +269,13 @@ st.title("◆ Voluntary CA Alpha Dashboard")
 s = get_summary()
 
 c1,c2,c3,c4,c5,c6 = st.columns(6)
-c1.metric("Live Events",   s["live"])
-c2.metric("Upcoming",      s["upcoming"])
-c3.metric("Voluntary",     s["vol"])
-c4.metric("Choice Events", s["mwc"])
-c5.metric("Countries",     s["countries"])
+c1.metric("Live Events",   s["live"],   delta=" ", delta_color="off")
+c2.metric("Upcoming",      s["upcoming"], delta=" ", delta_color="off")
+c3.metric("Voluntary",     s["vol"],    delta=" ", delta_color="off")
+c4.metric("Choice Events", s["mwc"],    delta=" ", delta_color="off")
+c5.metric("Countries",     s["countries"], delta=" ", delta_color="off")
 c6.metric("Deadlines ≤7d", s["urgent"],
-    delta="urgent" if s["urgent"] > 0 else None,
+    delta="urgent" if s["urgent"] > 0 else " ",
     delta_color="inverse" if s["urgent"] > 0 else "off")
 
 st.markdown("## Event Universe")
@@ -314,25 +314,30 @@ with m1:
 with m2:
     st.markdown("**◆ Scrip Arbitrage**")
     st.markdown("Multi-name scrip dividend engine — cash vs scrip economics, lender conflict analysis.")
-    st.button("Coming Soon", key="m2", disabled=True)
+    if st.button("Open Scrip Arbitrage →", key="m2"):
+        st.switch_page("pages/2_Scrip_Arbitrage.py")
 with m3:
     st.markdown("**◆ CCY Election Optimiser**")
     st.markdown("Currency election analysis — company FX vs market FX, arbitrage detection.")
-    st.button("Coming Soon", key="m3", disabled=True)
+    if st.button("Open CCY Optimiser →", key="m3"):
+        st.switch_page("pages/3_CCY_Election.py")
 
 m4,m5,m6 = st.columns(3)
 with m4:
     st.markdown("**◆ Rights Issue Analyser**")
     st.markdown("TERP calculator, nil-paid value, take-up vs sell economics.")
-    st.button("Coming Soon", key="m4", disabled=True)
+    if st.button("Open Rights Analyser →", key="m4"):
+        st.switch_page("pages/4_Rights_Issue.py")
 with m5:
     st.markdown("**◆ Tender Tracker**")
     st.markdown("Proration modelling, dutch auction range analysis, spread to terms.")
-    st.button("Coming Soon", key="m5", disabled=True)
+    if st.button("Open Tender Tracker →", key="m5"):
+        st.switch_page("pages/5_Tender_Tracker.py")
 with m6:
     st.markdown("**◆ Merger & Scheme Tracker**")
     st.markdown("Spread to terms, break risk, consideration election optimiser.")
-    st.button("Coming Soon", key="m6", disabled=True)
+    if st.button("Open Merger Tracker →", key="m6"):
+        st.switch_page("pages/6_Merger_Tracker.py")
 
 st.markdown("---")
 st.markdown(
@@ -340,5 +345,18 @@ st.markdown(
     f"color:#304050;letter-spacing:0.08em'>"
     f"UNIVERSE  1,207 companies · 36 countries · {s['total']} events · "
     f"AS AT  {date.today().isoformat()}</p>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<div style='font-family:IBM Plex Mono,monospace;font-size:0.56rem;"
+    "color:#243548;line-height:1.7;margin-top:0.6rem;padding:0.5rem 0;"
+    "border-top:1px solid #0e1825'>"
+    "<strong style='color:#304050'>DISCLAIMER</strong> &nbsp;·&nbsp; "
+    "All data on this dashboard is <strong style='color:#304050'>entirely fictional and generated for "
+    "illustrative purposes only</strong>. Company names, tickers, event details, prices, rates, "
+    "and deadlines do not represent real corporate actions and should not be relied upon for "
+    "investment, legal, or financial decisions. This dashboard is a personal portfolio project "
+    "demonstrating CA analytics tooling and has no affiliation with any financial institution."
+    "</div>",
     unsafe_allow_html=True
 )
