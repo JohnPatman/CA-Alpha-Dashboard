@@ -248,9 +248,9 @@ def get_summary():
 @st.cache_data(ttl=300)
 def get_type_breakdown():
     conn = sqlite3.connect(DB)
-    df = pd.read_sql("""SELECT event_type, event_category, COUNT(*) as n
-        FROM events WHERE status='LIVE'
-        GROUP BY event_type, event_category ORDER BY n DESC""", conn)
+    df = pd.read_sql("""SELECT event_type, COUNT(*) as n
+        FROM events WHERE status IN ('LIVE','UPCOMING')
+        GROUP BY event_type ORDER BY n DESC""", conn)
     conn.close()
     return df
 
@@ -301,9 +301,8 @@ with col_a:
         unsafe_allow_html=True
     )
     df_type = get_type_breakdown()
-    df_type.columns = ["Type", "Category", "Count"]
-    df_type["Category"] = df_type["Category"].str.replace("_", " ").str.title()
-    df_type["Type"]     = df_type["Type"].str.replace("_", " ").str.title().str.replace("Fx ", "CCY ")
+    df_type.columns = ["Type", "Count"]
+    df_type["Type"] = df_type["Type"].str.replace("_", " ").str.title().str.replace("Fx ", "CCY ")
     st.markdown(html_table(df_type), unsafe_allow_html=True)
 
 with col_b:
