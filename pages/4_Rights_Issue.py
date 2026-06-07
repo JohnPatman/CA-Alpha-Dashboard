@@ -82,6 +82,32 @@ def disc_colour(v):
     if v < -15: return '#f5a623'
     return '#d4c200'
 
+SORT_JS = """
+<script>
+function sortTable(th) {
+    var table = th.closest('table');
+    var tbody = table.querySelector('tbody');
+    var rows  = Array.from(tbody.querySelectorAll('tr'));
+    var idx   = Array.from(th.parentElement.children).indexOf(th);
+    var asc   = th.dataset.sort !== 'asc';
+    rows.sort(function(a, b) {
+        var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
+        var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
+        var an = parseFloat(av.replace(/[^-\\d.]/g,''));
+        var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    th.parentElement.querySelectorAll('th').forEach(function(t){
+        t.dataset.sort=''; var s=t.querySelector('span.sort-ind'); if(s) s.textContent='';
+    });
+    th.dataset.sort = asc ? 'asc' : 'desc';
+    var ind=th.querySelector('span.sort-ind');
+    if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
+    rows.forEach(function(r){ tbody.appendChild(r); });
+}
+</script>"""
+
 def dark_table(rows, headers, highlights=None, height=None):
     th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
     tbody = ''
@@ -106,6 +132,8 @@ def load_rights():
         FROM events e JOIN rights_details r ON e.event_id=r.event_id
         WHERE e.event_type IN ('rights_issue','open_offer')
         AND e.status IN ('LIVE','UPCOMING')
+        AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
+        AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
         ORDER BY r.discount_to_terp_pct ASC
     """, conn)
     conn.close()
