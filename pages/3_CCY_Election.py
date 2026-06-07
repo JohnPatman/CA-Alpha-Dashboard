@@ -113,7 +113,14 @@ document.querySelectorAll('thead th').forEach(function(th){
 </script>"""
 
 def dark_table(rows, headers, highlights=None, height=None):
-    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
+    th = ''.join(
+        f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;'
+        f'text-transform:uppercase;color:#304050;background:#04060a;'
+        f'border-bottom:1px solid #243548;text-align:left;white-space:nowrap;'
+        f'cursor:pointer;user-select:none">{h}'
+        f'<span class="si" style="color:#00d4aa;font-size:0.5rem"></span></th>'
+        for h in headers
+    )
     tbody = ''
     for i,row in enumerate(rows):
         bg = '#080c12' if i%2==0 else '#04060a'
@@ -121,7 +128,41 @@ def dark_table(rows, headers, highlights=None, height=None):
         cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
         tbody += f'<tr>{cells}</tr>'
     h_px = height or min(len(rows)*32+52, 560)
-    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
+    html = (
+        '<!DOCTYPE html><html><head>'
+        '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">'
+        '<style>*{box-sizing:border-box;margin:0;padding:0;}html,body{background:#04060a;font-family:"IBM Plex Mono",monospace;}'
+        'table{width:100%;border-collapse:collapse;}tr:hover td{background:#0e1825!important;}'
+        'thead th:hover{color:#6a8090!important;}</style>'
+        '<script>'
+        'function sT(th){'
+        'var tb=th.closest("table").querySelector("tbody");'
+        'var rs=Array.from(tb.querySelectorAll("tr"));'
+        'var idx=Array.from(th.parentElement.children).indexOf(th);'
+        'var asc=th.dataset.s!=="a";'
+        'rs.sort(function(a,b){'
+        'var av=a.cells[idx]?a.cells[idx].textContent.trim():"";'
+        'var bv=b.cells[idx]?b.cells[idx].textContent.trim():"";'
+        'var an=parseFloat(av.replace(/[^-\\d.]/g,""));'
+        'var bn=parseFloat(bv.replace(/[^-\\d.]/g,""));'
+        'if(!isNaN(an)&&!isNaN(bn))return asc?an-bn:bn-an;'
+        'return asc?av.localeCompare(bv):bv.localeCompare(av);});'
+        'th.parentElement.querySelectorAll("th").forEach(function(t){'
+        't.dataset.s="";var s=t.querySelector(".si");if(s)s.textContent="";});'
+        'th.dataset.s=asc?"a":"d";'
+        'var ind=th.querySelector(".si");'
+        'if(ind)ind.textContent=asc?" ▲":" ▼";'
+        'rs.forEach(function(r){tb.appendChild(r);});}'
+        '</script>'
+        '</head><body>'
+        f'<table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table>'
+        '<script>'
+        'Array.from(document.querySelectorAll("thead th")).forEach(function(th){'
+        'th.onclick=function(){sT(th);};});'
+        '</script>'
+        '</body></html>'
+    )
+    _c.html(html, height=h_px, scrolling=True)
 
 def migrate_db():
     """Ensure rate_pre_deadline column exists and flags are set correctly."""
