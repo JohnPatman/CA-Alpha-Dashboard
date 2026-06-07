@@ -235,7 +235,7 @@ def get_summary():
     upcoming  = c.execute("SELECT COUNT(*) FROM events WHERE status='UPCOMING'").fetchone()[0]
     vol       = c.execute("SELECT COUNT(*) FROM events WHERE event_category='VOLUNTARY' AND status='LIVE'").fetchone()[0]
     mwc       = c.execute("SELECT COUNT(*) FROM events WHERE event_category='MANDATORY_WITH_CHOICE' AND status='LIVE'").fetchone()[0]
-    countries = c.execute("SELECT COUNT(DISTINCT country) FROM events WHERE status='LIVE'").fetchone()[0]
+    countries = c.execute("SELECT COUNT(DISTINCT country) FROM events WHERE status IN ('LIVE','UPCOMING')").fetchone()[0]
     today     = date.today().isoformat()
     urgent    = c.execute("""SELECT COUNT(*) FROM events
         WHERE election_deadline IS NOT NULL
@@ -259,7 +259,7 @@ def get_country_breakdown():
     conn = sqlite3.connect(DB)
     df = pd.read_sql("""SELECT country, COUNT(*) as events
         FROM events WHERE status IN ('LIVE','UPCOMING')
-        GROUP BY country ORDER BY events DESC LIMIT 15""", conn)
+        GROUP BY country ORDER BY events DESC""", conn)
     conn.close()
     return df
 

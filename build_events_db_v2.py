@@ -573,6 +573,60 @@ def build():
             )""", (ticker,))
 
 
+    # ── Additional country coverage events (Ireland, Finland + boosters) ────────
+    NEW_COVERAGE_EVENTS = [
+        ("IE001","CRH.L","CRH PLC","Ireland","EUR","scrip_dividend","VOLUNTARY","LIVE",    dp(20),d(8), d(9), d(25),d(35),d(40),"https://crh.com",       "Scrip dividend alternative"),
+        ("IE002","KYGA.L","Kerry Group","Ireland","EUR","rights_issue","VOLUNTARY","UPCOMING",dp(5),d(22),d(23),d(38),d(50),d(55),"https://kerrygroup.com", "Capital raise rights issue"),
+        ("FI001","NESTE.HE","Neste Oyj","Finland","EUR","scrip_dividend","VOLUNTARY","LIVE",  dp(18),d(6), d(7), d(22),d(32),d(37),"https://neste.com",      "Scrip dividend"),
+        ("FI002","NOKIA.HE","Nokia Oyj","Finland","EUR","tender_offer","VOLUNTARY","UPCOMING",dp(3), None,d(18),d(35),None,d(40), "https://nokia.com",      "Share buyback tender"),
+        ("NL003","ASML.AS","ASML Holding","Netherlands","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(22),d(5),d(6),d(20),d(30),d(35),"https://asml.com","Scrip dividend"),
+        ("NL004","HEIA.AS","Heineken","Netherlands","EUR","rights_issue","VOLUNTARY","UPCOMING",dp(6),d(25),d(26),d(42),d(55),d(60),"https://heineken.com","Rights issue"),
+        ("DK003","MAERSK-B.CO","AP Moller-Maersk","Denmark","DKK","tender_offer","VOLUNTARY","LIVE",dp(15),None,dp(3),d(15),None,d(20),"https://maersk.com","Fixed price tender"),
+        ("SE003","ERIC-B.ST","Ericsson","Sweden","SEK","scrip_dividend","VOLUNTARY","LIVE",dp(20),d(7),d(8),d(24),d(34),d(38),"https://ericsson.com","Scrip dividend"),
+        ("SE004","VOLV-B.ST","Volvo AB","Sweden","SEK","rights_issue","VOLUNTARY","UPCOMING",dp(4),d(28),d(29),d(45),d(58),d(62),"https://volvo.com","Rights issue"),
+        ("BE003","UCB.BR","UCB SA","Belgium","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(17),d(9),d(10),d(26),d(36),d(40),"https://ucb.com","Scrip dividend"),
+        ("ES003","IBE.MC","Iberdrola","Spain","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(14),d(11),d(12),d(28),d(38),d(42),"https://iberdrola.com","Scrip dividend"),
+        ("ES004","SAN.MC","Banco Santander","Spain","EUR","rights_issue","VOLUNTARY","UPCOMING",dp(7),d(26),d(27),d(44),d(56),d(60),"https://santander.com","Capital rights issue"),
+        ("IT003","UCG.MI","UniCredit","Italy","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(19),d(4),d(5),d(18),d(28),d(32),"https://unicredit.com","Scrip dividend"),
+        ("JP003","6758.T","Sony Group Corp","Japan","JPY","tender_offer","VOLUNTARY","LIVE",dp(16),None,dp(2),d(18),None,d(22),"https://sony.com","Fixed price tender"),
+        ("HK003","2388.HK","BOC Hong Kong","Hong Kong","HKD","scrip_dividend","VOLUNTARY","LIVE",dp(21),d(6),d(7),d(22),d(32),d(36),"https://bochk.com","Scrip dividend"),
+        ("HK004","2018.HK","AAC Technologies","Hong Kong","HKD","rights_issue","VOLUNTARY","UPCOMING",dp(5),d(24),d(25),d(40),d(52),d(56),"https://aactechnologies.com","Rights issue"),
+    ]
+    c.executemany("""INSERT OR IGNORE INTO events(event_id,ticker,company_name,country,
+        currency,event_type,event_category,status,announcement_date,ex_date,
+        record_date,election_deadline,payment_date,settlement_date,source_url,notes)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", NEW_COVERAGE_EVENTS)
+
+    NEW_SCRIP = [
+        ("IE001",3.20,"EUR",None,"1 per 55","EUR",None,None,None,"CASH",0,-0.95,"SCRIP",0),
+        ("FI001",0.85,"EUR",None,"1 per 48","EUR",None,None,None,"CASH",0,-1.10,"SCRIP",0),
+        ("NL003",5.50,"EUR",None,"1 per 38","EUR",None,None,None,"CASH",0,0.18,"SCRIP",0),
+        ("SE003",1.20,"SEK",None,"1 per 62","SEK",None,None,None,"CASH",0,-0.72,"SCRIP",0),
+        ("BE003",2.10,"EUR",None,"1 per 44","EUR",None,None,None,"CASH",0,0.32,"SCRIP",0),
+        ("ES003",0.48,"EUR",None,"1 per 71","EUR",None,None,None,"CASH",0,-0.55,"SCRIP",0),
+        ("IT003",1.65,"EUR",None,"1 per 36","EUR",None,None,None,"CASH",0,0.25,"SCRIP",0),
+        ("HK003",0.28,"HKD",None,"1 per 58","HKD",None,None,None,"CASH",0,-1.20,"SCRIP",0),
+    ]
+    c.executemany("INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", NEW_SCRIP)
+
+    NEW_RIGHTS = [
+        ("IE002","RIGHTS_ISSUE","1 for 8",4.85,None,None,None,None,-18.5,"Morgan Stanley",None,1),
+        ("FI002","RIGHTS_ISSUE","1 for 6",3.45,None,None,None,None,-22.1,"Deutsche Bank",None,1),
+        ("NL004","RIGHTS_ISSUE","1 for 7",88.50,None,None,None,None,-15.8,"Goldman Sachs",None,1),
+        ("SE004","RIGHTS_ISSUE","1 for 5",165.0,None,None,None,None,-20.3,"SEB",None,1),
+        ("ES004","RIGHTS_ISSUE","1 for 9",3.20,None,None,None,None,-24.5,"BBVA",None,1),
+        ("HK004","RIGHTS_ISSUE","1 for 4",12.50,None,None,None,None,-16.2,"HSBC",None,1),
+    ]
+    c.executemany("INSERT OR IGNORE INTO rights_details(event_id,rights_type,rights_ratio,subscription_price,current_price,terp,nil_paid_value,nil_paid_ticker,discount_to_terp_pct,underwriter,gross_proceeds_mn,fully_underwritten) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", NEW_RIGHTS)
+
+    NEW_TENDERS = [
+        ("FI002","FIXED",18.50,None,None,17.20,7.6,None,8500.0,0,None,None,0),
+        ("DK003","FIXED",14800.0,None,None,14200.0,4.2,None,12000.0,1,55.0,None,0),
+        ("JP003","FIXED",3850.0,None,None,3650.0,5.5,None,5500.0,1,58.0,None,0),
+    ]
+    c.executemany("INSERT OR IGNORE INTO tender_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", NEW_TENDERS)
+
+
     conn.commit()
 
     total    = c.execute("SELECT COUNT(*) FROM events").fetchone()[0]
