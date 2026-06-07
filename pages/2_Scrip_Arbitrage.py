@@ -92,30 +92,38 @@ def pct_colour(v):
     if v is None: return '#6a8090'
     return '#00d4aa' if v > 0 else '#ff3355' if v < -1 else '#f5a623'
 
-SORT_JS = """
-<script>
-function sortTable(th) {
-    var table = th.closest('table');
-    var tbody = table.querySelector('tbody');
-    var rows  = Array.from(tbody.querySelectorAll('tr'));
-    var idx   = Array.from(th.parentElement.children).indexOf(th);
-    var asc   = th.dataset.sort !== 'asc';
-    rows.sort(function(a, b) {
-        var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
-        var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
-        var an = parseFloat(av.replace(/[^-\\d.]/g,''));
-        var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
-        if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
-        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+SORT_JS = """<script>
+(function() {
+    function sortTable(th) {
+        var table = th.closest('table');
+        var tbody = table.querySelector('tbody');
+        var rows  = Array.from(tbody.querySelectorAll('tr'));
+        var idx   = Array.from(th.parentElement.children).indexOf(th);
+        var asc   = th.dataset.sort !== 'asc';
+        rows.sort(function(a, b) {
+            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
+            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
+            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
+            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
+            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+        th.parentElement.querySelectorAll('th').forEach(function(t){
+            t.dataset.sort='';
+            var s=t.querySelector('span.sort-ind');
+            if(s) s.textContent='';
+        });
+        th.dataset.sort = asc ? 'asc' : 'desc';
+        var ind = th.querySelector('span.sort-ind');
+        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
+        rows.forEach(function(r){ tbody.appendChild(r); });
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('thead th').forEach(function(th){
+            th.addEventListener('click', function(){ sortTable(th); });
+        });
     });
-    th.parentElement.querySelectorAll('th').forEach(function(t){
-        t.dataset.sort=''; var s=t.querySelector('span.sort-ind'); if(s) s.textContent='';
-    });
-    th.dataset.sort = asc ? 'asc' : 'desc';
-    var ind=th.querySelector('span.sort-ind');
-    if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
-    rows.forEach(function(r){ tbody.appendChild(r); });
-}
+})();
 </script>"""
 
 def dark_table(rows, headers, highlights=None, height=None):

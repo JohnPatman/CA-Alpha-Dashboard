@@ -35,7 +35,6 @@ DATE_COLS = [
     ("events", "settlement_date"),
     ("merger_details", "court_sanction_date"),
     ("merger_details", "long_stop_date"),
-    ("spinoff_details", "distribution_date"),
 ]
 
 conn = sqlite3.connect(DB_PATH)
