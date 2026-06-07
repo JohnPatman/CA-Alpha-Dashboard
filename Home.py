@@ -314,7 +314,14 @@ with col_b:
     )
     df_ctry = get_country_breakdown()
     df_ctry.columns = ["Country", "Events"]
-    st.markdown(html_table(df_ctry), unsafe_allow_html=True)
+    # Wrap in fixed-height scrollable div matching the type table height
+    table_html = html_table(df_ctry)
+    scrollable = (
+        f"<div style='max-height:380px;overflow-y:auto;"
+        f"scrollbar-width:thin;scrollbar-color:#243548 #04060a'>"
+        f"{table_html}</div>"
+    )
+    st.markdown(scrollable, unsafe_allow_html=True)
 
 st.markdown("## Modules")
 
