@@ -268,15 +268,28 @@ st.title("◆ Voluntary CA Alpha Dashboard")
 
 s = get_summary()
 
-c1,c2,c3,c4,c5,c6 = st.columns(6)
-c1.metric("Live Events",   s["live"],   delta=" ", delta_color="off")
-c2.metric("Upcoming",      s["upcoming"], delta=" ", delta_color="off")
-c3.metric("Voluntary",     s["vol"],    delta=" ", delta_color="off")
-c4.metric("Choice Events", s["mwc"],    delta=" ", delta_color="off")
-c5.metric("Countries",     s["countries"], delta=" ", delta_color="off")
-c6.metric("Deadlines ≤7d", s["urgent"],
-    delta="urgent" if s["urgent"] > 0 else " ",
-    delta_color="inverse" if s["urgent"] > 0 else "off")
+def kpi_card(label, value, accent=False, urgent=False):
+    border_top = "#ff3355" if urgent else ("#00d4aa" if accent else "#243548")
+    val_color  = "#ff3355" if urgent else "#c8d8e8"
+    badge      = "<span style='display:inline-block;margin-top:0.35rem;font-size:0.52rem;letter-spacing:0.1em;color:#ff3355;text-transform:uppercase'>urgent</span>" if urgent else ""
+    return (
+        f"<div style='background:#080c12;border:1px solid #182436;"
+        f"border-top:2px solid {border_top};padding:0.55rem 0.8rem;"
+        f"font-family:IBM Plex Mono,monospace;height:5.2rem;box-sizing:border-box'>"
+        f"<div style='font-size:0.52rem;letter-spacing:0.16em;text-transform:uppercase;"
+        f"color:#304050;margin-bottom:0.3rem'>{label}</div>"
+        f"<div style='font-size:1.4rem;font-weight:400;color:{val_color};line-height:1.1'>{value}</div>"
+        f"{badge}</div>"
+    )
+
+kc1,kc2,kc3,kc4,kc5,kc6 = st.columns(6)
+kc1.markdown(kpi_card("Live Events",   s["live"]),     unsafe_allow_html=True)
+kc2.markdown(kpi_card("Upcoming",      s["upcoming"]), unsafe_allow_html=True)
+kc3.markdown(kpi_card("Voluntary",     s["vol"]),      unsafe_allow_html=True)
+kc4.markdown(kpi_card("Choice Events", s["mwc"]),      unsafe_allow_html=True)
+kc5.markdown(kpi_card("Countries",     s["countries"]),unsafe_allow_html=True)
+kc6.markdown(kpi_card("Deadlines ≤7d", s["urgent"],
+    urgent=s["urgent"] > 0),                           unsafe_allow_html=True)
 
 st.markdown("## Event Universe")
 
