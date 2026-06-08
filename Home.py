@@ -367,15 +367,43 @@ st.markdown(
     unsafe_allow_html=True
 )
 st.markdown(
-    "<div style='font-family:IBM Plex Mono,monospace;font-size:0.56rem;"
-    "color:#6a8090;line-height:1.7;margin-top:0.6rem;padding:0.5rem 0;"
-    "border-top:1px solid #0e1825'>"
-    "<strong style='color:#c8d8e8'>DISCLAIMER</strong> &nbsp;·&nbsp; "
-    "All data on this dashboard is <strong style='color:#304050'>entirely fictional and generated for "
-    "illustrative purposes only</strong>. Company names, tickers, event details, prices, rates, "
-    "and deadlines do not represent real corporate actions and should not be relied upon for "
-    "investment, legal, or financial decisions. This dashboard is a personal portfolio project "
-    "demonstrating CA analytics tooling and has no affiliation with any financial institution."
+    "<div style='font-family:IBM Plex Mono,monospace;font-size:0.58rem;"
+    "color:#6a8090;line-height:1.9;margin-top:0.8rem;"
+    "border-top:1px solid #0e1825;padding-top:0.7rem'>"
+
+    # — About block —
+    "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
+    "text-transform:uppercase'>About this project</span><br>"
+    "A personal portfolio project built to demonstrate corporate actions analytics methodology "
+    "across six event categories: scrip dividend arbitrage, currency election optimisation, "
+    "rights issue valuation, tender offer spread analysis, and merger &amp; scheme arbitrage. "
+    "Analytical frameworks — TERP from first principles, implied deal probability, CCY arb "
+    "detection, annualised return modelling, and lender recall logic — reflect genuine market "
+    "methodology applied to a synthetic dataset. "
+    "Built in Python using Streamlit, SQLite, Pandas, and Plotly. "
+    "<a href='https://github.com/JohnPatman/CA-Alpha-Dashboard' "
+    "style='color:#304050;text-decoration:underline' target='_blank'>Source on GitHub ↗</a>"
+
+    "<br><br>"
+
+    # — Data block —
+    "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
+    "text-transform:uppercase'>Data</span><br>"
+    "All companies, tickers, event terms, prices, ratios, spreads, FX rates, and deadlines are "
+    "<strong style='color:#c8d8e8'>entirely synthetic</strong> and generated solely for "
+    "illustrative purposes. They do not represent real corporate actions or real securities. "
+    "Nothing on this dashboard constitutes investment advice or should be relied upon for any "
+    "financial, legal, or investment decision."
+
+    "<br><br>"
+
+    # — Affiliation block —
+    "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
+    "text-transform:uppercase'>Affiliation</span><br>"
+    "This project is independent and has no affiliation with JPMorgan Chase, Nomura, or any "
+    "other financial institution. All views and methodologies are the author's own and do not "
+    "represent the views of any current or former employer."
+
     "</div>",
     unsafe_allow_html=True
 )
