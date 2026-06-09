@@ -3,73 +3,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
 from datetime import date
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.helpers import sf, fmt_date, days_to, tdot, ann_ret, ann_colour, spread_colour, risk_colour, reg_colour
+from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Merger & Scheme Tracker · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
-
-CSS = """<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-:root{--bg:#04060a;--bg-card:#080c12;--accent:#00d4aa;--accent-dim:#00d4aa12;--red:#ff3355;--amber:#f5a623;--yellow:#d4c200;--border:#0e1825;--border-mid:#182436;--border-bright:#243548;--text-primary:#c8d8e8;--text-secondary:#6a8090;--text-muted:#304050;--font-mono:'IBM Plex Mono',monospace;}
-html,body,.stApp,[class*="css"]{background:var(--bg)!important;color:var(--text-primary)!important;}
-#MainMenu,footer,header,[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
-.main .block-container{padding:1rem 2rem 3rem!important;max-width:100%!important;}
-section[data-testid="stSidebar"],section[data-testid="stSidebar"]>div:first-child{background:var(--bg)!important;border-right:1px solid var(--border-mid)!important;width:220px!important;min-width:220px!important;max-width:220px!important;}
-section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
-section[data-testid="stSidebar"] [aria-current="page"]{color:var(--accent)!important;background:var(--accent-dim)!important;border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:transparent!important;}
-section[data-testid="stSidebar"] a,section[data-testid="stSidebar"] li{border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
-section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
-[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"]{display:none!important;opacity:0!important;pointer-events:none!important;}
-html body section[data-testid="stSidebar"] *::before,html body section[data-testid="stSidebar"] *::after{content:none!important;display:none!important;}
-h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
-h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
-p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
-strong{color:var(--text-primary)!important;font-weight:500!important;}
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
-[data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
-[data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
-[data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
-[data-testid="stSelectbox"]>div>div{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.72rem!important;}
-[data-testid="stNumberInput"]>div>div>input{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.8rem!important;padding:0.3rem 0.5rem!important;}
-[data-testid="stExpander"]{background:transparent!important;border:1px solid var(--border-mid)!important;border-radius:0!important;margin-bottom:0.4rem!important;}
-[data-testid="stExpander"] summary{font-family:var(--font-mono)!important;font-size:0.62rem!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-secondary)!important;padding:0.45rem 0.7rem!important;background:var(--bg-card)!important;border-radius:0!important;}
-[data-testid="stExpander"] summary:hover{color:var(--text-primary)!important;}
-[data-testid="stExpander"][open]>summary{color:var(--accent)!important;border-bottom:1px solid var(--border-mid)!important;}
-[data-testid="stExpander"] [data-testid="stExpanderDetails"]{background:var(--bg)!important;padding:0.7rem 0.8rem!important;}
-[data-testid="stAlert"],.stAlert{font-family:var(--font-mono)!important;font-size:0.66rem!important;border-radius:0!important;border:0!important;border-left:2px solid var(--accent)!important;background:var(--accent-dim)!important;color:var(--accent)!important;padding:0.3rem 0.6rem!important;}
-hr{border-color:var(--border-mid)!important;margin:0.5rem 0!important;}
-::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border-bright);}
-</style>"""
-st.markdown(CSS, unsafe_allow_html=True)
-
-import streamlit.components.v1 as _c
-_c.html("""<script>(function(){function k(){try{var d=window.parent.document;['stSidebarCollapseButton','collapsedControl'].forEach(function(id){d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el){el.style.cssText='display:none!important';});});}catch(e){}}k();[100,500,1500].forEach(function(t){setTimeout(k,t);});try{new MutationObserver(k).observe(window.parent.document.body,{childList:true,subtree:true});}catch(e){}})();</script>""", height=1)
+apply_theme()
 
 DB = "data/events.db"; TODAY = date.today()
-
-def sf(v,d=None):
-    try:
-        if v is None or str(v)=='nan': return d
-        return float(v)
-    except: return d
-
-def fmt_date(d):
-    if not d or str(d)=='nan': return '—'
-    return str(d)[:10]
-
-def days_to(d):
-    try: return (date.fromisoformat(str(d)[:10]) - TODAY).days
-    except: return None
-
-def tdot(days):
-    if days is None: return '⚪'
-    if days < 0: return '⚫'
-    if days <= 7: return '🔴'
-    if days <= 14: return '🟠'
-    if days <= 30: return '🟡'
-    return '🟢'
 
 def implied_prob(spread_pct, break_pct):
     """
@@ -82,72 +22,6 @@ def implied_prob(spread_pct, break_pct):
     b = abs(break_pct)
     s = abs(spread_pct)
     return b / (s + b) * 100 if (s + b) > 0 else None
-
-def risk_colour(v):
-    if not v or str(v)=='nan': return '#6a8090'
-    v = str(v).upper()
-    return '#00d4aa' if v=='LOW' else ('#f5a623' if v=='MEDIUM' else '#ff3355' if v=='HIGH' else '#6a8090')
-
-def reg_colour(v):
-    if not v or str(v)=='nan': return '#6a8090'
-    return '#00d4aa' if str(v).upper()=='CLEARED' else '#f5a623'
-
-def spread_colour(v):
-    if v is None: return '#6a8090'
-    if v > 3: return '#00d4aa'
-    if v > 1: return '#d4c200'
-    return '#6a8090'
-
-def ann_colour(v):
-    if v is None: return '#6a8090'
-    if v > 10: return '#00d4aa'
-    if v > 5:  return '#d4c200'
-    return '#6a8090'
-
-SORT_JS = """<script>
-(function() {
-    function sortTable(th) {
-        var table = th.closest('table');
-        var tbody = table.querySelector('tbody');
-        var rows  = Array.from(tbody.querySelectorAll('tr'));
-        var idx   = Array.from(th.parentElement.children).indexOf(th);
-        var asc   = th.dataset.sort !== 'asc';
-        rows.sort(function(a, b) {
-            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
-            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
-            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
-            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
-            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
-            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
-        th.parentElement.querySelectorAll('th').forEach(function(t){
-            t.dataset.sort='';
-            var s=t.querySelector('span.sort-ind');
-            if(s) s.textContent='';
-        });
-        th.dataset.sort = asc ? 'asc' : 'desc';
-        var ind = th.querySelector('span.sort-ind');
-        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
-        rows.forEach(function(r){ tbody.appendChild(r); });
-    }
-    document.addEventListener('DOMContentLoaded', function(){
-        document.querySelectorAll('thead th').forEach(function(th){
-            th.addEventListener('click', function(){ sortTable(th); });
-        });
-    });
-})();
-</script>"""
-
-def dark_table(rows, headers, highlights=None, height=None):
-    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
-    tbody = ''
-    for i,row in enumerate(rows):
-        bg = '#080c12' if i%2==0 else '#04060a'
-        hl = (highlights or {}).get(i,{})
-        cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
-        tbody += f'<tr>{cells}</tr>'
-    h_px = height or min(len(rows)*32+52, 560)
-    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
 
 @st.cache_data(ttl=300)
 def load_mergers():
@@ -216,6 +90,8 @@ dot      = tdot(ddl_days)
 # Derived
 ann_ret_pct = spread / days_to_comp * 365 if spread and days_to_comp > 0 else None
 imp_prob    = implied_prob(spread, break_assume)
+# Express R/R as "making X% to risk Y%" — standard arb desk framing
+rr_display  = f"{spread:.2f}% : {abs(break_assume):.0f}%" if spread and break_assume else "—"
 rr_ratio    = abs(spread / break_assume) if spread and break_assume else None
 
 # ── page header ───────────────────────────────────────────────────────────────
@@ -242,9 +118,9 @@ k3.metric("Spread",         f"{spread:+.2f}%" if spread else "—",
 k4.metric("Implied Prob",
           f"{imp_prob:.1f}%" if imp_prob else "—",
           help=f"p = |break {break_assume}%| / (spread + |break|)")
-k5.metric("Risk/Reward",
-          f"{rr_ratio:.1f}x" if rr_ratio else "—",
-          help=f"Spread {spread:.2f}% vs break {break_assume}%")
+k5.metric("Reward : Risk",
+          rr_display,
+          help=f"Making {spread:.2f}% to risk {abs(break_assume):.0f}% · ratio = {rr_ratio:.2f}x" if rr_ratio else "")
 k6.metric("Sanction Date",  sanction)
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -325,7 +201,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
             ("Spread to terms",  f"{spread:+.2f}%" if spread else "—",                  "Gross upside"),
             ("Annualised return",f"{ann_ret_pct:.1f}%" if ann_ret_pct else "—",         f"@ {days_to_comp}d to completion"),
             ("Implied prob",     f"{imp_prob:.1f}%" if imp_prob else "—",               f"Break scenario: {break_assume}%"),
-            ("Risk/reward",      f"{rr_ratio:.1f}x" if rr_ratio else "—",               f"Upside / downside ratio"),
+            ("Risk/reward",      rr_display,                                                    f"Making {spread:.2f}% to risk {abs(break_assume):.0f}%"),
             ("Break risk",       brk,                                                    ""),
             ("Regulatory",       reg_stat,                                               ""),
             ("Sanction date",    sanction,                                               ""),
@@ -487,3 +363,31 @@ with st.expander("◆  Scenario Analysis & CA Desk Actions", expanded=False):
             st.success(f"◆  LOW risk + {spread:.2f}% spread + {imp_prob:.0f}% implied prob = strong risk/reward")
         elif brk.upper()=="HIGH":
             st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.4rem'>🔴  HIGH break risk — size position accordingly. Wide spread compensates but deal failure is material risk.</div>", unsafe_allow_html=True)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# METHODOLOGY
+# ═════════════════════════════════════════════════════════════════════════════
+with st.expander("◆  Methodology & Formulas", expanded=False):
+    st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
+<span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Merger Arbitrage Analytics</span><br><br>
+<strong style='color:#c8d8e8'>Implied completion probability</strong><br>
+&nbsp;&nbsp;&nbsp;Key assumption: market prices the deal at fair value → EV = 0<br>
+&nbsp;&nbsp;&nbsp;i.e. p × Spread + (1−p) × Break = 0<br>
+&nbsp;&nbsp;&nbsp;Solving: p = |Break%| ÷ (Spread% + |Break%|)<br>
+&nbsp;&nbsp;&nbsp;Example: spread 2%, break −15% → p = 15 ÷ (2+15) = 88.2%<br>
+&nbsp;&nbsp;&nbsp;Limitation: assumes linear payoff, single break scenario, no partial outcomes<br><br>
+<strong style='color:#c8d8e8'>Annualised return</strong><br>
+&nbsp;&nbsp;&nbsp;Ann_return = Spread% ÷ Days_to_completion × 365<br>
+&nbsp;&nbsp;&nbsp;Days_to_completion is user-input (not from DB) — affects ann return but not implied prob<br><br>
+<strong style='color:#c8d8e8'>Expected value per share</strong><br>
+&nbsp;&nbsp;&nbsp;EV = p × (Deal_px − Current_px) + (1−p) × (Break_px − Current_px)<br>
+&nbsp;&nbsp;&nbsp;Where Break_px = Current_px × (1 + Break%) — assumed fall on deal failure<br>
+&nbsp;&nbsp;&nbsp;At market price, EV = 0 by construction (the implied prob is derived from this)<br><br>
+<strong style='color:#c8d8e8'>Reward : Risk framing</strong><br>
+&nbsp;&nbsp;&nbsp;Expressed as Spread% : |Break%| — standard arb desk convention<br>
+&nbsp;&nbsp;&nbsp;A ratio of 2%:15% means risking 15 to make 2 — gross R/R = 0.13×<br>
+&nbsp;&nbsp;&nbsp;Low R/R is acceptable when implied probability is very high (e.g. 90%+)<br><br>
+<strong style='color:#c8d8e8'>Share deal hedge ratio</strong><br>
+&nbsp;&nbsp;&nbsp;For stock consideration deals: short acquirer shares × exchange_ratio per target share<br>
+&nbsp;&nbsp;&nbsp;This locks in the spread and hedges out market directional risk
+</div>""", unsafe_allow_html=True)

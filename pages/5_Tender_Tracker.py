@@ -3,135 +3,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
 from datetime import date
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.helpers import sf, fmt_date, days_to, tdot, ann_ret, prem_colour, ann_colour
+from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Tender Tracker · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
-
-CSS = """<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-:root{--bg:#04060a;--bg-card:#080c12;--accent:#00d4aa;--accent-dim:#00d4aa12;--red:#ff3355;--amber:#f5a623;--yellow:#d4c200;--border:#0e1825;--border-mid:#182436;--border-bright:#243548;--text-primary:#c8d8e8;--text-secondary:#6a8090;--text-muted:#304050;--font-mono:'IBM Plex Mono',monospace;}
-html,body,.stApp,[class*="css"]{background:var(--bg)!important;color:var(--text-primary)!important;}
-#MainMenu,footer,header,[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
-.main .block-container{padding:1rem 2rem 3rem!important;max-width:100%!important;}
-section[data-testid="stSidebar"],section[data-testid="stSidebar"]>div:first-child{background:var(--bg)!important;border-right:1px solid var(--border-mid)!important;width:220px!important;min-width:220px!important;max-width:220px!important;}
-section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
-section[data-testid="stSidebar"] [aria-current="page"]{color:var(--accent)!important;background:var(--accent-dim)!important;border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:transparent!important;}
-section[data-testid="stSidebar"] a,section[data-testid="stSidebar"] li{border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
-section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
-[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"]{display:none!important;opacity:0!important;pointer-events:none!important;}
-html body section[data-testid="stSidebar"] *::before,html body section[data-testid="stSidebar"] *::after{content:none!important;display:none!important;}
-h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
-h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
-p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
-strong{color:var(--text-primary)!important;font-weight:500!important;}
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
-[data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
-[data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
-[data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
-[data-testid="stSelectbox"]>div>div{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.72rem!important;}
-[data-testid="stNumberInput"]>div>div>input{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.8rem!important;padding:0.3rem 0.5rem!important;}
-[data-testid="stExpander"]{background:transparent!important;border:1px solid var(--border-mid)!important;border-radius:0!important;margin-bottom:0.4rem!important;}
-[data-testid="stExpander"] summary{font-family:var(--font-mono)!important;font-size:0.62rem!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-secondary)!important;padding:0.45rem 0.7rem!important;background:var(--bg-card)!important;border-radius:0!important;}
-[data-testid="stExpander"] summary:hover{color:var(--text-primary)!important;}
-[data-testid="stExpander"][open]>summary{color:var(--accent)!important;border-bottom:1px solid var(--border-mid)!important;}
-[data-testid="stExpander"] [data-testid="stExpanderDetails"]{background:var(--bg)!important;padding:0.7rem 0.8rem!important;}
-[data-testid="stAlert"],.stAlert{font-family:var(--font-mono)!important;font-size:0.66rem!important;border-radius:0!important;border:0!important;border-left:2px solid var(--accent)!important;background:var(--accent-dim)!important;color:var(--accent)!important;padding:0.3rem 0.6rem!important;}
-hr{border-color:var(--border-mid)!important;margin:0.5rem 0!important;}
-::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border-bright);}
-</style>"""
-st.markdown(CSS, unsafe_allow_html=True)
-
-import streamlit.components.v1 as _c
-_c.html("""<script>(function(){function k(){try{var d=window.parent.document;['stSidebarCollapseButton','collapsedControl'].forEach(function(id){d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el){el.style.cssText='display:none!important';});});}catch(e){}}k();[100,500,1500].forEach(function(t){setTimeout(k,t);});try{new MutationObserver(k).observe(window.parent.document.body,{childList:true,subtree:true});}catch(e){}})();</script>""", height=1)
+apply_theme()
 
 DB = "data/events.db"; TODAY = date.today()
-
-def sf(v,d=None):
-    try:
-        if v is None or str(v)=='nan': return d
-        return float(v)
-    except: return d
-
-def fmt_date(d):
-    if not d or str(d)=='nan': return '—'
-    return str(d)[:10]
-
-def days_to(d):
-    try: return (date.fromisoformat(str(d)[:10]) - TODAY).days
-    except: return None
-
-def tdot(days):
-    if days is None: return '⚪'
-    if days < 0: return '⚫'
-    if days <= 3: return '🔴'
-    if days <= 7: return '🟠'
-    if days <= 14: return '🟡'
-    return '🟢'
-
-def ann_ret(prem_pct, days):
-    """Annualised return from tender spread."""
-    if prem_pct is None or not days or days <= 0: return None
-    return prem_pct / days * 365
-
-def prem_colour(v):
-    if v is None: return '#6a8090'
-    if v >= 10: return '#00d4aa'
-    if v >= 5:  return '#d4c200'
-    return '#6a8090'
-
-def ann_colour(v):
-    if v is None: return '#6a8090'
-    if v >= 100: return '#00d4aa'
-    if v >= 30:  return '#d4c200'
-    return '#6a8090'
-
-SORT_JS = """<script>
-(function() {
-    function sortTable(th) {
-        var table = th.closest('table');
-        var tbody = table.querySelector('tbody');
-        var rows  = Array.from(tbody.querySelectorAll('tr'));
-        var idx   = Array.from(th.parentElement.children).indexOf(th);
-        var asc   = th.dataset.sort !== 'asc';
-        rows.sort(function(a, b) {
-            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
-            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
-            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
-            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
-            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
-            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
-        th.parentElement.querySelectorAll('th').forEach(function(t){
-            t.dataset.sort='';
-            var s=t.querySelector('span.sort-ind');
-            if(s) s.textContent='';
-        });
-        th.dataset.sort = asc ? 'asc' : 'desc';
-        var ind = th.querySelector('span.sort-ind');
-        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
-        rows.forEach(function(r){ tbody.appendChild(r); });
-    }
-    document.addEventListener('DOMContentLoaded', function(){
-        document.querySelectorAll('thead th').forEach(function(th){
-            th.addEventListener('click', function(){ sortTable(th); });
-        });
-    });
-})();
-</script>"""
-
-def dark_table(rows, headers, highlights=None, height=None):
-    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
-    tbody = ''
-    for i,row in enumerate(rows):
-        bg = '#080c12' if i%2==0 else '#04060a'
-        hl = (highlights or {}).get(i,{})
-        cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
-        tbody += f'<tr>{cells}</tr>'
-    h_px = height or min(len(rows)*32+52, 560)
-    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
 
 @st.cache_data(ttl=300)
 def load_tenders():
@@ -146,7 +24,6 @@ def load_tenders():
         FROM events e JOIN tender_details t ON e.event_id=t.event_id
         WHERE e.event_type IN ('tender_offer','dutch_auction')
         AND e.status IN ('LIVE','UPCOMING')
-        AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
         AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
     """, conn)
     conn.close()
@@ -197,6 +74,8 @@ prem      = sf(ev["premium_to_mkt_pct"])
 max_val   = sf(ev["max_value_mn"])
 proration = sf(ev["estimated_proration_pct"])
 pro_exp   = ev["proration_expected"]
+odd_thresh = sf(ev["odd_lot_threshold"])
+odd_guar   = int(ev["odd_lot_guaranteed"]) if ev["odd_lot_guaranteed"] is not None else 0
 ddl_days  = ev["_days"]
 ann       = ev["_ann_ret"]
 dot       = tdot(ddl_days)
@@ -312,10 +191,22 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
                 ("Est. proration",    f"~{proration:.0f}%" if proration else "—","% of tendered shares bought"),
                 ("Days to deadline",  f"{ddl_days}d" if ddl_days is not None else "—", fmt_date(ev["election_deadline"])),
             ]
+            # Odd lot row — show when threshold is set
+            if odd_thresh:
+                odd_label = f"◆ Guaranteed fill ≤ {int(odd_thresh):,} shares" if odd_guar==1 else f"Priority fill ≤ {int(odd_thresh):,} shares"
+                odd_note  = "No proration risk on odd lot position" if odd_guar==1 else "May receive priority allocation"
+                econ_rows.insert(-1, ("Odd lot threshold", odd_label, odd_note))
             hl = {4:{1:prem_colour(prem)},
                   5:{1:'#00d4aa' if ann and ann>30 else '#d4c200',2:'#00d4aa' if ann and ann>30 else '#6a8090'},
                   8:{1:'#f5a623' if proration else '#6a8090'}}
-            dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=390)
+            # Highlight odd lot row if present
+            if odd_thresh:
+                hl[len(econ_rows)-2] = {1:'#00d4aa', 2:'#00d4aa'}
+            dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=390 + (32 if odd_thresh else 0))
+            # Odd lot arb callout
+            if odd_thresh and odd_guar==1 and pos_shares and pos_shares <= odd_thresh and tp and cur_px:
+                odd_pnl = pos_shares * (tp - cur_px)
+                st.success(f"◆  ODD LOT ARB — {pos_shares:,} shares ≤ {int(odd_thresh):,} threshold: guaranteed fill, zero proration. P&L: {ev['currency']} {odd_pnl:+,.2f} ({prem:+.1f}%)")
 
         elif is_dutch and tp_lo and tp_hi:
             mid  = (tp_lo+tp_hi)/2
@@ -486,20 +377,65 @@ if is_dutch and tp_lo and tp_hi:
             st.plotly_chart(fig, use_container_width=True)
 
         with col_dt:
+            pro_rate_d = (proration or 80) / 100
+            _sh = pos_shares or 10000
             bid_levels = [
-                (tp_lo,                        "Floor",     "Fill only if low clears",   '#f5a623'),
-                (tp_lo+(tp_hi-tp_lo)*0.25,     "Low (25%)", "",                          '#d4c200'),
-                ((tp_lo+tp_hi)/2,              "Mid (50%)", "Balanced risk/reward",      '#c8d8e8'),
-                (tp_lo+(tp_hi-tp_lo)*0.75,     "High (75%)","Higher fill probability",   '#00d4aa'),
-                (tp_hi,                        "Ceiling",   "Max fill probability",      '#00d4aa'),
+                (tp_lo,                        "Floor",      "Fill only if floor clears"),
+                (tp_lo+(tp_hi-tp_lo)*0.25,     "Low (25%)",  ""),
+                ((tp_lo+tp_hi)/2,              "Mid (50%)",  "Balanced risk/reward"),
+                (tp_lo+(tp_hi-tp_lo)*0.75,     "High (75%)", "Higher fill probability"),
+                (tp_hi,                        "Ceiling",    "Max fill probability"),
             ]
-            bid_rows = [(f"{ev['currency']} {px:.2f}", lbl, note) for px,lbl,note,_ in bid_levels]
-            hl3 = {i:{0:col,1:col} for i,(_,_,_,col) in enumerate(bid_levels)}
-            dark_table(bid_rows, ["Bid","Level","Note"], hl3, height=205)
+            # EV model: P(fill) = (bid-floor)/(ceil-floor); expected clearing = (floor+bid)/2
+            # EV = P(fill) × (expected_clearing - cur_px) × shares × proration
+            bid_rows = []; bid_hl = {}
+            for k, (px, lbl, note) in enumerate(bid_levels):
+                p_fill  = min(1.0, max(0.0, (px - tp_lo) / (tp_hi - tp_lo))) if (tp_hi - tp_lo) > 0 else 0
+                exp_clr = (tp_lo + px) / 2          # expected clearing price below your bid
+                ev_ps   = p_fill * (exp_clr - (cur_px or exp_clr))     # EV per share
+                ev_tot  = ev_ps * _sh * pro_rate_d
+                col_ev  = '#00d4aa' if ev_tot > 0 else '#6a8090'
+                col_bid = '#00d4aa' if k >= 3 else '#d4c200' if k == 2 else '#f5a623'
+                bid_rows.append([
+                    f"{ev['currency']} {px:.2f}",
+                    lbl,
+                    f"{p_fill*100:.0f}%",
+                    f"{ev['currency']} {exp_clr:.2f}",
+                    f"{ev['currency']} {ev_tot:+,.0f}" if cur_px else "—",
+                ])
+                bid_hl[k] = {0:col_bid, 1:col_bid, 2:'#6a8090', 3:'#304050', 4:col_ev}
+            dark_table(bid_rows, ["Bid","Level","P(Fill)","Exp Clearing","EV"], bid_hl, height=220)
             st.markdown(
-                f"<p style='font-family:IBM Plex Mono;font-size:0.64rem;color:#6a8090;margin-top:0.3rem'>"
+                f"<p style='font-family:IBM Plex Mono;font-size:0.62rem;color:#6a8090;margin-top:0.3rem'>"
                 f"Range: {ev['currency']} {tp_lo:.2f}–{tp_hi:.2f} · "
-                f"Bid at or above mid to maximise fill probability. "
-                f"Company sets clearing price = lowest accepted bid.</p>",
+                f"P(fill) = (bid−floor)÷range · Exp clearing = (floor+bid)÷2 · "
+                f"EV = P(fill) × (exp_clearing − market_px) × {_sh:,} shares × ~{pro_rate_d*100:.0f}% proration</p>",
                 unsafe_allow_html=True
             )
+
+# ═════════════════════════════════════════════════════════════════════════════
+# METHODOLOGY
+# ═════════════════════════════════════════════════════════════════════════════
+with st.expander("◆  Methodology & Formulas", expanded=False):
+    st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
+<span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Tender Offer & Dutch Auction Analytics</span><br><br>
+<strong style='color:#c8d8e8'>Spread and annualised return (fixed price)</strong><br>
+&nbsp;&nbsp;&nbsp;Spread%     = (Tender_price − Market_price) ÷ Market_price × 100<br>
+&nbsp;&nbsp;&nbsp;Ann_return  = Spread% ÷ Days_to_deadline × 365<br>
+&nbsp;&nbsp;&nbsp;This is the key ranking metric — normalises different deadlines to a comparable basis<br><br>
+<strong style='color:#c8d8e8'>Effective premium after proration</strong><br>
+&nbsp;&nbsp;&nbsp;Accepted    = N_tendered × Proration_rate<br>
+&nbsp;&nbsp;&nbsp;Eff_price   = (Accepted × Tender_px + Returned × Market_px) ÷ N_tendered<br>
+&nbsp;&nbsp;&nbsp;Eff_prem%   = Eff_price ÷ Market_px − 1<br>
+&nbsp;&nbsp;&nbsp;Eff_ann     = Eff_prem% ÷ Days × 365<br><br>
+<strong style='color:#c8d8e8'>Odd lot arbitrage</strong><br>
+&nbsp;&nbsp;&nbsp;Odd lot positions (≤ threshold) are guaranteed full fill at tender price — no proration<br>
+&nbsp;&nbsp;&nbsp;Odd_lot_P&L = (Tender_px − Market_px) × N_shares — no fill uncertainty<br>
+&nbsp;&nbsp;&nbsp;Risk-free spread capture if position ≤ threshold and deadline risk is acceptable<br><br>
+<strong style='color:#c8d8e8'>Dutch auction expected value (EV) model</strong><br>
+&nbsp;&nbsp;&nbsp;Assumption: clearing price uniformly distributed between range floor and your bid<br>
+&nbsp;&nbsp;&nbsp;P(fill)          = (Bid − Floor) ÷ (Ceiling − Floor)<br>
+&nbsp;&nbsp;&nbsp;Expected clearing = (Floor + Bid) ÷ 2<br>
+&nbsp;&nbsp;&nbsp;EV               = P(fill) × (Exp_clearing − Market_px) × N_shares × Proration_rate<br>
+&nbsp;&nbsp;&nbsp;Limitation: assumes uniform clearing distribution; actual clearing reflects demand curve
+</div>""", unsafe_allow_html=True)
