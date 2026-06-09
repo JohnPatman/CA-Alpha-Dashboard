@@ -246,6 +246,61 @@ def get_summary():
                 vol=vol, mwc=mwc, countries=countries, urgent=urgent)
 
 @st.cache_data(ttl=300)
+def get_top_opportunities():
+    """Pull the single best opportunity from each alpha module."""
+    conn = sqlite3.connect(DB)
+    c    = conn.cursor()
+    today = date.today().isoformat()
+
+    # Best scrip: highest scrip premium where default≠optimal
+    scrip = c.execute("""
+        SELECT e.ticker, e.company_name, e.currency, s.scrip_discount_pct,
+               e.election_deadline
+        FROM events e JOIN scrip_details s ON e.event_id=s.event_id
+        WHERE e.event_type='scrip_dividend' AND e.status='LIVE'
+        AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
+        AND s.election_default != s.optimal_election
+        AND s.scrip_discount_pct IS NOT NULL
+        ORDER BY s.scrip_discount_pct DESC LIMIT 1""", (today,)).fetchone()
+
+    # Best CCY arb: highest arb bps, rate pre-deadline only
+    ccy = c.execute("""
+        SELECT e.ticker, e.company_name, s.fx_arbitrage_pct, s.dividend_currency_opts,
+               e.election_deadline
+        FROM events e JOIN scrip_details s ON e.event_id=s.event_id
+        WHERE e.event_type='fx_election' AND e.status='LIVE'
+        AND s.rate_pre_deadline=1
+        AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
+        ORDER BY s.fx_arbitrage_pct DESC LIMIT 1""", (today,)).fetchone()
+
+    # Best tender: highest annualised return
+    from datetime import date as _d
+    tender = c.execute("""
+        SELECT e.ticker, e.company_name, e.currency,
+               t.premium_to_mkt_pct, e.election_deadline
+        FROM events e JOIN tender_details t ON e.event_id=t.event_id
+        WHERE e.event_type IN ('tender_offer') AND e.status='LIVE'
+        AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
+        AND t.premium_to_mkt_pct IS NOT NULL AND t.tender_type='FIXED'
+        AND e.election_deadline IS NOT NULL
+        ORDER BY t.premium_to_mkt_pct / MAX(
+            (julianday(e.election_deadline) - julianday(?)), 1
+        ) DESC LIMIT 1""", (today, today)).fetchone()
+
+    # Best merger: tightest spread with LOW break risk
+    merger = c.execute("""
+        SELECT e.ticker, e.company_name, e.currency,
+               m.spread_to_terms_pct, m.break_risk, e.election_deadline
+        FROM events e JOIN merger_details m ON e.event_id=m.event_id
+        WHERE e.event_type IN ('scheme_of_arrangement','merger') AND e.status='LIVE'
+        AND m.break_risk='LOW' AND m.spread_to_terms_pct IS NOT NULL
+        ORDER BY m.spread_to_terms_pct DESC LIMIT 1""").fetchone()
+
+    conn.close()
+    return dict(scrip=scrip, ccy=ccy, tender=tender, merger=merger)
+
+
+@st.cache_data(ttl=300)
 def get_type_breakdown():
     conn = sqlite3.connect(DB)
     df = pd.read_sql("""SELECT event_type, COUNT(*) as n
@@ -266,7 +321,73 @@ def get_country_breakdown():
 # ── page ──────────────────────────────────────────────────────────────────────
 st.title("◆ Voluntary CA Alpha Dashboard")
 
-s = get_summary()
+s    = get_summary()
+tops = get_top_opportunities()
+
+# ── Top Opportunities Now ─────────────────────────────────────────────────────
+def _opp_card(label, ticker, detail, value, value_colour="#00d4aa", url_page=None):
+    badge = (f"<a href='/?p={url_page}' style='font-size:0.48rem;color:#304050;"
+             f"text-decoration:none;letter-spacing:0.1em;text-transform:uppercase'>"
+             f"→ open</a>") if url_page else ""
+    return (
+        f"<div style='background:#080c12;border:1px solid #182436;"
+        f"border-top:2px solid #00d4aa;padding:0.5rem 0.75rem;"
+        f"font-family:IBM Plex Mono,monospace;height:5.8rem;box-sizing:border-box'>"
+        f"<div style='font-size:0.45rem;letter-spacing:0.16em;text-transform:uppercase;"
+        f"color:#304050;margin-bottom:0.18rem'>{label}</div>"
+        f"<div style='font-size:0.8rem;font-weight:500;color:#c8d8e8;line-height:1.2'>{ticker}</div>"
+        f"<div style='font-size:0.62rem;color:#6a8090;line-height:1.3'>{detail}</div>"
+        f"<div style='font-size:0.72rem;color:{value_colour};font-weight:500;margin-top:0.1rem'>{value}</div>"
+        f"</div>"
+    )
+
+st.markdown(
+    "<p style='font-size:0.52rem;letter-spacing:0.16em;text-transform:uppercase;"
+    "color:#304050;margin-bottom:0.3rem;margin-top:0.4rem'>◆ Top Opportunities Now</p>",
+    unsafe_allow_html=True
+)
+oc1, oc2, oc3, oc4 = st.columns(4)
+if tops["scrip"]:
+    t = tops["scrip"]
+    ddl = (date.fromisoformat(t[4]) - date.today()).days if t[4] else None
+    oc1.markdown(_opp_card(
+        "Best Scrip Premium", t[0], t[1],
+        f"+{t[3]:.2f}% scrip premium · {ddl}d" if ddl is not None else f"+{t[3]:.2f}% scrip premium"
+    ), unsafe_allow_html=True)
+else:
+    oc1.markdown(_opp_card("Best Scrip Premium","—","No actionable scrip events","—","#304050"), unsafe_allow_html=True)
+
+if tops["ccy"]:
+    t = tops["ccy"]
+    ddl = (date.fromisoformat(t[4]) - date.today()).days if t[4] else None
+    oc2.markdown(_opp_card(
+        "Best CCY Arb", t[0], t[1],
+        f"+{t[2]:.2f}% / {int(t[2]*100)}bps · {ddl}d" if ddl is not None else f"+{t[2]:.2f}%"
+    ), unsafe_allow_html=True)
+else:
+    oc2.markdown(_opp_card("Best CCY Arb","—","No pre-deadline rate events","—","#304050"), unsafe_allow_html=True)
+
+if tops["tender"]:
+    t = tops["tender"]
+    ddl = (date.fromisoformat(t[4]) - date.today()).days if t[4] else None
+    ann = t[3] / ddl * 365 if (ddl and ddl > 0) else None
+    oc3.markdown(_opp_card(
+        "Best Tender Return", t[0], t[1],
+        f"{ann:.0f}% ann  ({t[3]:+.1f}% · {ddl}d)" if ann else f"{t[3]:+.1f}% spread"
+    ), unsafe_allow_html=True)
+else:
+    oc3.markdown(_opp_card("Best Tender Return","—","No active fixed tenders","—","#304050"), unsafe_allow_html=True)
+
+if tops["merger"]:
+    t = tops["merger"]
+    oc4.markdown(_opp_card(
+        "Best Merger Spread", t[0], f"{t[1]}  ·  LOW risk",
+        f"+{t[3]:.2f}% spread  ·  {t[4]}"
+    ), unsafe_allow_html=True)
+else:
+    oc4.markdown(_opp_card("Best Merger Spread","—","No LOW risk live deals","—","#304050"), unsafe_allow_html=True)
+
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
 def kpi_card(label, value, accent=False, urgent=False):
     border_top = "#ff3355" if urgent else ("#00d4aa" if accent else "#243548")
