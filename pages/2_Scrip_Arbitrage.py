@@ -3,13 +3,73 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3, re
 from datetime import date
-from utils.helpers import sf, fmt_date, days_to, tdot, pct_colour
-from utils.ui import apply_theme, dark_table
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 st.set_page_config(page_title="Scrip Arbitrage · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
-apply_theme()
+
+CSS = """<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#04060a;--bg-card:#080c12;--accent:#00d4aa;--accent-dim:#00d4aa12;--red:#ff3355;--amber:#f5a623;--yellow:#d4c200;--border:#0e1825;--border-mid:#182436;--border-bright:#243548;--text-primary:#c8d8e8;--text-secondary:#6a8090;--text-muted:#304050;--font-mono:'IBM Plex Mono',monospace;}
+html,body,.stApp,[class*="css"]{background:var(--bg)!important;color:var(--text-primary)!important;}
+#MainMenu,footer,header,[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
+.main .block-container{padding:1rem 2rem 3rem!important;max-width:100%!important;}
+section[data-testid="stSidebar"],section[data-testid="stSidebar"]>div:first-child{background:var(--bg)!important;border-right:1px solid var(--border-mid)!important;width:220px!important;min-width:220px!important;max-width:220px!important;}
+section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
+section[data-testid="stSidebar"] [aria-current="page"]{color:var(--accent)!important;background:var(--accent-dim)!important;border-radius:0!important;border:none!important;}
+section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:transparent!important;}
+section[data-testid="stSidebar"] a,section[data-testid="stSidebar"] li{border-radius:0!important;border:none!important;}
+section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
+section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
+[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"]{display:none!important;opacity:0!important;pointer-events:none!important;}
+html body section[data-testid="stSidebar"] *::before,html body section[data-testid="stSidebar"] *::after{content:none!important;display:none!important;}
+h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
+h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
+p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
+strong{color:var(--text-primary)!important;font-weight:500!important;}
+[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
+[data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
+[data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
+[data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
+[data-testid="stSelectbox"]>div>div{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.72rem!important;}
+[data-testid="stNumberInput"]>div>div>input{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.8rem!important;padding:0.3rem 0.5rem!important;}
+[data-testid="stExpander"]{background:transparent!important;border:1px solid var(--border-mid)!important;border-radius:0!important;margin-bottom:0.4rem!important;}
+[data-testid="stExpander"] summary{font-family:var(--font-mono)!important;font-size:0.62rem!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-secondary)!important;padding:0.45rem 0.7rem!important;background:var(--bg-card)!important;border-radius:0!important;}
+[data-testid="stExpander"] summary:hover{color:var(--text-primary)!important;}
+[data-testid="stExpander"][open]>summary{color:var(--accent)!important;border-bottom:1px solid var(--border-mid)!important;}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"]{background:var(--bg)!important;padding:0.7rem 0.8rem!important;}
+[data-testid="stAlert"],.stAlert{font-family:var(--font-mono)!important;font-size:0.66rem!important;border-radius:0!important;border:0!important;border-left:2px solid var(--accent)!important;background:var(--accent-dim)!important;color:var(--accent)!important;padding:0.3rem 0.6rem!important;}
+hr{border-color:var(--border-mid)!important;margin:0.5rem 0!important;}
+::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border-bright);}
+</style>"""
+st.markdown(CSS, unsafe_allow_html=True)
+
+import streamlit.components.v1 as _c
+_c.html("""<script>(function(){function k(){try{var d=window.parent.document;['stSidebarCollapseButton','collapsedControl'].forEach(function(id){d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el){el.style.cssText='display:none!important';});});}catch(e){}}k();[100,500,1500].forEach(function(t){setTimeout(k,t);});try{new MutationObserver(k).observe(window.parent.document.body,{childList:true,subtree:true});}catch(e){}})();</script>""", height=1)
 
 DB = "data/events.db"; TODAY = date.today()
+
+def sf(v,d=None):
+    try:
+        if v is None or str(v)=='nan': return d
+        return float(v)
+    except: return d
+
+def fmt_date(d):
+    if not d or str(d)=='nan': return '—'
+    return str(d)[:10]
+
+def days_to(d):
+    try: return (date.fromisoformat(str(d)[:10]) - TODAY).days
+    except: return None
+
+def tdot(days):
+    if days is None: return '⚪'
+    if days < 0: return '⚫'
+    if days <= 3: return '🔴'
+    if days <= 7: return '🟠'
+    if days <= 14: return '🟡'
+    return '🟢'
 
 def parse_ratio(s):
     if not s or str(s)=='nan': return None, None
@@ -27,6 +87,55 @@ def calc_scrip_prem(cash, scrip_px, ratio, wht=0.0, inferred_px=None):
     prem      = (scrip_val - cash_net) / cash_net * 100 if cash_net else 0
     opt       = "SCRIP" if prem > 0 else "CASH"
     return prem, cash_net, scrip_val, opt
+
+def pct_colour(v):
+    if v is None: return '#6a8090'
+    return '#00d4aa' if v > 0 else '#ff3355' if v < -1 else '#f5a623'
+
+SORT_JS = """<script>
+(function() {
+    function sortTable(th) {
+        var table = th.closest('table');
+        var tbody = table.querySelector('tbody');
+        var rows  = Array.from(tbody.querySelectorAll('tr'));
+        var idx   = Array.from(th.parentElement.children).indexOf(th);
+        var asc   = th.dataset.sort !== 'asc';
+        rows.sort(function(a, b) {
+            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
+            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
+            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
+            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
+            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+        th.parentElement.querySelectorAll('th').forEach(function(t){
+            t.dataset.sort='';
+            var s=t.querySelector('span.sort-ind');
+            if(s) s.textContent='';
+        });
+        th.dataset.sort = asc ? 'asc' : 'desc';
+        var ind = th.querySelector('span.sort-ind');
+        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
+        rows.forEach(function(r){ tbody.appendChild(r); });
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('thead th').forEach(function(th){
+            th.addEventListener('click', function(){ sortTable(th); });
+        });
+    });
+})();
+</script>"""
+
+def dark_table(rows, headers, highlights=None, height=None):
+    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
+    tbody = ''
+    for i,row in enumerate(rows):
+        bg = '#080c12' if i%2==0 else '#04060a'
+        hl = (highlights or {}).get(i,{})
+        cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
+        tbody += f'<tr>{cells}</tr>'
+    h_px = height or min(len(rows)*32+52,560)
+    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
 
 @st.cache_data(ttl=300)
 def load_scrip():
@@ -324,21 +433,9 @@ if wht > 0:
                 dark_table(wht_pos_rows, ["WHT","Cash Total","Scrip Total","Δ P&L"], hl4, height=200)
                 if wht >= 30:
                     st.success(f"◆  At {wht:.0f}% WHT, scrip advantage on {pos_shares:,} shares is {ev['currency']} {pos_shares*nshares_per*current_px - pos_shares*cash_net:,.2f}")
-else:
-    with st.expander("◆  Withholding Tax — 0% WHT applies", expanded=False):
-        st.markdown(
-            f"<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.8'>"
-            f"<strong style='color:#c8d8e8'>0% withholding tax</strong> applies to this event. "
-            f"Cash and scrip elections are compared on a gross basis — no tax drag on the cash alternative. "
-            f"The scrip premium shown in Section 1 reflects the pure economic difference with no WHT adjustment.<br><br>"
-            f"Countries with significant WHT typically include: France (30%), Switzerland (35%), "
-            f"Belgium (30%), Spain (19%), Germany (26.375%). "
-            f"UK, Australia, and Gulf domiciles commonly apply 0%."
-            f"</div>",
-            unsafe_allow_html=True
-        )
 
-
+# ═════════════════════════════════════════════════════════════════════════════
+# SECTION 4 — BREAK-EVEN CHART
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Break-even Analysis", expanded=True):
     if cash_amt and rd and current_px > 0:
@@ -409,27 +506,12 @@ If scrip election is optimal and stock is lent, every basis point of premium is 
 
     with col_b:
         cost_per_share = (scrip_val - cash_net) if scrip_val and cash_net else 0
-        # Calculate T+2 recall deadline dynamically from record date
-        _recall_by = "—"
-        _rec_str = fmt_date(ev.get("record_date") or ev.get("ex_date"))
-        if _rec_str != "—":
-            try:
-                from datetime import date as _d, timedelta as _td
-                _rec = _d.fromisoformat(_rec_str)
-                _count, _rb = 0, _rec
-                while _count < 2:
-                    _rb -= _td(days=1)
-                    if _rb.weekday() < 5:
-                        _count += 1
-                _recall_by = _rb.isoformat()
-            except Exception:
-                _recall_by = "T−2 from record date"
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Recall Decision</span><br><br>
 Scrip premium per share: <span style='color:#{"00d4aa" if cost_per_share>0 else "6a8090"}'>{ev["currency"]} {cost_per_share:.4f}</span><br>
 On {pos_shares:,} shares: <span style='color:#{"00d4aa" if cost_per_share*pos_shares>0 else "6a8090"}'>{ev["currency"]} {cost_per_share*pos_shares:,.4f}</span><br>
-Record date: <span style='color:#c8d8e8'>{fmt_date(ev.get("record_date") or ev.get("ex_date"))}</span><br>
-Recall by: <span style='color:#{"ff3355" if _recall_by not in ("—","T−2 from record date") else "6a8090"}'>{_recall_by}</span>  <span style='color:#304050'>(T−2 business days)</span><br><br>
+Record date: <span style='color:#c8d8e8'>{fmt_date(ev["ex_date"])}</span><br>
+Recall by: T+2 before record date<br><br>
 <strong style='color:#c8d8e8'>Recall if:</strong> scrip premium × position &gt; lending income to record date
 </div>""", unsafe_allow_html=True)
 
@@ -438,30 +520,3 @@ Recall by: <span style='color:#{"ff3355" if _recall_by not in ("—","T−2 from
         st.success(f"◆  RECALL WARRANTED — scrip premium {prem:.2f}% · Alpha: {ev['currency']} {alpha_val:,.4f} on {pos_shares:,} sh · Deadline: {fmt_date(ev['election_deadline'])}")
     if ddl_days is not None and 0 <= ddl_days <= 3:
         st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  URGENT — election deadline {ddl_days}d. Recall settlement window closing.</div>", unsafe_allow_html=True)
-
-# ═════════════════════════════════════════════════════════════════════════════
-# METHODOLOGY
-# ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Methodology & Formulas", expanded=False):
-    st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
-<span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Scrip Dividend Valuation</span><br><br>
-<strong style='color:#c8d8e8'>Scrip value per share</strong><br>
-&nbsp;&nbsp;&nbsp;Scrip_val = (N_new ÷ N_existing) × P_current<br>
-&nbsp;&nbsp;&nbsp;Where ratio = "N_new per N_existing" (e.g. 1 per 60 → 0.01667 new shares per existing share)<br><br>
-<strong style='color:#c8d8e8'>Cash net of withholding tax</strong><br>
-&nbsp;&nbsp;&nbsp;Cash_net = Cash_gross × (1 − WHT%)<br>
-&nbsp;&nbsp;&nbsp;Assumption: scrip dividends are WHT-exempt (typical in most jurisdictions)<br><br>
-<strong style='color:#c8d8e8'>Scrip premium (decision metric)</strong><br>
-&nbsp;&nbsp;&nbsp;Premium% = (Scrip_val − Cash_net) ÷ Cash_net × 100<br>
-&nbsp;&nbsp;&nbsp;If Premium% > 0 → elect SCRIP; if < 0 → take CASH<br><br>
-<strong style='color:#c8d8e8'>Break-even price</strong><br>
-&nbsp;&nbsp;&nbsp;B/E = Cash_net ÷ (N_new ÷ N_existing)<br>
-&nbsp;&nbsp;&nbsp;At P_current = B/E, Scrip_val = Cash_net exactly (indifferent between elections)<br>
-&nbsp;&nbsp;&nbsp;If P_current > B/E → SCRIP better; if P_current < B/E → CASH better<br><br>
-<strong style='color:#c8d8e8'>Action required flag</strong><br>
-&nbsp;&nbsp;&nbsp;Action_required = (election_default ≠ optimal_election)<br>
-&nbsp;&nbsp;&nbsp;i.e. the company's default election is suboptimal — instruction must be sent<br><br>
-<strong style='color:#c8d8e8'>Inferred market price</strong><br>
-&nbsp;&nbsp;&nbsp;P_inferred = Scrip_issue_price ÷ (1 + discount%)<br>
-&nbsp;&nbsp;&nbsp;Used when no live market price is available (reverse-engineered from issue discount)
-</div>""", unsafe_allow_html=True)

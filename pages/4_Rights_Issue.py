@@ -3,18 +3,129 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3, re
 from datetime import date
-from utils.helpers import sf, fmt_date, days_to, tdot, disc_colour
-from utils.ui import apply_theme, dark_table
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 st.set_page_config(page_title="Rights Issue Analyser · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
-apply_theme()
+
+CSS = """<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+:root{--bg:#04060a;--bg-card:#080c12;--accent:#00d4aa;--accent-dim:#00d4aa12;--red:#ff3355;--amber:#f5a623;--yellow:#d4c200;--border:#0e1825;--border-mid:#182436;--border-bright:#243548;--text-primary:#c8d8e8;--text-secondary:#6a8090;--text-muted:#304050;--font-mono:'IBM Plex Mono',monospace;}
+html,body,.stApp,[class*="css"]{background:var(--bg)!important;color:var(--text-primary)!important;}
+#MainMenu,footer,header,[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
+.main .block-container{padding:1rem 2rem 3rem!important;max-width:100%!important;}
+section[data-testid="stSidebar"],section[data-testid="stSidebar"]>div:first-child{background:var(--bg)!important;border-right:1px solid var(--border-mid)!important;width:220px!important;min-width:220px!important;max-width:220px!important;}
+section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
+section[data-testid="stSidebar"] [aria-current="page"]{color:var(--accent)!important;background:var(--accent-dim)!important;border-radius:0!important;border:none!important;}
+section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:transparent!important;}
+section[data-testid="stSidebar"] a,section[data-testid="stSidebar"] li{border-radius:0!important;border:none!important;}
+section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
+section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
+[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"]{display:none!important;opacity:0!important;pointer-events:none!important;}
+html body section[data-testid="stSidebar"] *::before,html body section[data-testid="stSidebar"] *::after{content:none!important;display:none!important;}
+h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
+h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
+p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
+strong{color:var(--text-primary)!important;font-weight:500!important;}
+[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
+[data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
+[data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
+[data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
+[data-testid="stSelectbox"]>div>div{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.72rem!important;}
+[data-testid="stNumberInput"]>div>div>input{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.8rem!important;padding:0.3rem 0.5rem!important;}
+[data-testid="stExpander"]{background:transparent!important;border:1px solid var(--border-mid)!important;border-radius:0!important;margin-bottom:0.4rem!important;}
+[data-testid="stExpander"] summary{font-family:var(--font-mono)!important;font-size:0.62rem!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-secondary)!important;padding:0.45rem 0.7rem!important;background:var(--bg-card)!important;border-radius:0!important;}
+[data-testid="stExpander"] summary:hover{color:var(--text-primary)!important;}
+[data-testid="stExpander"][open]>summary{color:var(--accent)!important;border-bottom:1px solid var(--border-mid)!important;}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"]{background:var(--bg)!important;padding:0.7rem 0.8rem!important;}
+[data-testid="stAlert"],.stAlert{font-family:var(--font-mono)!important;font-size:0.66rem!important;border-radius:0!important;border:0!important;border-left:2px solid var(--accent)!important;background:var(--accent-dim)!important;color:var(--accent)!important;padding:0.3rem 0.6rem!important;}
+hr{border-color:var(--border-mid)!important;margin:0.5rem 0!important;}
+::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border-bright);}
+</style>"""
+st.markdown(CSS, unsafe_allow_html=True)
+
+import streamlit.components.v1 as _c
+_c.html("""<script>(function(){function k(){try{var d=window.parent.document;['stSidebarCollapseButton','collapsedControl'].forEach(function(id){d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el){el.style.cssText='display:none!important';});});}catch(e){}}k();[100,500,1500].forEach(function(t){setTimeout(k,t);});try{new MutationObserver(k).observe(window.parent.document.body,{childList:true,subtree:true});}catch(e){}})();</script>""", height=1)
 
 DB = "data/events.db"; TODAY = date.today()
+
+def sf(v,d=None):
+    try:
+        if v is None or str(v)=='nan': return d
+        return float(v)
+    except: return d
+
+def fmt_date(d):
+    if not d or str(d)=='nan': return '—'
+    return str(d)[:10]
+
+def days_to(d):
+    try: return (date.fromisoformat(str(d)[:10]) - TODAY).days
+    except: return None
+
+def tdot(days):
+    if days is None: return '⚪'
+    if days < 0: return '⚫'
+    if days <= 3: return '🔴'
+    if days <= 7: return '🟠'
+    if days <= 14: return '🟡'
+    return '🟢'
 
 def parse_ratio(s):
     if not s or str(s)=='nan': return None, None
     m = re.search(r'(\d+)\s+for\s+(\d+)', str(s), re.I)
     return (int(m.group(1)), int(m.group(2))) if m else (None, None)
+
+def disc_colour(v):
+    if v is None: return '#6a8090'
+    if v < -25: return '#ff3355'
+    if v < -15: return '#f5a623'
+    return '#d4c200'
+
+SORT_JS = """<script>
+(function() {
+    function sortTable(th) {
+        var table = th.closest('table');
+        var tbody = table.querySelector('tbody');
+        var rows  = Array.from(tbody.querySelectorAll('tr'));
+        var idx   = Array.from(th.parentElement.children).indexOf(th);
+        var asc   = th.dataset.sort !== 'asc';
+        rows.sort(function(a, b) {
+            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
+            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
+            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
+            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
+            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        });
+        th.parentElement.querySelectorAll('th').forEach(function(t){
+            t.dataset.sort='';
+            var s=t.querySelector('span.sort-ind');
+            if(s) s.textContent='';
+        });
+        th.dataset.sort = asc ? 'asc' : 'desc';
+        var ind = th.querySelector('span.sort-ind');
+        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
+        rows.forEach(function(r){ tbody.appendChild(r); });
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('thead th').forEach(function(th){
+            th.addEventListener('click', function(){ sortTable(th); });
+        });
+    });
+})();
+</script>"""
+
+def dark_table(rows, headers, highlights=None, height=None):
+    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
+    tbody = ''
+    for i,row in enumerate(rows):
+        bg = '#080c12' if i%2==0 else '#04060a'
+        hl = (highlights or {}).get(i,{})
+        cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
+        tbody += f'<tr>{cells}</tr>'
+    h_px = height or min(len(rows)*32+52, 560)
+    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
 
 @st.cache_data(ttl=300)
 def load_rights():
@@ -29,6 +140,7 @@ def load_rights():
         FROM events e JOIN rights_details r ON e.event_id=r.event_id
         WHERE e.event_type IN ('rights_issue','open_offer')
         AND e.status IN ('LIVE','UPCOMING')
+        AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
         AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
         ORDER BY r.discount_to_terp_pct ASC
     """, conn)
@@ -75,13 +187,10 @@ proceeds = sf(ev["gross_proceeds_mn"])
 uw       = ev["fully_underwritten"]
 ddl_days = days_to(ev["election_deadline"])
 dot      = tdot(ddl_days)
-_rn_raw, _rd_raw = parse_ratio(ev["rights_ratio"])
-if (_rn_raw is None or _rd_raw is None) and ev["rights_ratio"] and str(ev["rights_ratio"]) != "nan":
-    st.warning(f"Rights ratio '{ev['rights_ratio']}' could not be parsed — TERP, nil-paid, and dilution calculations use 1:1 fallback. Verify ratio format.")
-rn, rd = _rn_raw or 1, _rd_raw or 1
+rn, rd   = parse_ratio(ev["rights_ratio"]); rn = rn or 1; rd = rd or 1
 
 # Calculate TERP from first principles
-terp_calc = (rd*cur_px + rn*sub_px) / (rd+rn) if cur_px is not None and sub_px is not None else db_terp
+terp_calc = (rd*cur_px + rn*sub_px) / (rd+rn) if cur_px and sub_px else db_terp
 nil_calc  = max(0, terp_calc - sub_px) if terp_calc and sub_px else max(0, db_npv or 0)
 disc_calc = (sub_px/terp_calc - 1)*100 if terp_calc and sub_px else disc_pct
 prem_terp = (cur_px/terp_calc - 1)*100 if cur_px and terp_calc else None
@@ -267,56 +376,6 @@ with st.expander("◆  Take-up vs Sell Rights — P&L at Different Share Prices"
             unsafe_allow_html=True
         )
 
-        # Portfolio-level P&L — at position size from sidebar
-        if pos_shares > 0:
-            st.markdown(
-                "<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;"
-                "color:#304050;margin-top:0.8rem;margin-bottom:0.3rem'>"
-                f"Portfolio P&L — {pos_shares:,} shares — take-up vs lapse vs sell rights</p>",
-                unsafe_allow_html=True
-            )
-            rights_ent = pos_shares * rn / rd
-            port_takeup = [max(0, p - sub_px) * rights_ent for p in prices]
-            port_sell   = [max(0, t_at(p) - sub_px) * rights_ent for p in prices]
-            port_lapse  = [0.0] * len(prices)  # lapse = zero proceeds on rights
-
-            fig2 = go.Figure()
-            fig2.add_trace(go.Scatter(x=prices, y=port_takeup, name="Take up",
-                line=dict(color="#00d4aa", width=2.5),
-                hovertemplate=f"Price: %{{x:.2f}}<br>Take-up P&L: {ev['currency']}%{{y:,.0f}}<extra></extra>"))
-            fig2.add_trace(go.Scatter(x=prices, y=port_sell, name="Sell nil-paid",
-                line=dict(color="#f5a623", width=2, dash="dash"),
-                hovertemplate=f"Price: %{{x:.2f}}<br>Sell P&L: {ev['currency']}%{{y:,.0f}}<extra></extra>"))
-            fig2.add_trace(go.Scatter(x=prices, y=port_lapse, name="Lapse (forfeit)",
-                line=dict(color="#ff3355", width=1.5, dash="dot"),
-                hovertemplate="Lapse: forfeited rights<extra></extra>"))
-            for vx, col, lbl in [
-                (sub_px, "#ff3355", f"Sub {sub_px:.0f}"),
-                (terp_calc, "#304050", f"TERP {terp_calc:.0f}"),
-                (cur_px, "#6a8090", f"Now {cur_px:.0f}"),
-            ]:
-                fig2.add_vline(x=vx, line_color=col, line_width=1, line_dash="dot",
-                    annotation_text=lbl, annotation_font=dict(color=col, size=9, family="IBM Plex Mono"))
-            fig2.update_layout(
-                paper_bgcolor="#04060a", plot_bgcolor="#080c12",
-                font=dict(family="IBM Plex Mono", size=10, color="#6a8090"),
-                height=260, margin=dict(l=8, r=8, t=15, b=30),
-                legend=dict(font=dict(color="#6a8090", size=9), bgcolor="rgba(0,0,0,0)", y=0.98),
-            )
-            fig2.update_xaxes(title_text=f"Share price ({ev['currency']})", gridcolor="#0e1825", tickfont=dict(size=9))
-            fig2.update_yaxes(title_text=f"Total P&L ({ev['currency']})", gridcolor="#0e1825", tickfont=dict(size=9))
-            st.plotly_chart(fig2, use_container_width=True)
-            # Callout at current price
-            _tu_now  = max(0, cur_px - sub_px) * rights_ent
-            _sel_now = max(0, nil_calc) * rights_ent
-            st.markdown(
-                f"<p style='font-family:IBM Plex Mono;font-size:0.64rem;color:#6a8090'>"
-                f"At current price: take-up = <span style='color:#00d4aa'>{ev['currency']} {_tu_now:,.0f}</span>"
-                f" &nbsp;·&nbsp; sell nil-paid = <span style='color:#f5a623'>{ev['currency']} {_sel_now:,.0f}</span>"
-                f" &nbsp;·&nbsp; lapse = <span style='color:#ff3355'>forfeited</span>"
-                f"</p>", unsafe_allow_html=True
-            )
-
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4 — DILUTION TABLE
 # ═════════════════════════════════════════════════════════════════════════════
@@ -369,25 +428,9 @@ Taking up rights preserves economic position.
 with st.expander("◆  Settlement & Lender Considerations", expanded=False):
     col_a, col_b = st.columns(2)
     with col_a:
-        # Calculate T-2 business days from record date for lender recall deadline
-        _rec_date_str = fmt_date(ev.get("record_date"))
-        _recall_by_ri = "—"
-        if _rec_date_str != "—":
-            try:
-                from datetime import date as _d2, timedelta as _td2
-                _rec2 = _d2.fromisoformat(_rec_date_str)
-                _cnt2, _rb2 = 0, _rec2
-                while _cnt2 < 2:
-                    _rb2 -= _td2(days=1)
-                    if _rb2.weekday() < 5:
-                        _cnt2 += 1
-                _recall_by_ri = _rb2.isoformat()
-            except Exception:
-                _recall_by_ri = "T−2 from record"
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase'>Timeline</span><br><br>
 Ex-date: <span style='color:#c8d8e8'>{fmt_date(ev["ex_date"])}</span><br>
-Record date: <span style='color:#c8d8e8'>{fmt_date(ev.get("record_date"))}</span><br>
 Nil-paid trading opens: ex-date<br>
 Subscription deadline: <span style='color:#c8d8e8'>{fmt_date(ev["election_deadline"])}</span> ({ddl_days}d)<br>
 Payment/settlement: <span style='color:#c8d8e8'>{fmt_date(ev["payment_date"])}</span><br><br>
@@ -402,34 +445,8 @@ Shares on loan over ex-date: borrower receives nil-paid rights.
 Lender receives <strong style='color:#f5a623'>manufactured nil-paid rights</strong> from borrower.<br><br>
 Lender must instruct borrower on election before deadline.
 If stock not recalled, election instruction must go via borrower — coordination critical.<br><br>
-Recall by: <span style='color:#{"ff3355" if _recall_by_ri not in ("—","T−2 from record") else "6a8090"}'>{_recall_by_ri}</span> <span style='color:#304050'>(T−2 business days before record date)</span><br><br>
 Recall if nil-paid value ({ev["currency"]} {nil_calc:.2f}/right × {int(pos_shares*rn/rd):,} rights = <span style='color:#00d4aa'>{ev["currency"]} {int(pos_shares*rn/rd)*nil_calc:,.0f}</span>) exceeds lending income.
 </div>""", unsafe_allow_html=True)
 
     if ddl_days is not None and 0 <= ddl_days <= 5:
         st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  Subscription deadline {ddl_days}d — nil-paid rights trading closing imminently.</div>", unsafe_allow_html=True)
-
-# ═════════════════════════════════════════════════════════════════════════════
-# METHODOLOGY
-# ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Methodology & Formulas", expanded=False):
-    st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
-<span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Rights Issue Valuation</span><br><br>
-<strong style='color:#c8d8e8'>Theoretical Ex-Rights Price (TERP)</strong><br>
-&nbsp;&nbsp;&nbsp;TERP = (N_existing × P_cum + N_new × Sub_price) ÷ (N_existing + N_new)<br>
-&nbsp;&nbsp;&nbsp;Assumption: no market impact, no signalling effect, linear share dilution<br>
-&nbsp;&nbsp;&nbsp;Example — 1 for 4 at 80p, current 120p: TERP = (4×120 + 1×80) ÷ 5 = 112p<br><br>
-<strong style='color:#c8d8e8'>Nil-paid value (value of the right itself)</strong><br>
-&nbsp;&nbsp;&nbsp;Nil_paid = max(0, TERP − Sub_price)<br>
-&nbsp;&nbsp;&nbsp;This is the intrinsic value of the right to subscribe at Sub_price when stock trades at TERP<br>
-&nbsp;&nbsp;&nbsp;Traded in the market as a separate instrument between ex-date and subscription deadline<br><br>
-<strong style='color:#c8d8e8'>Discount to TERP</strong><br>
-&nbsp;&nbsp;&nbsp;Disc% = Sub_price ÷ TERP − 1  (typically negative — deeper = more dilutive)<br>
-&nbsp;&nbsp;&nbsp;Reflects how aggressively the issue is priced to ensure take-up<br><br>
-<strong style='color:#c8d8e8'>Maximum dilution (if all rights taken up)</strong><br>
-&nbsp;&nbsp;&nbsp;Dilution_max = N_new ÷ (N_existing + N_new)<br>
-&nbsp;&nbsp;&nbsp;Non-participating holders suffer this dilution to their economic position<br><br>
-<strong style='color:#c8d8e8'>Lender recall deadline</strong><br>
-&nbsp;&nbsp;&nbsp;Recall_by = Record_date − 2 business days<br>
-&nbsp;&nbsp;&nbsp;Shares must be back in the account before record date for the holder to receive nil-paid rights
-</div>""", unsafe_allow_html=True)
