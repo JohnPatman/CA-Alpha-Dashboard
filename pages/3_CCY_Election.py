@@ -3,144 +3,34 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3
 from datetime import date
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.helpers import sf, fmt_date, days_to, tdot, arb_colour
+from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="CCY Election Optimiser · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
-
-CSS = """<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
-:root{--bg:#04060a;--bg-card:#080c12;--accent:#00d4aa;--accent-dim:#00d4aa12;--red:#ff3355;--amber:#f5a623;--yellow:#d4c200;--border:#0e1825;--border-mid:#182436;--border-bright:#243548;--text-primary:#c8d8e8;--text-secondary:#6a8090;--text-muted:#304050;--font-mono:'IBM Plex Mono',monospace;}
-html,body,.stApp,[class*="css"]{background:var(--bg)!important;color:var(--text-primary)!important;}
-#MainMenu,footer,header,[data-testid="stToolbar"],[data-testid="stDecoration"],[data-testid="stStatusWidget"]{display:none!important;}
-.main .block-container{padding:1rem 2rem 3rem!important;max-width:100%!important;}
-section[data-testid="stSidebar"],section[data-testid="stSidebar"]>div:first-child{background:var(--bg)!important;border-right:1px solid var(--border-mid)!important;width:220px!important;min-width:220px!important;max-width:220px!important;}
-section[data-testid="stSidebar"] *{font-family:var(--font-mono)!important;color:var(--text-secondary)!important;}
-section[data-testid="stSidebar"] [aria-current="page"]{color:var(--accent)!important;background:var(--accent-dim)!important;border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] [aria-current="page"] *{color:var(--accent)!important;background:transparent!important;}
-section[data-testid="stSidebar"] a,section[data-testid="stSidebar"] li{border-radius:0!important;border:none!important;}
-section[data-testid="stSidebar"] label{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;}
-section[data-testid="stSidebar"] .stMarkdown p{font-size:0.58rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;border-bottom:1px solid var(--border-mid)!important;padding-bottom:0.25rem!important;margin-bottom:0.4rem!important;}
-[data-testid="stSidebarCollapseButton"],[data-testid="collapsedControl"]{display:none!important;opacity:0!important;pointer-events:none!important;}
-html body section[data-testid="stSidebar"] *::before,html body section[data-testid="stSidebar"] *::after{content:none!important;display:none!important;}
-h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weight:500!important;color:var(--accent)!important;letter-spacing:0.18em!important;text-transform:uppercase!important;padding:0.5rem 0 0.4rem!important;border-bottom:1px solid var(--border-mid)!important;margin-bottom:0.8rem!important;}
-h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
-p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
-strong{color:var(--text-primary)!important;font-weight:500!important;}
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
-[data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
-[data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
-[data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
-[data-testid="stSelectbox"]>div>div{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.72rem!important;}
-[data-testid="stNumberInput"]>div>div>input{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-radius:0!important;color:var(--text-primary)!important;font-family:var(--font-mono)!important;font-size:0.8rem!important;padding:0.3rem 0.5rem!important;}
-[data-testid="stExpander"]{background:transparent!important;border:1px solid var(--border-mid)!important;border-radius:0!important;margin-bottom:0.4rem!important;}
-[data-testid="stExpander"] summary{font-family:var(--font-mono)!important;font-size:0.62rem!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-secondary)!important;padding:0.45rem 0.7rem!important;background:var(--bg-card)!important;border-radius:0!important;}
-[data-testid="stExpander"] summary:hover{color:var(--text-primary)!important;}
-[data-testid="stExpander"][open]>summary{color:var(--accent)!important;border-bottom:1px solid var(--border-mid)!important;}
-[data-testid="stExpander"] [data-testid="stExpanderDetails"]{background:var(--bg)!important;padding:0.7rem 0.8rem!important;}
-[data-testid="stAlert"],.stAlert{font-family:var(--font-mono)!important;font-size:0.66rem!important;border-radius:0!important;border:0!important;border-left:2px solid var(--accent)!important;background:var(--accent-dim)!important;color:var(--accent)!important;padding:0.3rem 0.6rem!important;}
-hr{border-color:var(--border-mid)!important;margin:0.5rem 0!important;}
-::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border-bright);}
-</style>"""
-st.markdown(CSS, unsafe_allow_html=True)
-
-import streamlit.components.v1 as _c
-_c.html("""<script>(function(){function k(){try{var d=window.parent.document;['stSidebarCollapseButton','collapsedControl'].forEach(function(id){d.querySelectorAll('[data-testid="'+id+'"]').forEach(function(el){el.style.cssText='display:none!important';});});}catch(e){}}k();[100,500,1500].forEach(function(t){setTimeout(k,t);});try{new MutationObserver(k).observe(window.parent.document.body,{childList:true,subtree:true});}catch(e){}})();</script>""", height=1)
+apply_theme()
 
 DB = "data/events.db"; TODAY = date.today()
 
-def sf(v,d=None):
-    try:
-        if v is None or str(v)=='nan': return d
-        return float(v)
-    except: return d
-
-def fmt_date(d):
-    if not d or str(d)=='nan': return '—'
-    return str(d)[:10]
-
-def days_to(d):
-    try: return (date.fromisoformat(str(d)[:10]) - TODAY).days
-    except: return None
-
-def tdot(days):
-    if days is None: return '⚪'
-    if days < 0: return '⚫'
-    if days <= 3: return '🔴'
-    if days <= 7: return '🟠'
-    if days <= 14: return '🟡'
-    return '🟢'
-
-def arb_colour(v):
-    if v is None: return '#6a8090'
-    if v > 2.0: return '#00d4aa'
-    if v > 0.5: return '#d4c200'
-    if v > 0:   return '#6a8090'
-    return '#ff3355'
-
-SORT_JS = """<script>
-(function() {
-    function sortTable(th) {
-        var table = th.closest('table');
-        var tbody = table.querySelector('tbody');
-        var rows  = Array.from(tbody.querySelectorAll('tr'));
-        var idx   = Array.from(th.parentElement.children).indexOf(th);
-        var asc   = th.dataset.sort !== 'asc';
-        rows.sort(function(a, b) {
-            var av = a.cells[idx] ? a.cells[idx].textContent.trim() : '';
-            var bv = b.cells[idx] ? b.cells[idx].textContent.trim() : '';
-            var an = parseFloat(av.replace(/[^-\\d.]/g,''));
-            var bn = parseFloat(bv.replace(/[^-\\d.]/g,''));
-            if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
-            return asc ? av.localeCompare(bv) : bv.localeCompare(av);
-        });
-        th.parentElement.querySelectorAll('th').forEach(function(t){
-            t.dataset.sort='';
-            var s=t.querySelector('span.sort-ind');
-            if(s) s.textContent='';
-        });
-        th.dataset.sort = asc ? 'asc' : 'desc';
-        var ind = th.querySelector('span.sort-ind');
-        if(ind) ind.textContent = asc ? ' \u25b2' : ' \u25bc';
-        rows.forEach(function(r){ tbody.appendChild(r); });
-    }
-    document.addEventListener('DOMContentLoaded', function(){
-        document.querySelectorAll('thead th').forEach(function(th){
-            th.addEventListener('click', function(){ sortTable(th); });
-        });
-    });
-})();
-</script>"""
-
-def dark_table(rows, headers, highlights=None, height=None):
-    th = ''.join(f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:#304050;background:#04060a;border-bottom:1px solid #243548;text-align:left;white-space:nowrap">{h}</th>' for h in headers)
-    tbody = ''
-    for i,row in enumerate(rows):
-        bg = '#080c12' if i%2==0 else '#04060a'
-        hl = (highlights or {}).get(i,{})
-        cells = ''.join(f'<td style="padding:0.28rem 0.7rem;color:{hl.get(j,"#c8d8e8")};font-size:0.7rem;background:{bg};border-bottom:1px solid #0e1825;white-space:nowrap">{str(v) if v is not None else "—"}</td>' for j,v in enumerate(row))
-        tbody += f'<tr>{cells}</tr>'
-    h_px = height or min(len(rows)*32+52, 560)
-    _c.html(f'<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"><style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{background:#04060a;font-family:"IBM Plex Mono",monospace;}}table{{width:100%;border-collapse:collapse;}}tr:hover td{{background:#0e1825!important;}}</style></head><body><table><thead><tr>{th}</tr></thead><tbody>{tbody}</tbody></table></body></html>', height=h_px, scrolling=True)
-
 def migrate_db():
-    """Add rate_pre_deadline column if DB is on old schema."""
+    """Ensure rate_pre_deadline column exists and flags are set correctly."""
     conn = sqlite3.connect(DB)
+    # Step 1: add column if missing
     try:
         conn.execute("ALTER TABLE scrip_details ADD COLUMN rate_pre_deadline INTEGER DEFAULT 0")
         conn.commit()
-        # Flag known pre-deadline tickers
-        pre_deadline = ['AAF.L','STAN.L','RIO.L','AAL.L','ANTO.L','BHP.JO','HSBA.L','BHP.AX','RIO.AX']
-        for ticker in pre_deadline:
-            conn.execute("""UPDATE scrip_details SET rate_pre_deadline=1
-                WHERE event_id IN (
-                    SELECT event_id FROM events WHERE ticker=? AND event_type='fx_election'
-                )""", (ticker,))
-        conn.commit()
     except Exception:
-        pass  # column already exists
-    finally:
-        conn.close()
+        pass  # column already exists — that's fine
+
+    # Step 2: ALWAYS set correct flags regardless of column state
+    # This runs whether column was just created or already existed
+    pre_deadline = ['AAF.L','STAN.L','RIO.L','AAL.L','ANTO.L','BHP.JO','HSBA.L','BHP.AX','RIO.AX']
+    for ticker in pre_deadline:
+        conn.execute("""UPDATE scrip_details SET rate_pre_deadline=1
+            WHERE event_id IN (
+                SELECT event_id FROM events WHERE ticker=? AND event_type='fx_election'
+            )""", (ticker,))
+    conn.commit()
+    conn.close()
 
 migrate_db()
 
@@ -238,17 +128,20 @@ uplift  = co_gbp - mkt_gbp if co_gbp and mkt_gbp else None
 uplift_bps = uplift / mkt_gbp * 10000 if uplift and mkt_gbp else None
 
 # ── page header ───────────────────────────────────────────────────────────────
-st.title("◆ CCY Election Optimiser")
+st.title("◆ CCY Election Optimiser — Pre-Deadline Fixed Rate Only")
 
-# Pre-deadline filter banner
+# Pre-deadline filter banner — this is the defining analytical choice of this module
 total_ccy = len(df) + excluded_n
 st.markdown(
-    f"<div style='font-family:IBM Plex Mono;font-size:0.68rem;color:#6a8090;"
-    f"border:1px solid #182436;background:#080c12;padding:0.35rem 0.8rem;margin-bottom:0.6rem'>"
-    f"◆ &nbsp;Showing <strong style='color:#c8d8e8'>{len(df)} of {total_ccy} CCY elections</strong> where the company"
-    f" <strong style='color:#c8d8e8'>fixes the FX reference rate before the election deadline</strong>"
-    f" — genuine arb vs spot. "
-    f"<span style='color:#304050'>{excluded_n} events excluded (rate set at/after deadline — no locked-in arb).</span>"
+    f"<div style='font-family:IBM Plex Mono;font-size:0.70rem;color:#6a8090;"
+    f"border:1px solid #00d4aa40;border-left:3px solid #00d4aa;"
+    f"background:#00d4aa08;padding:0.5rem 0.9rem;margin-bottom:0.6rem'>"
+    f"<strong style='color:#00d4aa'>◆ Analytical filter:</strong> "
+    f"showing <strong style='color:#c8d8e8'>{len(df)} of {total_ccy} CCY elections</strong> "
+    f"where the company <strong style='color:#c8d8e8'>announced a fixed FX reference rate "
+    f"at the time of the dividend declaration</strong> — before the election deadline. "
+    f"This locks in the arb vs spot. The {excluded_n} excluded events have rates set "
+    f"at or after the deadline (no locked-in arb — currency preference only, not arbitrage)."
     f"</div>",
     unsafe_allow_html=True
 )
@@ -601,3 +494,30 @@ with st.expander("◆  Portfolio Alpha Aggregator — All CCY Elections", expand
             f"</p>",
             unsafe_allow_html=True
         )
+
+# ═════════════════════════════════════════════════════════════════════════════
+# METHODOLOGY
+# ═════════════════════════════════════════════════════════════════════════════
+with st.expander("◆  Methodology & Formulas", expanded=False):
+    st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
+<span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>CCY Election Arbitrage</span><br><br>
+<strong style='color:#c8d8e8'>The key condition for a genuine arb</strong><br>
+&nbsp;&nbsp;&nbsp;The company must publish a fixed FX reference rate at dividend announcement — before the election deadline.<br>
+&nbsp;&nbsp;&nbsp;If the rate is set at or after the deadline, there is no locked-in arb (rate_pre_deadline = 0, excluded).<br><br>
+<strong style='color:#c8d8e8'>Arbitrage percentage</strong><br>
+&nbsp;&nbsp;&nbsp;Arb% = (Co_rate ÷ Mkt_rate − 1) × 100<br>
+&nbsp;&nbsp;&nbsp;Arb_bps = Arb% × 100<br>
+&nbsp;&nbsp;&nbsp;Positive Arb% → company rate is more favourable than converting at spot<br><br>
+<strong style='color:#c8d8e8'>Per-share comparison (net of WHT)</strong><br>
+&nbsp;&nbsp;&nbsp;Div_GBP_co  = Cash_div_USD × Co_rate × (1 − WHT%)<br>
+&nbsp;&nbsp;&nbsp;Div_GBP_mkt = Cash_div_USD × Mkt_rate × (1 − WHT%)<br>
+&nbsp;&nbsp;&nbsp;Uplift/sh   = Div_GBP_co − Div_GBP_mkt<br><br>
+<strong style='color:#c8d8e8'>Break-even FX rate</strong><br>
+&nbsp;&nbsp;&nbsp;B/E = Co_rate (arb = 0 when spot reaches the company reference rate)<br>
+&nbsp;&nbsp;&nbsp;If spot strengthens to Co_rate, the arb disappears entirely<br><br>
+<strong style='color:#c8d8e8'>Cost of inaction (position-level)</strong><br>
+&nbsp;&nbsp;&nbsp;Cost = Uplift/sh × N_shares = forfeited alpha if default currency is kept<br><br>
+<strong style='color:#c8d8e8'>Filter logic</strong><br>
+&nbsp;&nbsp;&nbsp;rate_pre_deadline = 1 → company fixes FX before election deadline (genuine arb)<br>
+&nbsp;&nbsp;&nbsp;rate_pre_deadline = 0 → rate determined at/after deadline → excluded from this module
+</div>""", unsafe_allow_html=True)
