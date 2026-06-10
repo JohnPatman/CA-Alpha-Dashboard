@@ -83,7 +83,10 @@ def get_briefing():
     """, (today, today)).fetchall()
 
     conn.close()
-    return list(scrip), list(rights), list(tenders), list(mergers)
+    return ([dict(r) for r in scrip],
+            [dict(r) for r in rights],
+            [dict(r) for r in tenders],
+            [dict(r) for r in mergers])
 
 scrip_rows, rights_rows, tender_rows, merger_rows = get_briefing()
 
