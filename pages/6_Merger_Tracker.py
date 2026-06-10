@@ -88,7 +88,8 @@ ddl_days = days_to(ev["court_sanction_date"] or ev["election_deadline"])
 dot      = tdot(ddl_days)
 
 # Derived
-ann_ret_pct = spread / days_to_comp * 365 if spread and days_to_comp > 0 else None
+ann_days_actual = ddl_days if ddl_days and ddl_days > 0 else days_to_comp
+ann_ret_pct = spread / ann_days_actual * 365 if spread and ann_days_actual > 0 else None
 imp_prob    = implied_prob(spread, break_assume)
 # Express R/R as "making X% to risk Y%" — standard arb desk framing
 rr_display  = f"{spread:.2f}% : {abs(break_assume):.0f}%" if spread and break_assume else "—"
@@ -152,7 +153,8 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
         reg_r = str(r["regulatory_status"]).strip() if r["regulatory_status"] and str(r["regulatory_status"])!='nan' else "—"
         consid_r = str(r["consideration_type"]).strip() if r["consideration_type"] else "CASH"
         terms  = f"{r['currency']} {cps:.2f}" if cps else (str(r["share_ratio"]) if r["share_ratio"] and str(r["share_ratio"])!='nan' else "—")
-        ann_   = sp/days_to_comp*365 if sp and days_to_comp>0 else None
+        ann_d  = d if d and d > 0 else days_to_comp   # use actual days to close, fallback to assumption
+        ann_   = sp/ann_d*365 if sp and ann_d>0 else None
         prob_  = implied_prob(sp, break_assume)
         rr_    = abs(sp/break_assume) if sp and break_assume else None
 
@@ -199,7 +201,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
             ("Consideration",    f"{ev['currency']} {cash_ps:.2f}/sh" if cash_ps else str(ev["share_ratio"]) if ev["share_ratio"] and str(ev["share_ratio"])!='nan' else "—", ""),
             ("Current price",    f"{ev['currency']} {cur_px:.2f}" if cur_px else "—",  ""),
             ("Spread to terms",  f"{spread:+.2f}%" if spread else "—",                  "Gross upside"),
-            ("Annualised return",f"{ann_ret_pct:.1f}%" if ann_ret_pct else "—",         f"@ {days_to_comp}d to completion"),
+            ("Annualised return",f"{ann_ret_pct:.1f}%" if ann_ret_pct else "—",         f"@ {ann_days_actual}d to completion ({'actual' if ddl_days and ddl_days>0 else 'assumed'})"),
             ("Implied prob",     f"{imp_prob:.1f}%" if imp_prob else "—",               f"Break scenario: {break_assume}%"),
             ("Risk/reward",      rr_display,                                                    f"Making {spread:.2f}% to risk {abs(break_assume):.0f}%"),
             ("Break risk",       brk,                                                    ""),
@@ -232,7 +234,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
                     ("Current value",         f"{ev['currency']} {mkt_val:,.2f}",         f"@ {ev['currency']} {cur_px:.2f}"),
                     ("Deal value",            f"{ev['currency']} {deal_val:,.2f}",        f"@ {ev['currency']} {cash_ps:.2f}/sh"),
                     ("Gross P&L (deal)",      f"{ev['currency']} {gross_pnl:+,.2f}",      f"{gross_pct:+.2f}%"),
-                    ("Annualised return",      f"{ann_ret_pct:.1f}%" if ann_ret_pct else "—", f"@ {days_to_comp}d"),
+                    ("Annualised return",      f"{ann_ret_pct:.1f}%" if ann_ret_pct else "—", f"@ {ann_days_actual}d ({'actual' if ddl_days and ddl_days>0 else 'assumed'})"),
                     (f"Break P&L ({break_assume}%)",f"{ev['currency']} {break_loss:+,.2f}",f"If deal fails"),
                     ("Risk/reward (money)",   f"{rr_money:.2f}x",                         "Profit / potential loss"),
                     ("Implied prob",          f"{imp_prob:.1f}%" if imp_prob else "—",     f"At market spread"),
@@ -266,7 +268,7 @@ with st.expander("◆  Deal Universe — Spread vs Implied Probability", expande
         sp  = sf(r["spread_to_terms_pct"])
         d   = days_to(r["court_sanction_date"] or r["election_deadline"])
         if sp is None: continue
-        ann_= sp/days_to_comp*365 if days_to_comp>0 else 0
+        ann_= sp/(d if d and d>0 else days_to_comp)*365 if sp and days_to_comp>0 else 0
         prob_ = implied_prob(sp, break_assume) or 50
         brk_r = str(r["break_risk"]).upper() if r["break_risk"] and str(r["break_risk"])!='nan' else "MEDIUM"
         reg_r = str(r["regulatory_status"]).upper() if r["regulatory_status"] and str(r["regulatory_status"])!='nan' else "PENDING"

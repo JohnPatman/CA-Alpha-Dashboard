@@ -546,7 +546,9 @@ with st.expander(f"◆  Live Event Feed  —  {len(df_active)} events", expanded
         dfd["event_category"]    = dfd["event_category"].map(CATEGORY_LABELS)
         dfd["election_deadline"] = dfd["election_deadline"].apply(fmt_date)
         dfd["ex_date"]           = dfd["ex_date"].apply(fmt_date)
-        dfd["days_to_deadline"]  = dfd["days_to_deadline"].apply(safe_int)
+        dfd["days_to_deadline"]  = dfd["days_to_deadline"].apply(
+            lambda v: f"{int(v)}d" if v is not None and str(v) != "nan" else "—"
+        )
         dfd.columns = ["Ticker", "Company", "Country", "Type", "Category",
                        "Status", "Deadline", "Days", "Ex-Date", "Alpha"]
         render_table(dfd)

@@ -337,7 +337,7 @@ def _opp_card(label, ticker, detail, value, value_colour="#00d4aa", url_page=Non
         f"color:#304050;margin-bottom:0.18rem'>{label}</div>"
         f"<div style='font-size:0.8rem;font-weight:500;color:#c8d8e8;line-height:1.2'>{ticker}</div>"
         f"<div style='font-size:0.62rem;color:#6a8090;line-height:1.3'>{detail}</div>"
-        f"<div style='font-size:0.72rem;color:{value_colour};font-weight:500;margin-top:0.1rem'>{value}</div>"
+        f"<div style='font-size:0.92rem;color:{value_colour};font-weight:500;margin-top:0.1rem'>{value}</div>"
         f"</div>"
     )
 
@@ -448,36 +448,54 @@ st.markdown("## Modules")
 m1,m2,m3 = st.columns(3)
 with m1:
     st.markdown("**◆ Event Pipeline**")
-    st.markdown("Live event tracker with deadline countdown, traffic light status, and alpha flags.")
+    st.markdown("Live event tracker with deadline countdown, traffic light urgency, passed deadlines, and alpha flags.")
     if st.button("Open Event Pipeline →", key="m1"):
         st.switch_page("pages/1_Event_Pipeline.py")
 with m2:
     st.markdown("**◆ Scrip Arbitrage**")
-    st.markdown("Multi-name scrip dividend engine — cash vs scrip economics, lender conflict analysis.")
+    st.markdown("Cash vs scrip valuation, WHT impact, break-even analysis, lender recall logic. Formulas included.")
     if st.button("Open Scrip Arbitrage →", key="m2"):
         st.switch_page("pages/2_Scrip_Arbitrage.py")
 with m3:
     st.markdown("**◆ CCY Election Optimiser**")
-    st.markdown("Currency election analysis — company FX vs market FX, arbitrage detection.")
+    st.markdown("Pre-deadline fixed-rate filter only — genuine FX arb vs spot, cost of inaction. Formulas included.")
     if st.button("Open CCY Optimiser →", key="m3"):
         st.switch_page("pages/3_CCY_Election.py")
 
 m4,m5,m6 = st.columns(3)
 with m4:
     st.markdown("**◆ Rights Issue Analyser**")
-    st.markdown("TERP calculator, nil-paid value, take-up vs sell economics.")
+    st.markdown("TERP from first principles, nil-paid valuation, portfolio take-up vs sell vs lapse. Formulas included.")
     if st.button("Open Rights Analyser →", key="m4"):
         st.switch_page("pages/4_Rights_Issue.py")
 with m5:
     st.markdown("**◆ Tender Tracker**")
-    st.markdown("Proration modelling, dutch auction range analysis, spread to terms.")
+    st.markdown("Proration modelling, Dutch auction EV, odd lot arb, annualised return ranking. Formulas included.")
     if st.button("Open Tender Tracker →", key="m5"):
         st.switch_page("pages/5_Tender_Tracker.py")
 with m6:
     st.markdown("**◆ Merger & Scheme Tracker**")
-    st.markdown("Spread to terms, break risk, consideration election optimiser.")
+    st.markdown("Implied probability, reward:risk framing, consideration election optimiser. Formulas included.")
     if st.button("Open Merger Tracker →", key="m6"):
         st.switch_page("pages/6_Merger_Tracker.py")
+
+st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
+m7,m8,m9 = st.columns(3)
+with m7:
+    st.markdown("**◆ Closed Events**")
+    st.markdown("Post-deadline lifecycle view — election outcomes, alpha captured vs forfeited, feedback loop.")
+    if st.button("Open Closed Events →", key="m7"):
+        st.switch_page("pages/7_Closed_Events.py")
+with m8:
+    st.markdown("**◆ Priority Briefing**")
+    st.markdown("Cross-module morning brief — all action-required elections ranked by urgency and alpha.")
+    if st.button("Open Priority Briefing →", key="m8"):
+        st.switch_page("pages/8_Priority_Briefing.py")
+with m9:
+    st.markdown("**◆ ADR / Cross-Listed**")
+    st.markdown("Conversion-adjusted ADR vs primary listing arb — gross arb, friction, net signal. Methodology included.")
+    if st.button("Open ADR Analyser →", key="m9"):
+        st.switch_page("pages/9_ADR_Pricing.py")
 
 st.markdown("---")
 st.markdown(
@@ -496,11 +514,12 @@ st.markdown(
     "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
     "text-transform:uppercase'>About this project</span><br>"
     "A personal portfolio project built to demonstrate corporate actions analytics methodology "
-    "across six event categories: scrip dividend arbitrage, currency election optimisation, "
-    "rights issue valuation, tender offer spread analysis, and merger &amp; scheme arbitrage. "
+    "across nine modules: scrip dividend arbitrage, currency election optimisation, "
+    "rights issue valuation, tender offer spread analysis, merger &amp; scheme arbitrage, "
+    "closed event outcomes, cross-module priority briefing, and ADR / cross-listed pricing. "
     "Analytical frameworks — TERP from first principles, implied deal probability, CCY arb "
-    "detection, annualised return modelling, and lender recall logic — reflect genuine market "
-    "methodology applied to a synthetic dataset. "
+    "detection, annualised return modelling, lender recall logic, and ADR conversion arb — "
+    "reflect genuine market methodology applied to a synthetic dataset. "
     "Built in Python using Streamlit, SQLite, Pandas, and Plotly. "
     "<a href='https://github.com/JohnPatman/CA-Alpha-Dashboard' "
     "style='color:#304050;text-decoration:underline' target='_blank'>Source on GitHub ↗</a>"
