@@ -501,7 +501,7 @@ st.markdown("---")
 st.markdown(
     f"<p style='font-family:IBM Plex Mono,monospace;font-size:0.58rem;"
     f"color:#304050;letter-spacing:0.08em'>"
-    f"UNIVERSE  1,207 companies · 36 countries · {s['total']} events · "
+    f"UNIVERSE  {s['countries']} countries · {s['live']} live events · {s['upcoming']} upcoming · "
     f"AS AT  {date.today().isoformat()}</p>",
     unsafe_allow_html=True
 )

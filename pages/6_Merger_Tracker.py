@@ -153,8 +153,11 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
         reg_r = str(r["regulatory_status"]).strip() if r["regulatory_status"] and str(r["regulatory_status"])!='nan' else "—"
         consid_r = str(r["consideration_type"]).strip() if r["consideration_type"] else "CASH"
         terms  = f"{r['currency']} {cps:.2f}" if cps else (str(r["share_ratio"]) if r["share_ratio"] and str(r["share_ratio"])!='nan' else "—")
-        ann_d  = d if d and d > 0 else days_to_comp   # use actual days to close, fallback to assumption
+        ann_d  = d if d and d > 0 else days_to_comp
         ann_   = sp/ann_d*365 if sp and ann_d>0 else None
+        # Flag deals where court sanction date has passed (d <= 0) — in settlement
+        is_settling = d is not None and d <= 0
+        ann_display = "SETTLING" if is_settling else (f"{ann_:.1f}%" if ann_ else "—")
         prob_  = implied_prob(sp, break_assume)
         rr_    = abs(sp/break_assume) if sp and break_assume else None
 
@@ -168,7 +171,7 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
             terms,
             f"{r['currency']} {cur:.2f}" if cur else "—",
             f"{sp:+.2f}%" if sp is not None else "—",
-            f"{ann_:.1f}%" if ann_ else "—",
+            ann_display,
             f"{prob_:.0f}%" if prob_ else "—",
             reg_r,
             brk_r,
@@ -176,7 +179,7 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
         scan_rows.append(row)
         scan_hl[i] = {
             8:  spread_colour(sp),
-            9:  ann_colour(ann_),
+            9:  '#00d4aa' if is_settling else ann_colour(ann_),
             10: '#00d4aa' if prob_ and prob_>85 else '#d4c200' if prob_ and prob_>70 else '#f5a623',
             11: reg_colour(reg_r),
             12: risk_colour(brk_r),

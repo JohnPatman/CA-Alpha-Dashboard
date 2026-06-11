@@ -164,32 +164,37 @@ st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 with st.expander("◆  ADR Arb Scanner — All Pairs", expanded=True):
     scan_rows = []; scan_hl = {}
     for i,r in enumerate(processed):
-        act_flag = "◆ ACTION" if r["actionable"] else "—"
+        # Direction abbreviated: ▲ = buy local/sell ADR, ▼ = buy ADR/sell local
+        dir_short = "▲ Buy local" if r["arb_pct"] > 0 else "▼ Buy ADR"
+        act_flag  = "◆ ACTION" if r["actionable"] else "Monitor"
         row = [
             r["ticker_l"],
             r["ticker_a"],
-            r["company"][:20],
+            r["company"][:16],
             r["typ"],
-            f"USD {r['local_usd']:.4f}",
-            f"USD {r['implied_local_usd']:.4f}",
             f"{r['arb_pct']:+.3f}%",
-            f"{r['friction']:.2f}%",
             f"{r['net_arb']:+.3f}%",
-            r["direction"] if r["actionable"] else "Monitor",
+            dir_short if r["actionable"] else "—",
             act_flag,
         ]
         scan_rows.append(row)
         net = r["net_arb"]
         scan_hl[i] = {
-            6:  "#00d4aa" if r["arb_pct"] > 0 else "#ff3355",
-            8:  "#00d4aa" if net > 0.10 else "#ff3355" if net < -0.10 else "#6a8090",
-            10: "#00d4aa" if r["actionable"] else "#304050",
+            4: "#00d4aa" if r["arb_pct"] > 0 else "#ff3355",
+            5: "#00d4aa" if net > 0.10 else "#ff3355" if net < -0.10 else "#6a8090",
+            7: "#00d4aa" if r["actionable"] else "#304050",
         }
 
     dark_table(scan_rows,
-               ["Local","ADR/Alt","Company","Type","Local USD","Implied USD",
-                "Gross Arb","Friction","Net Arb","Direction","Signal"],
+               ["Local","ADR/Alt","Company","Type","Gross Arb","Net Arb","Direction","Signal"],
                scan_hl)
+    st.markdown(
+        "<p style='font-family:IBM Plex Mono;font-size:0.58rem;color:#304050;margin-top:0.2rem'>"
+        "Net arb = gross arb − round-trip friction (0.20–0.35%). "
+        "Full price breakdown and FX rate in deep-dive below. "
+        "Action flag: |net arb| ≥ 0.10%.</p>",
+        unsafe_allow_html=True
+    )
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — DEEP-DIVE (selected pair)
