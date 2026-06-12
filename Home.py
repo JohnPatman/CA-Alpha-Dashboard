@@ -418,7 +418,7 @@ col_a, col_b = st.columns(2)
 with col_a:
     st.markdown(
         "<p style='font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;"
-        "color:#304050;margin-bottom:0.4rem'>Live events by type</p>",
+        "color:#304050;margin-bottom:0.4rem'>Events by type (live + upcoming)</p>",
         unsafe_allow_html=True
     )
     df_type = get_type_breakdown()

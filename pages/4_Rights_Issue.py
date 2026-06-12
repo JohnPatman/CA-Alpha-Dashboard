@@ -30,7 +30,9 @@ def load_rights():
         WHERE e.event_type IN ('rights_issue','open_offer')
         AND e.status IN ('LIVE','UPCOMING')
         AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
-        ORDER BY r.discount_to_terp_pct ASC
+        ORDER BY
+            julianday(e.election_deadline)-julianday('now') ASC,
+            r.discount_to_terp_pct ASC
     """, conn)
     conn.close()
     return df

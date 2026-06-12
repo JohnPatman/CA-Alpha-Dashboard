@@ -534,7 +534,7 @@ with st.expander("◆  Deadline Countdown", expanded=True):
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — LIVE EVENT FEED (active events, default = Table)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Live Event Feed  —  {len(df_active)} events", expanded=True):
+with st.expander(f"◆  Live Event Feed  —  {len(df_active)} events  (+ {len(df_passed)} passed deadline — see below)", expanded=True):
     view = st.radio("View", ["Table", "Cards"], index=0, horizontal=True, label_visibility="collapsed")
 
     if view == "Table":
