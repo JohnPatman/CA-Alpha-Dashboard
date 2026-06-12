@@ -76,10 +76,10 @@ def scrip_outcome(ev, det):
         # Action was required — model recommendation was to elect non-default
         if ev["event_type"] == "fx_election":
             return ("ELECTED " + opt, "alpha",
-                    f"+{arb:.2f}% / {int((arb or 0)*100)}bps CCY arb captured" if arb else "Arb captured")
+                    f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb captured" if arb else "Arb captured")
         else:
             return ("ELECTED SCRIP" if opt=="SCRIP" else "ELECTED CASH", "alpha",
-                    f"+{prem:.2f}% scrip premium captured" if prem else "Premium captured")
+                    f"{prem:+.2f}% scrip premium captured" if prem else "Premium captured")
     else:
         return ("DEFAULT ACCEPTED", "neutral",
                 f"Default was optimal — no action needed")

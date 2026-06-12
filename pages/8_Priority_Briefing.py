@@ -163,10 +163,18 @@ for r in scrip_rows:
     if d is None or d > 3: continue
     prem  = sf(r["prem"])
     arb   = sf(r["ccy_arb"])
-    val   = f"+{prem:.2f}% scrip premium" if r["event_type"]=="scrip_dividend" and prem else \
-            f"+{arb:.2f}% / {int((arb or 0)*100)}bps CCY arb" if r["event_type"]=="fx_election" and arb else "—"
+    wht   = sf(r["wht"]) or 0
+    if r["event_type"]=="scrip_dividend":
+        if wht > 0 and (prem is None or prem < 1.0):
+            val = f"WHT {wht:.0f}% uplift — elect scrip for full dividend value"
+        else:
+            val = f"{prem:+.2f}% scrip premium" if prem else "Scrip premium"
+    elif r["event_type"]=="fx_election" and arb:
+        val = f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb"
+    else:
+        val = "—"
     action = f"Elect {r['optimal_election']} (default is {r['election_default']})"
-    wht_note = f"WHT {r['wht']:.0f}% drag on cash div" if r["wht"] and sf(r["wht"]) and sf(r["wht"])>0 else ""
+    wht_note = f"WHT {wht:.0f}% drag on cash div — full div value preserved in scrip" if wht > 0 else ""
     critical_items.append((d, event_card(r["ticker"],r["company_name"],r["event_type"],d,action,val,wht_note)))
 
 for r in tender_rows:
@@ -174,7 +182,7 @@ for r in tender_rows:
     if d is None or d > 3: continue
     prem = sf(r["prem"])
     ann  = prem/max(d,1)*365 if prem and d and d>0 else None
-    val  = f"{ann:.0f}% ann  (+{prem:.1f}% · {int(d)}d)" if ann else f"+{prem:.1f}% spread"
+    val  = f"{ann:.0f}% ann  (+{prem:.1f}% · {int(d)}d)" if ann else f"{prem:+.1f}% spread"
     odd  = f"Odd lot ≤{int(r['odd_thresh'])} guaranteed fill" if r["odd_thresh"] and r["odd_guar"]==1 else ""
     critical_items.append((d, event_card(r["ticker"],r["company_name"],"tender_offer",d,
                             "Tender shares before deadline",val,odd)))
@@ -207,8 +215,13 @@ for r in scrip_rows:
     d = sf(r["days"])
     if d is None or d <= 3 or d > 7: continue
     prem  = sf(r["prem"]); arb = sf(r["ccy_arb"])
-    val   = f"+{prem:.2f}% scrip premium" if r["event_type"]=="scrip_dividend" and prem else \
-            f"+{arb:.2f}% / {int((arb or 0)*100)}bps CCY arb" if r["event_type"]=="fx_election" and arb else "—"
+    wht_w = sf(r["wht"]) or 0
+    if r["event_type"]=="scrip_dividend":
+        val = f"WHT {wht_w:.0f}% uplift — elect scrip" if (wht_w > 0 and (prem is None or prem < 1.0)) else (f"{prem:+.2f}% scrip premium" if prem else "Scrip premium")
+    elif r["event_type"]=="fx_election" and arb:
+        val = f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb"
+    else:
+        val = "—"
     action = f"Elect {r['optimal_election']} — default {r['election_default']}"
     week_items.append((d, event_card(r["ticker"],r["company_name"],r["event_type"],d,action,val)))
 
@@ -217,7 +230,7 @@ for r in tender_rows:
     if d is None or d <= 3 or d > 7: continue
     prem = sf(r["prem"])
     ann  = prem/max(d,1)*365 if prem and d and d>0 else None
-    val  = f"{ann:.0f}% ann  (+{prem:.1f}% · {int(d)}d)" if ann else f"+{prem:.1f}%"
+    val  = f"{ann:.0f}% ann  (+{prem:.1f}% · {int(d)}d)" if ann else f"{prem:+.1f}%"
     week_items.append((d, event_card(r["ticker"],r["company_name"],"tender_offer",d,
                         "Tender before deadline",val)))
 
@@ -260,8 +273,8 @@ if merger_rows:
         reg_txt = str(r["reg"]).upper() if r["reg"] and str(r["reg"])!="nan" else "PENDING"
         action  = "Monitor spread — no election required" if str(r["consid"])=="CASH" else \
                   "Consider share/mixed election optimisation"
-        val_txt = (f"+{spread:.2f}% spread  ·  {ann_m:.0f}% ann" if ann_m
-                   else f"+{spread:.2f}% spread") if spread else "—"
+        val_txt = (f"{spread:+.2f}% spread  ·  {ann_m:.0f}% ann" if ann_m
+                   else f"{spread:+.2f}% spread") if spread else "—"
         note_txt = (f"Reg: {reg_txt}  ·  Break risk: {str(r['break_risk']).upper()}  "
                     f"·  Acquirer: {str(r['acquirer'])[:16] if r['acquirer'] else '—'}")
         card = event_card(r["ticker"], r["company_name"],
