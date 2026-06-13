@@ -5,6 +5,7 @@ from datetime import date
 from utils.helpers import sf, fmt_date, days_to, ann_ret, pct_colour, spread_colour, risk_colour
 from utils.ui import apply_theme, dark_table
 
+st.set_page_config(page_title="Closed Events · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
 DB    = "data/events.db"
 TODAY = date.today()

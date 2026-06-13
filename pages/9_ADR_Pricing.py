@@ -5,6 +5,7 @@ from datetime import date
 from utils.helpers import sf
 from utils.ui import apply_theme, dark_table
 
+st.set_page_config(page_title="ADR Pricing · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
 TODAY = date.today()
 
