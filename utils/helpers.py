@@ -54,6 +54,64 @@ def tdot(days):
 
 # ── Financial calculation helpers ────────────────────────────────────────────
 
+import re
+
+
+def parse_ratio(s):
+    """Parse a 'N per M' scrip/rights ratio string into (N, M) ints, or (None, None)."""
+    if not s or str(s) == 'nan':
+        return None, None
+    m = re.search(r'(\d+)\s+per\s+(\d+)', str(s), re.I)
+    return (int(m.group(1)), int(m.group(2))) if m else (None, None)
+
+
+def calc_scrip_prem(cash, scrip_px, ratio, wht=0.0, inferred_px=None):
+    """
+    Canonical scrip-vs-cash decision metric — the single source of truth shared
+    by the Scrip Arbitrage page, the Priority Briefing, and the Home Top-Opps card.
+
+    Returns (scrip_prem_pct, cash_net, scrip_val, optimal) — all per share.
+
+    scrip_prem_pct  > 0  → scrip worth more than cash net of WHT → optimal SCRIP
+    The premium is computed against the current market price (inferred_px) when
+    supplied, falling back to the issue/reference price.
+    """
+    rn, rd = parse_ratio(ratio)
+    if not rn or not rd or not cash:
+        return None, None, None, "—"
+    cur_px = inferred_px or scrip_px
+    if not cur_px:
+        return None, None, None, "—"
+    cash_net  = cash * (1 - (wht or 0.0) / 100)
+    scrip_val = (rn / rd) * cur_px
+    prem      = (scrip_val - cash_net) / cash_net * 100 if cash_net else 0
+    opt       = "SCRIP" if prem > 0 else "CASH"
+    return prem, cash_net, scrip_val, opt
+
+
+def scrip_decision(cash_amount, scrip_issue_price, scrip_ratio,
+                   scrip_discount_pct, withholding_tax_pct, election_default):
+    """
+    Wrapper that takes raw scrip_details fields and returns the full decision
+    tuple: (prem_pct, optimal_election, action_required, inferred_current_px).
+
+    `scrip_discount_pct` is the stored issue-price-to-market figure used ONLY to
+    infer the current market price (P_inferred = issue_px / (1 + disc/100)); it is
+    NOT the scrip premium. The premium and optimal election are computed here so
+    every page agrees. action_required is True when the company default differs
+    from the computed optimal election.
+    """
+    cash = sf(cash_amount)
+    sp   = sf(scrip_issue_price)
+    disc = sf(scrip_discount_pct)
+    wht  = sf(withholding_tax_pct, 0.0)
+    inferred = sp / (1 + disc / 100) if (sp and disc is not None and (1 + disc / 100) != 0) else sp
+    prem, _, _, opt = calc_scrip_prem(cash, sp, scrip_ratio, wht, inferred)
+    default = str(election_default).upper() if election_default and str(election_default) != 'nan' else "CASH"
+    action_req = (default != opt) if opt != "—" else False
+    return prem, opt, action_req, inferred
+
+
 def ann_ret(prem_pct, days):
     """
     Annualised return from a percentage spread over N calendar days.
