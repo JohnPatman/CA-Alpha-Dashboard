@@ -6,6 +6,7 @@ from datetime import date, timedelta
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.db import get_live_events, get_filter_options, traffic_light
+from utils.helpers import scrip_decision
 
 st.set_page_config(
     page_title="Event Pipeline · CA Alpha",
@@ -244,11 +245,18 @@ def safe_int(v):
 def alpha_flag(row):
     flags = []
     t = row.get("event_type", "")
-    if t in ("scrip_dividend", "fx_election"):
+    if t == "fx_election":
         arb  = row.get("fx_arbitrage_pct")
-        disc = row.get("scrip_discount_pct")
         if arb and float(arb) > 1.5:   flags.append(f"CCY arb {float(arb):.2f}%")
-        if disc and float(disc) > 0:   flags.append("Scrip premium")
+    if t == "scrip_dividend":
+        # Canonical scrip decision (net of WHT) — not the stored scrip_discount_pct,
+        # which is an issue-price input, not the premium. Flag only when scrip is
+        # the optimal election and the company default would forfeit it.
+        prem, opt, action_req, _ = scrip_decision(
+            row.get("cash_amount"), row.get("scrip_issue_price"), row.get("scrip_ratio"),
+            row.get("scrip_discount_pct"), row.get("withholding_tax_pct"), row.get("election_default"))
+        if action_req and opt == "SCRIP" and prem is not None:
+            flags.append("Scrip premium")
     if t == "rights_issue":
         disc = row.get("discount_to_terp_pct")
         if disc and float(disc) < -25: flags.append(f"Deep discount {float(disc):.1f}%")
@@ -322,8 +330,17 @@ def render_cards(df_section):
                 parts.append(f"CCY  {row['dividend_currency_opts']}")
             if row.get("fx_arbitrage_pct") and str(row["fx_arbitrage_pct"]) != "nan":
                 parts.append(f"CCY arb  {float(row['fx_arbitrage_pct']):.2f}%")
-            if row.get("optimal_election") and str(row["optimal_election"]) != "nan":
-                parts.append(f"Optimal  {row['optimal_election']}")
+            if t == "fx_election":
+                if row.get("optimal_election") and str(row["optimal_election"]) != "nan":
+                    parts.append(f"Optimal  {row['optimal_election']}")
+            else:  # scrip_dividend — canonical decision, not stored field
+                _prem, _opt, _act, _ = scrip_decision(
+                    row.get("cash_amount"), row.get("scrip_issue_price"), row.get("scrip_ratio"),
+                    row.get("scrip_discount_pct"), row.get("withholding_tax_pct"), row.get("election_default"))
+                if _opt != "—":
+                    if _prem is not None:
+                        parts.append(f"Scrip prem  {_prem:+.2f}%")
+                    parts.append(f"Optimal  {_opt}")
         elif t in ("rights_issue", "open_offer"):
             if row.get("rights_ratio") and str(row["rights_ratio"]) != "nan":
                 parts.append(f"Ratio  {row['rights_ratio']}")

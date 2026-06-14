@@ -387,7 +387,7 @@ if tops["tender"]:
     ann = t[3] / ddl * 365 if (ddl and ddl > 0) else None
     oc3.markdown(_opp_card(
         "Best Tender Return", t[0], t[1],
-        f"{ann:.0f}% ann  ({t[3]:+.1f}% · {ddl}d)" if ann else f"{t[3]:+.1f}% spread"
+        f"{ann:.0f}% ann-eq  ({t[3]:+.1f}% · {ddl}d)" if ann else f"{t[3]:+.1f}% spread"
     ), unsafe_allow_html=True)
 else:
     oc3.markdown(_opp_card("Best Tender Return","—","No active fixed tenders","—","#304050"), unsafe_allow_html=True)

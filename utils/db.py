@@ -80,6 +80,7 @@ def get_live_events(filters=None):
             s.cash_amount,
             s.cash_currency,
             s.scrip_issue_price,
+            s.scrip_ratio,
             s.dividend_currency_opts,
             s.company_fx_rate,
             s.market_fx_rate,

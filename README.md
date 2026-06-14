@@ -5,6 +5,9 @@
 
 A CA desk decision tool built to demonstrate corporate actions analytics methodology across nine modules. Most CA tools stop at showing an event list. This one adds the decision layer — for each event type, what action is needed, what is the value of taking it, and what does doing nothing cost.
 
+![CA Alpha Dashboard — Priority Briefing](docs/priority_briefing.png)
+<sub>Priority Briefing — the cross-module morning brief ranking every action-required election by urgency and alpha.</sub>
+
 ---
 
 ## What it does
