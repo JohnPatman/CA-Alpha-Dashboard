@@ -156,12 +156,12 @@ with st.expander("◆  Rights Issue Scanner — All Live Events", expanded=True)
             f"{r['currency']} {sub:.2f}" if sub else "—",
             f"{r['currency']} {t_calc:.2f}" if t_calc else "—",
             f"{disc:+.1f}%" if disc is not None else "—",
-            f"{r['currency']} {np_:.2f}" if np_ else "—",
+            "N/A" if str(r["rights_type"]).upper()=="OPEN_OFFER" else (f"{r['currency']} {np_:.2f}" if np_ else "—"),
             f"{r['currency']} {proc:,.0f}m" if proc else "—",
             "✓" if r["fully_underwritten"]==1 else "—",
         ]
         scan_rows.append(row)
-        scan_hl[i] = {9:disc_colour(disc), 10:'#00d4aa' if np_>0 else '#304050'}
+        scan_hl[i] = {9:disc_colour(disc), 10:'#304050' if str(r["rights_type"]).upper()=="OPEN_OFFER" else ('#00d4aa' if np_>0 else '#304050')}
 
     dark_table(scan_rows,
                ["Ticker","Company","Country","Type","Ratio","Deadline","Days","Sub Px","TERP","Disc%","Nil-Paid","Proceeds","UW"],
@@ -207,7 +207,7 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
                     ("Existing shares",     f"{pos_shares:,}",                            ""),
                     ("Rights entitlement",  f"{new_ent:,} rights",                        f"{rn}:{rd} ratio"),
                     ("Cost to take up",     f"{ev['currency']} {sub_cost:,.2f}",          f"@ {ev['currency']} {sub_px:.2f}/sh"),
-                    ("Nil-paid value",      f"{ev['currency']} {nil_tot:,.2f}",           f"@ {ev['currency']} {nil_calc:.2f}/right"),
+                    ("Nil-paid value",      "N/A" if is_open_offer else f"{ev['currency']} {nil_tot:,.2f}",           "Non-renounceable" if is_open_offer else f"@ {ev['currency']} {nil_calc:.2f}/right"),
                     ("Post-TERP (take up)", f"{ev['currency']} {post_take:,.2f}",         f"{pos_shares+new_ent:,} sh × {terp_calc:.2f}"),
                     ("Post-TERP (lapse)",   f"{ev['currency']} {post_lapse:,.2f}",        f"{pos_shares:,} sh × {terp_calc:.2f}"),
                     ("Max dilution",        f"{dilution:.1f}%",                            "If you lapse, others take up"),
@@ -267,16 +267,18 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
         fig.update_xaxes(title_text=f"Share price ({ev['currency']})",gridcolor="#0e1825",tickfont=dict(size=9))
         fig.update_yaxes(title_text="P&L per right",gridcolor="#0e1825",tickfont=dict(size=9))
         st.plotly_chart(fig, use_container_width=True)
+        if is_open_offer:
+            _cap = (f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
+                    f" &nbsp;·&nbsp; <span style='color:#6a8090'>Non-renounceable — take up or lapse only</span>")
+        elif cur_px > sub_px:
+            _cap = (f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
+                    f" &nbsp;·&nbsp; Nil-paid value today: <span style='color:#00d4aa'>{ev['currency']} {nil_calc:.2f}/right</span>"
+                    f" &nbsp;·&nbsp; <span style='color:#00d4aa'>Take up rights — positive P&L at current price</span>")
+        else:
+            _cap = (f"Break-even: <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
+                    f" &nbsp;·&nbsp; <span style='color:#f5a623'>Consider selling nil-paid rights in market</span>")
         st.markdown(
-            f"<p style='font-family:IBM Plex Mono;font-size:0.66rem;color:#6a8090'>"
-            f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
-            f" &nbsp;·&nbsp; Nil-paid value today: <span style='color:#00d4aa'>{ev['currency']} {nil_calc:.2f}/right</span>"
-            f" &nbsp;·&nbsp; "
-            f"<span style='color:#00d4aa'>Take up rights — positive P&L at current price</span>"
-            if cur_px > sub_px else
-            f"Break-even: <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
-            f" &nbsp;·&nbsp; <span style='color:#f5a623'>Consider selling nil-paid rights in market</span>"
-            ,
+            f"<p style='font-family:IBM Plex Mono;font-size:0.66rem;color:#6a8090'>{_cap}</p>",
             unsafe_allow_html=True
         )
 
@@ -285,7 +287,7 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
             st.markdown(
                 "<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;"
                 "color:#304050;margin-top:0.8rem;margin-bottom:0.3rem'>"
-                f"Portfolio P&L — {pos_shares:,} shares — take-up vs lapse vs sell rights</p>",
+                f"Portfolio P&L — {pos_shares:,} shares — {'take-up vs lapse' if is_open_offer else 'take-up vs lapse vs sell rights'}</p>",
                 unsafe_allow_html=True
             )
             rights_ent = pos_shares * rn / rd
@@ -297,9 +299,10 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
             fig2.add_trace(go.Scatter(x=prices, y=port_takeup, name="Take up",
                 line=dict(color="#00d4aa", width=2.5),
                 hovertemplate=f"Price: %{{x:.2f}}<br>Take-up P&L: {ev['currency']}%{{y:,.0f}}<extra></extra>"))
-            fig2.add_trace(go.Scatter(x=prices, y=port_sell, name="Sell nil-paid",
-                line=dict(color="#f5a623", width=2, dash="dash"),
-                hovertemplate=f"Price: %{{x:.2f}}<br>Sell P&L: {ev['currency']}%{{y:,.0f}}<extra></extra>"))
+            if not is_open_offer:
+                fig2.add_trace(go.Scatter(x=prices, y=port_sell, name="Sell nil-paid",
+                    line=dict(color="#f5a623", width=2, dash="dash"),
+                    hovertemplate=f"Price: %{{x:.2f}}<br>Sell P&L: {ev['currency']}%{{y:,.0f}}<extra></extra>"))
             fig2.add_trace(go.Scatter(x=prices, y=port_lapse, name="Lapse (forfeit)",
                 line=dict(color="#ff3355", width=1.5, dash="dot"),
                 hovertemplate="Lapse: forfeited rights<extra></extra>"))
@@ -322,10 +325,11 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
             # Callout at current price
             _tu_now  = max(0, cur_px - sub_px) * rights_ent
             _sel_now = max(0, nil_calc) * rights_ent
+            _sell_seg = "" if is_open_offer else f" &nbsp;·&nbsp; sell nil-paid = <span style='color:#f5a623'>{ev['currency']} {_sel_now:,.0f}</span>"
             st.markdown(
                 f"<p style='font-family:IBM Plex Mono;font-size:0.64rem;color:#6a8090'>"
                 f"At current price: take-up = <span style='color:#00d4aa'>{ev['currency']} {_tu_now:,.0f}</span>"
-                f" &nbsp;·&nbsp; sell nil-paid = <span style='color:#f5a623'>{ev['currency']} {_sel_now:,.0f}</span>"
+                f"{_sell_seg}"
                 f" &nbsp;·&nbsp; lapse = <span style='color:#ff3355'>forfeited</span>"
                 f"</p>", unsafe_allow_html=True
             )
@@ -397,30 +401,51 @@ with st.expander("◆  Settlement & Lender Considerations", expanded=False):
                 _recall_by_ri = _rb2.isoformat()
             except Exception:
                 _recall_by_ri = "T−2 from record"
+        _np_trading = "Entitlement non-renounceable — cannot be traded" if is_open_offer else "Nil-paid trading opens: ex-date"
+        _np_ticker = str(ev["nil_paid_ticker"]) if ev["nil_paid_ticker"] and str(ev["nil_paid_ticker"])!='nan' else "Check prospectus"
+        _np_tail = ("<span style='color:#6a8090'>Non-renounceable — no nil-paid instrument</span>" if is_open_offer
+                    else f"Nil-paid ticker: <span style='color:#c8d8e8'>{_np_ticker}</span><br>Current nil-paid value: <span style='color:#00d4aa'>{ev['currency']} {nil_calc:.2f}</span>")
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase'>Timeline</span><br><br>
 Ex-date: <span style='color:#c8d8e8'>{fmt_date(ev["ex_date"])}</span><br>
 Record date: <span style='color:#c8d8e8'>{fmt_date(ev.get("record_date"))}</span><br>
-Nil-paid trading opens: ex-date<br>
+{_np_trading}<br>
 Subscription deadline: <span style='color:#c8d8e8'>{fmt_date(ev["election_deadline"])}</span> ({ddl_days}d)<br>
 Payment/settlement: <span style='color:#c8d8e8'>{fmt_date(ev["payment_date"])}</span><br><br>
-Nil-paid ticker: <span style='color:#c8d8e8'>{str(ev["nil_paid_ticker"]) if ev["nil_paid_ticker"] and str(ev["nil_paid_ticker"])!='nan' else "Check prospectus"}</span><br>
-Current nil-paid value: <span style='color:#00d4aa'>{ev["currency"]} {nil_calc:.2f}</span>
+{_np_tail}
 </div>""", unsafe_allow_html=True)
 
     with col_b:
+        _recall_html = f"<span style='color:#{'ff3355' if _recall_by_ri not in ('—','T−2 from record') else '6a8090'}'>{_recall_by_ri}</span> <span style='color:#304050'>(T−2 business days before record date)</span>"
+        if is_open_offer:
+            _lender_body = (
+                "Shares on loan over record date: borrower is holder of record and receives the "
+                "<strong style='color:#f5a623'>non-renounceable</strong> entitlement.<br><br>"
+                "The entitlement cannot be sold or manufactured back as a tradeable right. To "
+                "participate, the lender must recall before record date to become holder of record "
+                "and decide take-up vs lapse.<br><br>"
+                f"Recall by: {_recall_html}<br><br>"
+                "No nil-paid value to capture — the recall decision turns on the take-up opportunity "
+                "(subscribe below TERP), not on selling rights."
+            )
+        else:
+            _lender_body = (
+                "Shares on loan over ex-date: borrower receives nil-paid rights. "
+                "Lender receives <strong style='color:#f5a623'>manufactured nil-paid rights</strong> from borrower.<br><br>"
+                "Lender must instruct borrower on election before deadline. "
+                "If stock not recalled, election instruction must go via borrower — coordination critical.<br><br>"
+                f"Recall by: {_recall_html}<br><br>"
+                f"Recall if nil-paid value ({ev['currency']} {nil_calc:.2f}/right × {int(pos_shares*rn/rd):,} rights = "
+                f"<span style='color:#00d4aa'>{ev['currency']} {int(pos_shares*rn/rd)*nil_calc:,.0f}</span>) exceeds lending income."
+            )
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase'>Lender Considerations</span><br><br>
-Shares on loan over ex-date: borrower receives nil-paid rights.
-Lender receives <strong style='color:#f5a623'>manufactured nil-paid rights</strong> from borrower.<br><br>
-Lender must instruct borrower on election before deadline.
-If stock not recalled, election instruction must go via borrower — coordination critical.<br><br>
-Recall by: <span style='color:#{"ff3355" if _recall_by_ri not in ("—","T−2 from record") else "6a8090"}'>{_recall_by_ri}</span> <span style='color:#304050'>(T−2 business days before record date)</span><br><br>
-Recall if nil-paid value ({ev["currency"]} {nil_calc:.2f}/right × {int(pos_shares*rn/rd):,} rights = <span style='color:#00d4aa'>{ev["currency"]} {int(pos_shares*rn/rd)*nil_calc:,.0f}</span>) exceeds lending income.
+{_lender_body}
 </div>""", unsafe_allow_html=True)
 
     if ddl_days is not None and 0 <= ddl_days <= 5:
-        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  Subscription deadline {ddl_days}d — nil-paid rights trading closing imminently.</div>", unsafe_allow_html=True)
+        _imm_tail = "election window closing imminently" if is_open_offer else "nil-paid rights trading closing imminently"
+        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  Subscription deadline {ddl_days}d — {_imm_tail}.</div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # METHODOLOGY
