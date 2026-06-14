@@ -352,7 +352,7 @@ if tops["scrip"]:
     ddl = (date.fromisoformat(t[4]) - date.today()).days if t[4] else None
     oc1.markdown(_opp_card(
         "Best Scrip Premium", t[0], t[1],
-        f"+{t[3]:.2f}% scrip premium · {ddl}d" if ddl is not None else f"+{t[3]:.2f}% scrip premium"
+        f"{t[3]:+.2f}% scrip premium · {ddl}d" if ddl is not None else f"{t[3]:+.2f}% scrip premium"
     ), unsafe_allow_html=True)
 else:
     oc1.markdown(_opp_card("Best Scrip Premium","—","No actionable scrip events","—","#304050"), unsafe_allow_html=True)
@@ -362,7 +362,7 @@ if tops["ccy"]:
     ddl = (date.fromisoformat(t[4]) - date.today()).days if t[4] else None
     oc2.markdown(_opp_card(
         "Best CCY Arb", t[0], t[1],
-        f"+{t[2]:.2f}% / {int(t[2]*100)}bps · {ddl}d" if ddl is not None else f"+{t[2]:.2f}%"
+        f"{t[2]:+.2f}% / {int(abs(t[2])*100)}bps · {ddl}d" if ddl is not None else f"{t[2]:+.2f}%"
     ), unsafe_allow_html=True)
 else:
     oc2.markdown(_opp_card("Best CCY Arb","—","No pre-deadline rate events","—","#304050"), unsafe_allow_html=True)
@@ -382,7 +382,7 @@ if tops["merger"]:
     t = tops["merger"]
     oc4.markdown(_opp_card(
         "Best Merger Spread", t[0], f"{t[1]}  ·  LOW risk",
-        f"+{t[3]:.2f}% spread  ·  {t[4]}"
+        f"{t[3]:+.2f}% spread  ·  {t[4]}"
     ), unsafe_allow_html=True)
 else:
     oc4.markdown(_opp_card("Best Merger Spread","—","No LOW risk live deals","—","#304050"), unsafe_allow_html=True)

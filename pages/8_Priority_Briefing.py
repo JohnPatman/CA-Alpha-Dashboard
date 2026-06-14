@@ -175,7 +175,7 @@ for r in scrip_rows:
     else:
         val = "—"
     action = f"Elect {r['optimal_election']} (default is {r['election_default']})"
-    wht_note = f"WHT {wht:.0f}% drag on cash div — full div value preserved in scrip" if wht > 0 else ""
+    wht_note = "" if val.startswith("WHT") else (f"WHT {wht:.0f}% drag on cash div" if wht > 0 else "")
     critical_items.append((d, event_card(r["ticker"],r["company_name"],r["event_type"],d,action,val,wht_note)))
 
 for r in tender_rows:
