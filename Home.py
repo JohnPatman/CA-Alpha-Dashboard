@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import date
+from utils.helpers import sf, scrip_decision
 
 st.set_page_config(
     page_title="CA Alpha Dashboard",
@@ -252,16 +253,27 @@ def get_top_opportunities():
     c    = conn.cursor()
     today = date.today().isoformat()
 
-    # Best scrip: highest scrip premium where default≠optimal
-    scrip = c.execute("""
+    # Best scrip: highest COMPUTED scrip premium where the company default is
+    # suboptimal. Uses the canonical scrip_decision helper so the Home card
+    # agrees with the Scrip Arbitrage module and the Priority Briefing.
+    _scrip_rows = c.execute("""
         SELECT e.ticker, e.company_name, e.currency, s.scrip_discount_pct,
-               e.election_deadline
+               e.election_deadline, s.cash_amount, s.scrip_issue_price,
+               s.scrip_ratio, s.withholding_tax_pct, s.election_default
         FROM events e JOIN scrip_details s ON e.event_id=s.event_id
         WHERE e.event_type='scrip_dividend' AND e.status='LIVE'
         AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
-        AND s.election_default != s.optimal_election
-        AND s.scrip_discount_pct IS NOT NULL
-        ORDER BY s.scrip_discount_pct DESC LIMIT 1""", (today,)).fetchone()
+    """, (today,)).fetchall()
+    scrip = None
+    _best = None
+    for row in _scrip_rows:
+        prem, opt, action_req, _ = scrip_decision(
+            row[5], row[6], row[7], row[3], row[8], row[9])
+        if not action_req or opt != "SCRIP" or prem is None:
+            continue
+        if _best is None or prem > _best:
+            _best = prem
+            scrip = (row[0], row[1], row[2], prem, row[4])
 
     # Best CCY arb: highest arb bps, rate pre-deadline only
     ccy = c.execute("""
@@ -273,7 +285,7 @@ def get_top_opportunities():
         AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
         ORDER BY s.fx_arbitrage_pct DESC LIMIT 1""", (today,)).fetchone()
 
-    # Best tender: highest annualised return
+    # Best tender: highest proration-adjusted (expected) annualised return
     from datetime import date as _d
     tender = c.execute("""
         SELECT e.ticker, e.company_name, e.currency,
@@ -283,7 +295,9 @@ def get_top_opportunities():
         AND (e.election_deadline IS NULL OR e.election_deadline >= ?)
         AND t.premium_to_mkt_pct IS NOT NULL AND t.tender_type='FIXED'
         AND e.election_deadline IS NOT NULL
-        ORDER BY t.premium_to_mkt_pct / MAX(
+        ORDER BY (t.premium_to_mkt_pct * (CASE
+                    WHEN t.proration_expected=1 AND t.estimated_proration_pct IS NOT NULL
+                    THEN t.estimated_proration_pct/100.0 ELSE 1 END)) / MAX(
             (julianday(e.election_deadline) - julianday(?)), 1
         ) DESC LIMIT 1""", (today, today)).fetchone()
 

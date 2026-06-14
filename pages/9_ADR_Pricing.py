@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import math
 from datetime import date
 from utils.helpers import sf
 from utils.ui import apply_theme, dark_table
@@ -111,7 +112,10 @@ def calc_arb(row):
         other_usd = adr_px
 
     arb_pct   = (implied_local_usd - local_usd) / local_usd * 100
-    net_arb   = arb_pct - friction
+    # Round-trip friction is a cost that always erodes the edge toward zero,
+    # regardless of which leg is bought. Subtracting it with the sign of the
+    # gross arb keeps "buy ADR" (negative) rows from being inflated.
+    net_arb   = arb_pct - math.copysign(friction, arb_pct) if arb_pct else -friction
     direction = "BUY LOCAL / SELL ADR" if arb_pct > 0 else "BUY ADR / SELL LOCAL"
     actionable = abs(net_arb) >= 0.10  # net of friction
 
@@ -229,7 +233,7 @@ c5.metric("Net Arb",         f"{r['net_arb']:+.3f}%",
 # Arb breakdown bar chart — percentages only (prices are incomparable scale)
 fig = go.Figure()
 bar_labels = ["Gross Arb", "Round-trip Friction", "Net Arb"]
-bar_values = [r["arb_pct"], -r["friction"], r["net_arb"]]
+bar_values = [r["arb_pct"], -math.copysign(r["friction"], r["arb_pct"]), r["net_arb"]]
 bar_colours = [
     "#00d4aa" if r["arb_pct"] > 0 else "#ff3355",
     "#ff3355",

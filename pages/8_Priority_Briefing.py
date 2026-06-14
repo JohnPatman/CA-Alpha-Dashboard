@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 from datetime import date, timedelta
-from utils.helpers import sf, fmt_date, days_to, tdot, ann_ret
+from utils.helpers import sf, fmt_date, days_to, tdot, ann_ret, scrip_decision
 from utils.ui import apply_theme
 
 st.set_page_config(page_title="Priority Briefing · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
@@ -19,19 +19,20 @@ def get_briefing():
     c = conn.cursor()
     today = TODAY.isoformat()
 
-    # ── Scrip: action-required events ordered by urgency then premium ─────────
+    # ── Scrip / CCY: pulled raw; scrip optimality computed in Python so the
+    #    briefing always agrees with the Scrip Arbitrage module (single source
+    #    of truth). The stored optimal_election / scrip_discount_pct are NOT
+    #    trusted for scrip rows. ──────────────────────────────────────────────
     scrip = c.execute("""
         SELECT e.event_id, e.ticker, e.company_name, e.country, e.currency,
                e.election_deadline, julianday(e.election_deadline)-julianday(?) AS days,
-               s.scrip_discount_pct AS prem, s.election_default, s.optimal_election,
+               s.scrip_discount_pct, s.election_default, s.optimal_election,
                s.withholding_tax_pct AS wht, s.fx_arbitrage_pct AS ccy_arb,
+               s.cash_amount, s.scrip_issue_price, s.scrip_ratio,
                e.event_type
         FROM events e JOIN scrip_details s ON e.event_id=s.event_id
         WHERE e.status='LIVE'
         AND e.election_deadline IS NOT NULL AND e.election_deadline >= ?
-        AND s.election_default != s.optimal_election
-        ORDER BY days ASC, ABS(COALESCE(s.scrip_discount_pct,0)+COALESCE(s.fx_arbitrage_pct,0)) DESC
-        LIMIT 10
     """, (today, today)).fetchall()
 
     # ── Rights: take-up events with upcoming deadlines ────────────────────────
@@ -84,7 +85,34 @@ def get_briefing():
     """, (today, today)).fetchall()
 
     conn.close()
-    return ([dict(r) for r in scrip],
+
+    # Post-process scrip/CCY rows: compute scrip optimality canonically and keep
+    # only events where the company default is suboptimal (action required).
+    scrip_out = []
+    for r in scrip:
+        d = dict(r)
+        if d["event_type"] == "scrip_dividend":
+            prem, opt, action_req, _ = scrip_decision(
+                d["cash_amount"], d["scrip_issue_price"], d["scrip_ratio"],
+                d["scrip_discount_pct"], d["wht"], d["election_default"])
+            if not action_req:
+                continue
+            d["prem"] = prem
+            d["optimal_election"] = opt
+        else:  # fx_election — CCY arb logic already correct in the module
+            deflt = str(d["election_default"]).upper() if d["election_default"] else ""
+            opt   = str(d["optimal_election"]).upper() if d["optimal_election"] else ""
+            if deflt == opt:
+                continue
+            d["prem"] = d["ccy_arb"]
+        scrip_out.append(d)
+
+    scrip_out.sort(key=lambda x: (
+        sf(x["days"]) if x["days"] is not None else 9e9,
+        -abs((sf(x["prem"]) or 0) + (sf(x["ccy_arb"]) or 0))))
+    scrip_out = scrip_out[:10]
+
+    return (scrip_out,
             [dict(r) for r in rights],
             [dict(r) for r in tenders],
             [dict(r) for r in mergers])
@@ -166,10 +194,11 @@ for r in scrip_rows:
     arb   = sf(r["ccy_arb"])
     wht   = sf(r["wht"]) or 0
     if r["event_type"]=="scrip_dividend":
-        if wht > 0 and (prem is None or prem < 1.0):
+        opt = str(r.get("optimal_election","")).upper()
+        if wht > 0 and opt == "SCRIP" and (prem is None or prem < 1.0):
             val = f"WHT {wht:.0f}% uplift — elect scrip for full dividend value"
         else:
-            val = f"{prem:+.2f}% scrip premium" if prem else "Scrip premium"
+            val = f"{prem:+.2f}% scrip premium" if prem is not None else "Scrip premium"
     elif r["event_type"]=="fx_election" and arb:
         val = f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb"
     else:
@@ -218,7 +247,8 @@ for r in scrip_rows:
     prem  = sf(r["prem"]); arb = sf(r["ccy_arb"])
     wht_w = sf(r["wht"]) or 0
     if r["event_type"]=="scrip_dividend":
-        val = f"WHT {wht_w:.0f}% uplift — elect scrip" if (wht_w > 0 and (prem is None or prem < 1.0)) else (f"{prem:+.2f}% scrip premium" if prem else "Scrip premium")
+        opt = str(r.get("optimal_election","")).upper()
+        val = f"WHT {wht_w:.0f}% uplift — elect scrip" if (wht_w > 0 and opt == "SCRIP" and (prem is None or prem < 1.0)) else (f"{prem:+.2f}% scrip premium" if prem is not None else "Scrip premium")
     elif r["event_type"]=="fx_election" and arb:
         val = f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb"
     else:

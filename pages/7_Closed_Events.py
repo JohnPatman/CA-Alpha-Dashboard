@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import date
-from utils.helpers import sf, fmt_date, days_to, ann_ret, pct_colour, spread_colour, risk_colour
+from utils.helpers import sf, fmt_date, days_to, ann_ret, pct_colour, spread_colour, risk_colour, scrip_decision
 from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Closed Events · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
@@ -67,23 +67,25 @@ rows = get_closed()
 # ── Compute synthetic outcomes ────────────────────────────────────────────────
 def scrip_outcome(ev, det):
     """Was the optimal election made? Was deadline met? What alpha was captured?"""
-    opt      = det.get("optimal_election","")
-    default_ = det.get("election_default","")
-    prem     = sf(det.get("scrip_discount_pct"))
-    arb      = sf(det.get("fx_arbitrage_pct"))
-    alpha    = prem if ev["event_type"]=="scrip_dividend" else arb
+    default_ = (det.get("election_default") or "").upper() or "CASH"
 
-    if opt and default_ and opt != default_:
-        # Action was required — model recommendation was to elect non-default
-        if ev["event_type"] == "fx_election":
+    if ev["event_type"] == "fx_election":
+        arb = sf(det.get("fx_arbitrage_pct"))
+        opt = (det.get("optimal_election") or "").upper()
+        if opt and opt != default_:
             return ("ELECTED " + opt, "alpha",
                     f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb captured" if arb else "Arb captured")
-        else:
-            return ("ELECTED SCRIP" if opt=="SCRIP" else "ELECTED CASH", "alpha",
-                    f"{prem:+.2f}% scrip premium captured" if prem else "Premium captured")
-    else:
-        return ("DEFAULT ACCEPTED", "neutral",
-                f"Default was optimal — no action needed")
+        return ("DEFAULT ACCEPTED", "neutral", "Default was optimal — no action needed")
+
+    # scrip_dividend — compute the premium canonically (net of WHT) so a small
+    # negative gross that WHT turns net-positive is recognised, and a genuinely
+    # negative premium is never shown as captured alpha.
+    prem, opt, action_req, _ = scrip_decision(
+        det.get("cash_amount"), det.get("scrip_issue_price"), det.get("scrip_ratio"),
+        det.get("scrip_discount_pct"), det.get("withholding_tax_pct"), det.get("election_default"))
+    if action_req and prem is not None and prem > 0:
+        return ("ELECTED " + opt, "alpha", f"{prem:+.2f}% scrip premium captured")
+    return ("DEFAULT ACCEPTED", "neutral", "Default was optimal — no action needed")
 
 def rights_outcome(ev, det):
     sub = sf(det.get("subscription_price"))

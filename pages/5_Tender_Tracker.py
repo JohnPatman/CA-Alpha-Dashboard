@@ -27,11 +27,25 @@ def load_tenders():
         AND (e.election_deadline IS NULL OR e.election_deadline >= date('now'))
     """, conn)
     conn.close()
-    # Compute days and annualised return
+    # Compute days, gross annualised return, and proration-adjusted effective return
     df["_days"]    = df["election_deadline"].apply(days_to)
     df["_ann_ret"] = df.apply(lambda r: ann_ret(sf(r["premium_to_mkt_pct"]), r["_days"]), axis=1)
-    # Sort: by annualised return desc (highest alpha first)
-    df = df.sort_values("_ann_ret", ascending=False, na_position="last")
+
+    def _eff_prem(r):
+        # Fixed tenders that pro-rate only buy a fraction of tendered stock at the
+        # premium; the rest returns at market. Expected capture = gross × acceptance.
+        gp = sf(r["premium_to_mkt_pct"])
+        if gp is None:
+            return None
+        if r["proration_expected"] == 1:
+            pr = sf(r["estimated_proration_pct"])
+            return gp * (pr / 100) if pr else gp
+        return gp  # no proration → full premium captured (e.g. odd-lot / uncapped)
+
+    df["_eff_prem"] = df.apply(_eff_prem, axis=1)
+    df["_eff_ann"]  = df.apply(lambda r: ann_ret(r["_eff_prem"], r["_days"]), axis=1)
+    # Rank by proration-adjusted (expected-value) annualised return, not gross
+    df = df.sort_values("_eff_ann", ascending=False, na_position="last")
     return df
 
 df = load_tenders()
@@ -119,23 +133,25 @@ elif is_dutch and tp_lo and tp_hi:
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — SCANNER (sorted by annualised return)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Tender Scanner — Ranked by Annualised Return", expanded=True):
+with st.expander("◆  Tender Scanner — Ranked by Proration-Adjusted Return", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
     fixed_n   = len(df[df["tender_type"]=="FIXED"])
     dutch_n   = len(df[df["tender_type"]=="DUTCH_AUCTION"])
-    best_ann  = df["_ann_ret"].dropna().max()
-    best_tick = df.loc[df["_ann_ret"].idxmax(),"ticker"] if not df["_ann_ret"].dropna().empty else "—"
+    best_ann  = df["_eff_ann"].dropna().max()
+    best_tick = df.loc[df["_eff_ann"].idxmax(),"ticker"] if not df["_eff_ann"].dropna().empty else "—"
     urgent_n  = len(df[(df["_days"].apply(lambda x: x is not None and 0<=x<=7))])
     s1.metric("Fixed Tenders",     fixed_n)
     s2.metric("Dutch Auctions",    dutch_n)
-    s3.metric("Best Ann Return",   f"{best_ann:.0f}%" if best_ann else "—",
-              delta=f"{best_tick}" if best_tick!="—" else None, delta_color="normal")
+    s3.metric("Best Eff. Return",  f"{best_ann:.0f}%" if best_ann else "—",
+              delta=f"{best_tick}" if best_tick!="—" else None, delta_color="normal",
+              help="Annualised return after proration adjustment (expected value)")
     s4.metric("Deadline ≤7d",      urgent_n, delta="Urgent" if urgent_n>0 else None, delta_color="inverse" if urgent_n>0 else "off")
 
     scan_rows=[]; scan_hl={}
     for i,(_,r) in enumerate(df.iterrows()):
         d    = r["_days"]
         ann_ = r["_ann_ret"]
+        eff_ = r["_eff_ann"]
         prem_= sf(r["premium_to_mkt_pct"])
         tp_  = sf(r["tender_price"])
         tlo_ = sf(r["tender_price_low"]); thi_ = sf(r["tender_price_high"])
@@ -154,6 +170,7 @@ with st.expander("◆  Tender Scanner — Ranked by Annualised Return", expanded
             f"{r['currency']} {cur_:.2f}" if cur_ else "—",
             f"{prem_:+.1f}%" if prem_ is not None else "—",
             f"{ann_:.0f}%" if ann_ else "—",
+            f"{eff_:.0f}%" if eff_ else "—",
             f"{r['currency']} {mv_:,.0f}m" if mv_ else "—",
             f"~{pro_:.0f}%" if r["proration_expected"]==1 and pro_ else "None",
         ]
@@ -161,11 +178,12 @@ with st.expander("◆  Tender Scanner — Ranked by Annualised Return", expanded
         scan_hl[i] = {
             7: prem_colour(prem_),
             8: ann_colour(ann_),
-            10: '#f5a623' if r["proration_expected"]==1 else '#304050',
+            9: ann_colour(eff_),
+            11: '#f5a623' if r["proration_expected"]==1 else '#304050',
         }
 
     dark_table(scan_rows,
-               ["Ticker","Company","Country","Type","Days","Tender Px","Current","Prem %","Ann Ret","Size","Proration"],
+               ["Ticker","Company","Country","Type","Days","Tender Px","Current","Prem %","Ann Ret","Eff Ann","Size","Proration"],
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════

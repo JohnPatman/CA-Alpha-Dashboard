@@ -3,30 +3,14 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3, re
 from datetime import date
-from utils.helpers import sf, fmt_date, days_to, tdot, pct_colour
+from utils.helpers import (sf, fmt_date, days_to, tdot, pct_colour,
+                           parse_ratio, calc_scrip_prem, scrip_decision)
 from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Scrip Arbitrage · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
 
 DB = "data/events.db"; TODAY = date.today()
-
-def parse_ratio(s):
-    if not s or str(s)=='nan': return None, None
-    m = re.search(r'(\d+)\s+per\s+(\d+)', str(s), re.I)
-    return (int(m.group(1)), int(m.group(2))) if m else (None, None)
-
-def calc_scrip_prem(cash, scrip_px, ratio, wht=0.0, inferred_px=None):
-    """Return (scrip_prem_pct, cash_net, scrip_val, calc_opt). All per share."""
-    rn, rd = parse_ratio(ratio)
-    if not rn or not rd or not cash: return None, None, None, "—"
-    cur_px = inferred_px or scrip_px
-    if not cur_px: return None, None, None, "—"
-    cash_net  = cash * (1 - wht/100)
-    scrip_val = (rn/rd) * cur_px
-    prem      = (scrip_val - cash_net) / cash_net * 100 if cash_net else 0
-    opt       = "SCRIP" if prem > 0 else "CASH"
-    return prem, cash_net, scrip_val, opt
 
 @st.cache_data(ttl=300)
 def load_scrip():
@@ -55,16 +39,8 @@ if df.empty:
 
 # Pre-calculate scrip premium and action required for ALL events
 def enrich_row(r):
-    disc = sf(r["scrip_discount_pct"])
-    sp   = sf(r["scrip_issue_price"])
-    inferred = sp / (1 + disc/100) if sp and disc is not None and (1+disc/100)!=0 else sp
-    prem, cash_net, scrip_val, calc_opt = calc_scrip_prem(
-        sf(r["cash_amount"]), sp, r["scrip_ratio"],
-        sf(r["withholding_tax_pct"], 0.0), inferred
-    )
-    default    = str(r["election_default"]).upper() if r["election_default"] and str(r["election_default"])!='nan' else "CASH"
-    action_req = (default != calc_opt) if calc_opt != "—" else False
-    return prem, calc_opt, action_req, inferred
+    return scrip_decision(r["cash_amount"], r["scrip_issue_price"], r["scrip_ratio"],
+                          r["scrip_discount_pct"], r["withholding_tax_pct"], r["election_default"])
 
 enrich = [enrich_row(r) for _,r in df.iterrows()]
 df["_prem"]       = [e[0] for e in enrich]
