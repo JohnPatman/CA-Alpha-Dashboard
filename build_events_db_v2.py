@@ -627,6 +627,28 @@ def build():
     c.executemany("INSERT OR IGNORE INTO tender_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", NEW_TENDERS)
 
 
+    # ── Data-integrity normalisation ─────────────────────────────────────────
+    # Keyed on column names (not tuple positions) so it can never touch the
+    # optimal_election='GBP' field on CCY-election rows.
+    #
+    # 1. Pence-quoted UK scrip events: cash dividend is stored in pence, so
+    #    cash_currency must match the GBX trading currency, not 'GBP'. (GBX and
+    #    GBP are the same currency; only the unit differs.) Genuine cross-currency
+    #    dividends — a GBX stock declaring USD/EUR cash — are left untouched.
+    c.execute("""
+        UPDATE scrip_details SET cash_currency='GBX'
+        WHERE cash_currency='GBP'
+        AND event_id IN (SELECT event_id FROM events WHERE currency='GBX')
+    """)
+    # 2. event_type must agree with rights_type: a non-renounceable open offer
+    #    (no tradeable nil-paid) tagged as a rights_issue is reclassified so the
+    #    Home by-type count and the Rights page agree.
+    c.execute("""
+        UPDATE events SET event_type='open_offer'
+        WHERE event_type='rights_issue'
+        AND event_id IN (SELECT event_id FROM rights_details WHERE rights_type='OPEN_OFFER')
+    """)
+
     conn.commit()
 
     total    = c.execute("SELECT COUNT(*) FROM events").fetchone()[0]

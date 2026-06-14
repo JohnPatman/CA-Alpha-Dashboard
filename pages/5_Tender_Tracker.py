@@ -130,9 +130,21 @@ elif is_dutch and tp_lo and tp_hi:
     k4.metric("Max Size",        f"{ev['currency']} {max_val:,.0f}m" if max_val else "—")
     k5.metric("Days to Deadline",f"{ddl_days}d" if ddl_days is not None else "—")
 
-# ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — SCANNER (sorted by annualised return)
-# ═════════════════════════════════════════════════════════════════════════════
+# ── Annualised-return caveat ──────────────────────────────────────────────────
+_recyc = (f" — i.e. the {prem:.1f}% spread over {ddl_days}d scaled by 365/{ddl_days}≈{365/ddl_days:.0f}×"
+          if is_fixed and prem and ddl_days and ddl_days > 0 else "")
+st.markdown(
+    f"<div style='font-family:IBM Plex Mono;font-size:0.62rem;color:#6a8090;"
+    f"background:#0e1825;border-left:2px solid #304050;padding:0.5rem 0.7rem;"
+    f"margin:0.2rem 0 0.9rem;line-height:1.7'>"
+    f"<span style='color:#c8d8e8'>On annualised return:</span> this is an annualised-<em>equivalent</em>{_recyc}. "
+    f"It assumes capital recycles into comparable tenders at that rate, which rarely holds — so it overstates "
+    f"a realised annual return on short tenors. The absolute spread and holding period are the figures that "
+    f"actually clear; where proration applies, the <span style='color:#c8d8e8'>Eff Ann</span> column "
+    f"(gross × acceptance) is the expected-value return."
+    f"</div>",
+    unsafe_allow_html=True
+)
 with st.expander("◆  Tender Scanner — Ranked by Proration-Adjusted Return", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
     fixed_n   = len(df[df["tender_type"]=="FIXED"])
