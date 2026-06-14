@@ -554,8 +554,8 @@ st.markdown(
     # — Affiliation block —
     "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
     "text-transform:uppercase'>Affiliation</span><br>"
-    "This project is independent and has no affiliation with JPMorgan Chase, Nomura, or any "
-    "other financial institution. All views and methodologies are the author's own and do not "
+    "This project is independent and was built in personal time. All views and "
+    "methodologies are the author's own and do not "
     "represent the views of any current or former employer."
 
     "</div>",

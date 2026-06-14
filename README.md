@@ -201,6 +201,6 @@ The dataset is structured to be realistic in character — event types, geograph
 
 ## About
 
-Built by John Patman — JPMorgan Corporate Actions Senior Associate, London. CFA Level 1.
+Built by John Patman.
 
-This project was built independently in personal time and has no affiliation with JPMorgan Chase, Nomura, or any other financial institution. All views and methodologies are the author's own and do not represent the views of any current or former employer.
+This project was built independently in personal time. All views and methodologies are the author's own and do not represent the views of any current or former employer.

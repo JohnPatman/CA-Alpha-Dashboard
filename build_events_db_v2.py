@@ -648,6 +648,11 @@ def build():
         WHERE event_type='rights_issue'
         AND event_id IN (SELECT event_id FROM rights_details WHERE rights_type='OPEN_OFFER')
     """)
+    # 3. Open offers are non-renounceable — they have no tradeable nil-paid line.
+    c.execute("""
+        UPDATE rights_details SET nil_paid_value=NULL, nil_paid_ticker=NULL
+        WHERE rights_type='OPEN_OFFER'
+    """)
 
     conn.commit()
 

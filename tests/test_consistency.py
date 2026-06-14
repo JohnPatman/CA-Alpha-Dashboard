@@ -48,6 +48,16 @@ def test_event_type_agrees_with_rights_type():
     assert n == 0, f"{n} open offers mis-tagged as rights_issue"
 
 
+def test_open_offers_have_no_nil_paid():
+    """Open offers are non-renounceable — they must carry no tradeable nil-paid line."""
+    c = _conn()
+    n = c.execute("""SELECT COUNT(*) FROM rights_details
+                     WHERE rights_type='OPEN_OFFER'
+                     AND (nil_paid_value IS NOT NULL OR nil_paid_ticker IS NOT NULL)""").fetchone()[0]
+    c.close()
+    assert n == 0, f"{n} open offers carry a nil-paid value/ticker (non-renounceable)"
+
+
 def test_open_offer_counts_reconcile():
     """event_type count of open offers must equal rights_type OPEN_OFFER count."""
     c = _conn()

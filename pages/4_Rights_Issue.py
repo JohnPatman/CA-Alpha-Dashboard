@@ -72,6 +72,7 @@ sub_px   = sf(ev["subscription_price"])
 cur_px   = pos_price if pos_price > 0 else sf(ev["current_price"])
 db_terp  = sf(ev["terp"])
 db_npv   = sf(ev["nil_paid_value"])
+is_open_offer = str(ev["rights_type"]).upper() == "OPEN_OFFER"  # non-renounceable: no tradeable nil-paid
 disc_pct = sf(ev["discount_to_terp_pct"])
 proceeds = sf(ev["gross_proceeds_mn"])
 uw       = ev["fully_underwritten"]
@@ -107,8 +108,12 @@ k1.metric("Sub Price",      f"{ev['currency']} {sub_px:.2f}" if sub_px else "—
 k2.metric("Current Price",  f"{ev['currency']} {cur_px:.2f}" if cur_px else "—")
 k3.metric("TERP",           f"{ev['currency']} {terp_calc:.2f}" if terp_calc else "—",
           help=f"({rd}×{cur_px:.0f} + {rn}×{sub_px:.0f}) / {rd+rn}" if cur_px and sub_px else "")
-k4.metric("Nil-Paid Value", f"{ev['currency']} {nil_calc:.2f}" if nil_calc else "—",
-          delta="Tradeable" if nil_calc and nil_calc>0 else None, delta_color="normal")
+if is_open_offer:
+    k4.metric("Nil-Paid Value", "N/A", delta="Non-renounceable", delta_color="off",
+              help="Open offers are non-renounceable — the entitlement cannot be sold")
+else:
+    k4.metric("Nil-Paid Value", f"{ev['currency']} {nil_calc:.2f}" if nil_calc else "—",
+              delta="Tradeable" if nil_calc and nil_calc>0 else None, delta_color="normal")
 k5.metric("Disc to TERP",   f"{disc_calc:+.1f}%" if disc_calc is not None else "—",
           delta_color="inverse")
 k6.metric("Proceeds",       f"{ev['currency']} {proceeds:,.0f}m" if proceeds else "—")
@@ -175,13 +180,13 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
                 ("Current price",         f"{ev['currency']} {cur_px:.2f}",                 "Pre-rights cum price"),
                 ("Subscription price",    f"{ev['currency']} {sub_px:.2f}",                 "Price to take up rights"),
                 ("TERP (calculated)",     f"{ev['currency']} {terp_calc:.2f}",               f"({rd}×{cur_px:.2f} + {rn}×{sub_px:.2f}) / {rd+rn}"),
-                ("Nil-paid value",        f"{ev['currency']} {nil_calc:.2f}",               "TERP − sub price  (market value of right)"),
+                ("Nil-paid value",        "N/A" if is_open_offer else f"{ev['currency']} {nil_calc:.2f}",  "Non-renounceable — cannot be sold" if is_open_offer else "TERP − sub price  (market value of right)"),
                 ("Discount of sub to TERP",f"{disc_calc:+.1f}%",                             "How deep the issue is priced"),
                 ("Current vs TERP",       f"{prem_terp:+.1f}%" if prem_terp else "—",       "Current price premium above TERP"),
                 ("Underwriter",           str(ev["underwriter"]) if ev["underwriter"] and str(ev["underwriter"])!='nan' else "—", ""),
                 ("Fully underwritten",    "Yes" if uw==1 else "No",                          "Protects against deal failure"),
                 ("Gross proceeds",        f"{ev['currency']} {proceeds:,.0f}m" if proceeds else "—", ""),
-                ("Nil-paid ticker",       str(ev["nil_paid_ticker"]) if ev["nil_paid_ticker"] and str(ev["nil_paid_ticker"])!='nan' else "Check prospectus", "Trade rights in market"),
+                ("Nil-paid ticker",       "N/A" if is_open_offer else (str(ev["nil_paid_ticker"]) if ev["nil_paid_ticker"] and str(ev["nil_paid_ticker"])!='nan' else "Check prospectus"), "Non-renounceable" if is_open_offer else "Trade rights in market"),
             ]
             hl = {4:{1:'#00d4aa',2:'#00d4aa'},
                   5:{1:disc_colour(disc_calc)},
@@ -210,7 +215,12 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
                 hl2 = {2:{1:'#f5a623'}, 3:{1:'#00d4aa',2:'#00d4aa'}, 6:{1:'#ff3355'}}
                 dark_table(pnl_rows, ["Metric","Value","Detail"], hl2, height=275)
 
-                if nil_calc > 0 and cur_px > sub_px:
+                if is_open_offer:
+                    if cur_px and sub_px and cur_px > sub_px:
+                        st.success(f"◆  Take up — sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Open offer is non-renounceable: take up or let lapse, the entitlement cannot be sold.")
+                    else:
+                        st.warning("⚠  Sub price near or above TERP — taking up offers little benefit; lapse is reasonable. (Non-renounceable — no nil-paid to sell.)")
+                elif nil_calc > 0 and cur_px > sub_px:
                     st.success(f"◆  Take up rights — sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Nil-paid value: {ev['currency']} {nil_tot:,.2f}")
                 else:
                     st.warning("⚠  Sub price near or above TERP — consider selling nil-paid rights")
@@ -218,7 +228,7 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — TAKE-UP vs SELL CHART
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Take-up vs Sell Rights — P&L at Different Share Prices", expanded=True):
+with st.expander("◆  Take-up Economics — P&L at Different Share Prices", expanded=True):
     if sub_px and cur_px and terp_calc:
         lo = sub_px * 0.80
         hi = cur_px * 1.30
@@ -234,9 +244,10 @@ with st.expander("◆  Take-up vs Sell Rights — P&L at Different Share Prices"
         fig.add_trace(go.Scatter(x=prices, y=takeup_pnl, name="Take up (profit/right)",
             line=dict(color="#00d4aa",width=2.5),
             hovertemplate=f"Price: %{{x:.2f}}<br>Profit/right: %{{y:.2f}}<extra></extra>"))
-        fig.add_trace(go.Scatter(x=prices, y=sell_pnl, name="Sell nil-paid (value/right)",
-            line=dict(color="#f5a623",width=2,dash="dash"),
-            hovertemplate=f"Price: %{{x:.2f}}<br>Nil-paid: %{{y:.2f}}<extra></extra>"))
+        if not is_open_offer:
+            fig.add_trace(go.Scatter(x=prices, y=sell_pnl, name="Sell nil-paid (value/right)",
+                line=dict(color="#f5a623",width=2,dash="dash"),
+                hovertemplate=f"Price: %{{x:.2f}}<br>Nil-paid: %{{y:.2f}}<extra></extra>"))
 
         for vx, col, label in [
             (sub_px,   "#ff3355", f"Sub {sub_px:.0f}"),

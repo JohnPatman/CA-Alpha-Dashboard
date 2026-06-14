@@ -54,6 +54,14 @@ n = c.execute("""
 print(f"✓  event_type rights_issue → open_offer: {n} row(s) fixed."
       if n else "–  event_type: no rights/open_offer mismatches (already patched).")
 
+# ── Fix 3: open offers are non-renounceable — clear any nil-paid line ──────────
+n3 = c.execute("""
+    UPDATE rights_details SET nil_paid_value=NULL, nil_paid_ticker=NULL
+    WHERE rights_type='OPEN_OFFER' AND (nil_paid_value IS NOT NULL OR nil_paid_ticker IS NOT NULL)
+""").rowcount
+print(f"✓  open-offer nil-paid cleared: {n3} row(s) fixed."
+      if n3 else "–  nil-paid: no open offers carry a nil-paid line (already patched).")
+
 conn.commit()
 conn.close()
 print("\n✓  Review data fixes committed.")
