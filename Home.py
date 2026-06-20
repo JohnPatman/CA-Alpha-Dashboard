@@ -242,9 +242,14 @@ def get_summary():
         WHERE election_deadline IS NOT NULL
         AND election_deadline BETWEEN ? AND date(?,'+7 days')
         AND status='LIVE'""", (today, today)).fetchone()[0]
+    # Actionable = LIVE with the election window still open (deadline today or later,
+    # or no deadline). The remainder are LIVE-but-past-deadline (pending settlement).
+    actionable = c.execute("""SELECT COUNT(*) FROM events
+        WHERE status='LIVE'
+        AND (election_deadline IS NULL OR election_deadline >= ?)""", (today,)).fetchone()[0]
     conn.close()
     return dict(total=total, live=live, upcoming=upcoming,
-                vol=vol, mwc=mwc, countries=countries, urgent=urgent)
+                vol=vol, mwc=mwc, countries=countries, urgent=urgent, actionable=actionable)
 
 @st.cache_data(ttl=300)
 def get_top_opportunities():
@@ -403,10 +408,12 @@ else:
 
 st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
-def kpi_card(label, value, accent=False, urgent=False):
+def kpi_card(label, value, accent=False, urgent=False, sub=None):
     border_top = "#ff3355" if urgent else ("#00d4aa" if accent else "#243548")
     val_color  = "#ff3355" if urgent else "#c8d8e8"
     badge      = "<span style='display:inline-block;margin-top:0.35rem;font-size:0.52rem;letter-spacing:0.1em;color:#ff3355;text-transform:uppercase'>urgent</span>" if urgent else ""
+    if sub and not urgent:
+        badge  = f"<span style='display:inline-block;margin-top:0.35rem;font-size:0.52rem;letter-spacing:0.08em;color:#5a6a7a'>{sub}</span>"
     return (
         f"<div style='background:#080c12;border:1px solid #182436;"
         f"border-top:2px solid {border_top};padding:0.55rem 0.8rem;"
@@ -418,7 +425,8 @@ def kpi_card(label, value, accent=False, urgent=False):
     )
 
 kc1,kc2,kc3,kc4,kc5,kc6 = st.columns(6)
-kc1.markdown(kpi_card("Live Events",   s["live"]),     unsafe_allow_html=True)
+kc1.markdown(kpi_card("Live Events",   s["live"],
+    sub=f"{s['actionable']} actionable"),             unsafe_allow_html=True)
 kc2.markdown(kpi_card("Upcoming",      s["upcoming"]), unsafe_allow_html=True)
 kc3.markdown(kpi_card("Voluntary",     s["vol"]),      unsafe_allow_html=True)
 kc4.markdown(kpi_card("Choice Events", s["mwc"]),      unsafe_allow_html=True)

@@ -481,8 +481,11 @@ df_passed = df[df["days_to_deadline"].notna() & (df["days_to_deadline"] < 0)].co
 st.title("◆ Event Pipeline  /  Deadline Manager")
 
 mc1, mc2, mc3, mc4, mc5 = st.columns(5)
+_live_df = df[df["status"] == "LIVE"]
+_live_actionable = _live_df[_live_df["days_to_deadline"].isna() | (_live_df["days_to_deadline"] >= 0)]
 mc1.metric("Showing",     len(df))
-mc2.metric("Live",        len(df[df["status"] == "LIVE"]))
+mc2.metric("Live",        len(_live_df), delta=f"{len(_live_actionable)} actionable", delta_color="off",
+           help="Actionable = election window still open (deadline today or later). The rest are live but past their election deadline, pending settlement.")
 mc3.metric("Upcoming",    len(df[df["status"] == "UPCOMING"]))
 mc4.metric("Urgent ≤7d",  len(df_active[df_active["days_to_deadline"].notna() & (df_active["days_to_deadline"] <= 7)]))
 mc5.metric("Alpha Flags", len(df[df["alpha_flag"] != ""]))

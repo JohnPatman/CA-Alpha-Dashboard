@@ -48,6 +48,15 @@ def test_event_type_agrees_with_rights_type():
     assert n == 0, f"{n} open offers mis-tagged as rights_issue"
 
 
+def test_parse_ratio_handles_scrip_and_rights_formats():
+    """Canonical parse_ratio must handle both 'N per M' (scrip) and 'N for M'
+       (rights). The rights page relies on the shared helper, not a local copy."""
+    assert H.parse_ratio("1 per 59") == (1, 59)
+    assert H.parse_ratio("1 for 8") == (1, 8)
+    assert H.parse_ratio("garbage") == (None, None)
+    assert H.parse_ratio(None) == (None, None)
+
+
 def test_open_offers_have_no_nil_paid():
     """Open offers are non-renounceable — they must carry no tradeable nil-paid line."""
     c = _conn()

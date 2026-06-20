@@ -58,10 +58,11 @@ import re
 
 
 def parse_ratio(s):
-    """Parse a 'N per M' scrip/rights ratio string into (N, M) ints, or (None, None)."""
+    """Parse an 'N per M' (scrip) or 'N for M' (rights) ratio string into (N, M)
+    ints, or (None, None). Single source of truth for both event families."""
     if not s or str(s) == 'nan':
         return None, None
-    m = re.search(r'(\d+)\s+per\s+(\d+)', str(s), re.I)
+    m = re.search(r'(\d+)\s+(?:per|for)\s+(\d+)', str(s), re.I)
     return (int(m.group(1)), int(m.group(2))) if m else (None, None)
 
 

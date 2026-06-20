@@ -68,7 +68,7 @@ EV_dutch       = P(fill) × (Exp_clearing − Market_px) × N × Proration_rate
 Odd_lot_P&L    = (Tender_px − Market_px) × N_shares  [guaranteed fill, zero proration risk]
 ```
 
-Dutch auction EV uses a uniform clearing distribution: P(fill) = (bid − floor) ÷ (ceiling − floor), expected clearing = (floor + bid) ÷ 2. Scanner ranks all live tenders by annualised return. Odd lot thresholds flag guaranteed-fill sub-positions as a separate arb from the main proration position.
+Dutch auction EV uses a uniform clearing distribution. In an issuer Dutch tender the holder names the minimum price they will accept and is filled when the clearing price is at or above that bid, so P(fill) = (ceiling − bid) ÷ (ceiling − floor) and the expected clearing conditional on fill = (bid + ceiling) ÷ 2. Scanner ranks all live tenders by proration-adjusted annualised return. Odd lot thresholds flag guaranteed-fill sub-positions as a separate arb from the main proration position.
 
 ### ◆ Merger & Scheme Tracker
 Implied probability model, reward:risk framing, and consideration election optimisation:
@@ -123,7 +123,7 @@ CA Project/
 ├── add_past_urgent_events.py    ← Seeds closed/urgent demo events; auto-detects DB shift
 ├── fix_db_overrebase.py         ← Corrects cumulative rebase drift if run multiple times
 ├── data/
-│   └── events.db                ← SQLite; 281 events across 8 tables
+│   └── events.db                ← SQLite; 234 events across 8 tables
 ├── pages/
 │   ├── 1_Event_Pipeline.py
 │   ├── 2_Scrip_Arbitrage.py

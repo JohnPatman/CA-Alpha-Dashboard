@@ -241,6 +241,14 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
         elif is_dutch and tp_lo and tp_hi:
             mid  = (tp_lo+tp_hi)/2
             my_bid = bid_price if bid_price>0 else mid
+            # Uniform-clearing EV model. Issuer Dutch tender: the holder names the
+            # minimum price they'll accept; they're filled when the clearing price
+            # is ≥ that bid. So P(fill)=P(clearing ≥ bid)=(ceiling−bid)/(ceiling−floor),
+            # and conditional on fill the expected clearing is (bid+ceiling)/2.
+            p_fill = max(0.0, min(1.0, (tp_hi - my_bid)/(tp_hi - tp_lo))) if tp_hi > tp_lo else 0.0
+            exp_clr_fill = (my_bid + tp_hi) / 2
+            _pr = (proration/100) if proration else 1.0
+            ev_ps  = p_fill * (exp_clr_fill - cur_px) * _pr if cur_px else None
             econ_rows = [
                 ("Type",           "Dutch Auction",                             ""),
                 ("Range low",      f"{ev['currency']} {tp_lo:.2f}",            "Min clearing price"),
@@ -250,12 +258,16 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
                 ("Prem at mid",    f"{((mid/cur_px)-1)*100:+.1f}%" if cur_px else "—", ""),
                 ("Ann ret at mid", f"{ann_ret(((mid/cur_px)-1)*100 if cur_px else 0, ddl_days):.0f}%" if cur_px and ddl_days and ddl_days>0 else "—", ""),
                 ("Your bid",       f"{ev['currency']} {my_bid:.2f}",           "Set in sidebar"),
+                ("P(fill)",        f"{p_fill*100:.0f}%",                        "P(clearing ≥ bid), uniform"),
+                ("Exp clearing | fill", f"{ev['currency']} {exp_clr_fill:.2f}", "(bid + ceiling) ÷ 2"),
+                ("EV / share",     f"{ev['currency']} {ev_ps:+.3f}" if ev_ps is not None else "—", "P(fill) × (clearing − mkt) × proration"),
                 ("Max size",       f"{ev['currency']} {max_val:,.0f}m" if max_val else "—",""),
                 ("Est. proration", f"~{proration:.0f}%" if proration else "—", ""),
                 ("Days to close",  f"{ddl_days}d" if ddl_days else "—",        fmt_date(ev["election_deadline"])),
             ]
-            hl = {7:{1:'#00d4aa' if my_bid>=tp_lo else '#ff3355'}}
-            dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=425)
+            hl = {7:{1:'#00d4aa' if my_bid>=tp_lo else '#ff3355'},
+                  10:{1:'#00d4aa' if (ev_ps or 0)>0 else '#6a8090'}}
+            dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=470)
 
     with col_r:
         st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L — {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)

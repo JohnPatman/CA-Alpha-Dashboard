@@ -3,18 +3,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import sqlite3, re
 from datetime import date
-from utils.helpers import sf, fmt_date, days_to, tdot, disc_colour
+from utils.helpers import sf, fmt_date, days_to, tdot, disc_colour, parse_ratio
 from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Rights Issue Analyser · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
 
 DB = "data/events.db"; TODAY = date.today()
-
-def parse_ratio(s):
-    if not s or str(s)=='nan': return None, None
-    m = re.search(r'(\d+)\s+for\s+(\d+)', str(s), re.I)
-    return (int(m.group(1)), int(m.group(2))) if m else (None, None)
 
 @st.cache_data(ttl=300)
 def load_rights():
