@@ -5,7 +5,7 @@ import sqlite3, re
 from datetime import date
 from utils.helpers import (sf, fmt_date, days_to, tdot, pct_colour,
                            parse_ratio, calc_scrip_prem, scrip_decision)
-from utils.ui import apply_theme, dark_table, dark_table_select
+from utils.ui import apply_theme, dark_table
 
 st.set_page_config(page_title="Scrip Arbitrage · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
@@ -63,33 +63,9 @@ def ev_label(r):
     return f"{tdot(d)} {req} {r['ticker']} · {r['company_name'][:18]} · {f'{prem:+.2f}%' if prem else '—'}"
 
 labels  = [ev_label(r) for _,r in df_filt.iterrows()]
-_tickers = list(df_filt["ticker"])
-
-# Row clicks in the scanner set ?scrip_sel=<ticker>; keep the sidebar selectbox
-# in sync with it so both drive the same featured event (query param wins).
-_qp_sel = st.query_params.get("scrip_sel")
-if "scrip_evt_idx" not in st.session_state:
-    st.session_state["scrip_evt_idx"] = 0
-if _qp_sel in _tickers:
-    st.session_state["scrip_evt_idx"] = _tickers.index(_qp_sel)
-if st.session_state["scrip_evt_idx"] >= len(_tickers):
-    st.session_state["scrip_evt_idx"] = 0
-
-def _sync_scrip_sel():
-    i = st.session_state.get("scrip_evt_idx", 0)
-    if 0 <= i < len(_tickers):
-        st.query_params["scrip_sel"] = _tickers[i]
-
-sel_idx = st.sidebar.selectbox("Event", range(len(labels)), key="scrip_evt_idx",
-                               format_func=lambda i: labels[i], on_change=_sync_scrip_sel)
+sel_idx = st.sidebar.selectbox("Event", range(len(labels)), format_func=lambda i: labels[i])
 sel_idx = min(sel_idx, max(0, len(df_filt)-1))
 ev = df_filt.iloc[sel_idx]
-# a scanner row click (?scrip_sel) loads that event directly, even if a country/
-# action filter would otherwise hide it from the sidebar list
-if _qp_sel:
-    _match = df[df["ticker"] == _qp_sel]
-    if len(_match):
-        ev = _match.iloc[0]
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ◆ Position")
@@ -173,7 +149,7 @@ with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=T
     sc3.metric("Deadline ≤7d",        urgent_n,    delta="Urgent" if urgent_n>0 else None, delta_color="inverse" if urgent_n>0 else "off")
     sc4.metric("Scrip Premium >0.5%", high_prem)
 
-    scan_rows=[]; scan_hl={}; scan_tickers=[]
+    scan_rows=[]; scan_hl={}
     for i,(_,r) in enumerate(df.iterrows()):
         d       = days_to(r["election_deadline"])
         prem    = r["_prem"]
@@ -198,23 +174,15 @@ with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=T
             "⚡ ELECT" if act_req else ("✓" if opt=="SCRIP" else "—"),
         ]
         scan_rows.append(row)
-        scan_tickers.append(r['ticker'])
         scan_hl[i] = {
             8:  pct_colour(prem),
             10: '#00d4aa' if opt=="SCRIP" else '#6a8090',
             11: '#ff3355' if act_req else ('#00d4aa' if opt=="SCRIP" else '#304050'),
         }
 
-    st.caption("Click a ticker to load it as the featured event above. Click a column header to sort.")
-    try:
-        dark_table_select(
-            scan_rows,
-            ["Ticker","Company","Country","Deadline","Days","Cash Div","Ratio","WHT","Scrip vs Cash","Default","Optimal","Action"],
-            ns="scrip", key_values=scan_tickers, highlights=scan_hl)
-    except Exception:
-        dark_table(scan_rows,
-                   ["Ticker","Company","Country","Deadline","Days","Cash Div","Ratio","WHT","Scrip vs Cash","Default","Optimal","Action"],
-                   scan_hl)
+    dark_table(scan_rows,
+               ["Ticker","Company","Country","Deadline","Days","Cash Div","Ratio","WHT","Scrip vs Cash","Default","Optimal","Action"],
+               scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — ECONOMICS DEEP-DIVE
