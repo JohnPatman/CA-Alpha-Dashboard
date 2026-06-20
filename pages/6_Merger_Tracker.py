@@ -71,7 +71,7 @@ pos_shares   = st.sidebar.number_input("Shares held", min_value=0, value=10000, 
 break_assume = st.sidebar.number_input("Break scenario (%)", min_value=-50, max_value=0, value=-15, step=1,
                                         help="Expected fall if deal fails. Typical UK scheme: -10% to -20%")
 days_to_comp = st.sidebar.number_input("Days to completion", min_value=1, value=90, step=10,
-                                        help="Your estimate — drives annualised return calc")
+                                        help="Your estimate, drives annualised return calc")
 
 cash_ps  = sf(ev["cash_per_share"])
 cur_px   = sf(ev["current_price"])
@@ -127,7 +127,7 @@ k6.metric("Sanction Date",  sanction)
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — DEAL SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjusted Return", expanded=True):
+with st.expander("◆  Deal Scanner · All Live M&A  ·  Ranked by Risk-Adjusted Return", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
     cleared_n  = len(df[df["regulatory_status"].apply(lambda x: str(x).upper()=="CLEARED")])
     low_risk_n = len(df[df["break_risk"].apply(lambda x: str(x).upper()=="LOW")])
@@ -136,7 +136,7 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
     s1.metric("Reg Cleared",     cleared_n, delta="✓ Low risk" if cleared_n>0 else None, delta_color="normal")
     s2.metric("Low Break Risk",  low_risk_n)
     s3.metric("Spread >2%",      high_sp_n, delta="Alpha" if high_sp_n>0 else None, delta_color="normal")
-    s4.metric("Share Deals",     shares_n,  help="Share consideration — hedge ratio applies")
+    s4.metric("Share Deals",     shares_n,  help="Share consideration, hedge ratio applies")
 
     scan_rows=[]; scan_hl={}
     # Sort by implied probability desc (highest conviction first)
@@ -192,7 +192,7 @@ with st.expander("◆  Deal Scanner — All Live M&A  ·  Ranked by Risk-Adjuste
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — DEAL DEEP-DIVE + P&L
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}", expanded=True):
+with st.expander(f"◆  Deal Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     col_l, col_r = st.columns(2)
     with col_l:
         st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Deal summary</p>", unsafe_allow_html=True)
@@ -221,7 +221,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
         dark_table(deal_rows, ["Parameter","Value","Detail"], hl, height=505)
 
     with col_r:
-        st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L — {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
+        st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L · {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
         if pos_shares > 0 and cur_px and spread:
             mkt_val    = pos_shares * cur_px
             if cash_ps:
@@ -254,7 +254,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
                 st.markdown(
                     f"<div style='border-left:2px solid #f5a623;background:#f5a62310;padding:0.35rem 0.7rem;"
                     f"font-family:IBM Plex Mono;font-size:0.68rem;color:#f5a623;margin-top:0.4rem'>"
-                    f"Share consideration deal. Ratio: {ev['share_ratio']} — "
+                    f"Share consideration deal. Ratio: {ev['share_ratio']}, "
                     f"short acquirer shares to hedge. Ratio = target shares × exchange ratio.</div>",
                     unsafe_allow_html=True
                 )
@@ -265,7 +265,7 @@ with st.expander(f"◆  Deal Analysis — {ev['ticker']} / {ev['company_name']}"
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — RETURN vs PROBABILITY CHART (Bubble)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Deal Universe — Spread vs Implied Probability", expanded=True):
+with st.expander("◆  Deal Universe · Spread vs Implied Probability", expanded=True):
     chart_data = []
     for _,r in df.iterrows():
         sp  = sf(r["spread_to_terms_pct"])
@@ -359,7 +359,7 @@ with st.expander("◆  Scenario Analysis & CA Desk Actions", expanded=False):
 1. Set election to <strong style='color:#c8d8e8'>ACCEPT</strong> before deadline<br>
 2. Verify no stock on loan over record date<br>
 3. Monitor regulatory/court announcements<br>
-{'4. <strong style="color:#f5a623">Share deal</strong> — calculate hedge ratio: short acquirer shares × exchange ratio<br>' if is_shares else ''}
+{'4. <strong style="color:#f5a623">Share deal</strong>, calculate hedge ratio: short acquirer shares × exchange ratio<br>' if is_shares else ''}
 5. Update spread model on material news<br>
 6. Review if spread widens materially (market pricing in risk)
 </div>""", unsafe_allow_html=True)
@@ -367,7 +367,7 @@ with st.expander("◆  Scenario Analysis & CA Desk Actions", expanded=False):
         if brk.upper()=="LOW" and spread and spread>0:
             st.success(f"◆  LOW risk + {spread:.2f}% spread + {imp_prob:.0f}% implied prob = strong risk/reward")
         elif brk.upper()=="HIGH":
-            st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.4rem'>🔴  HIGH break risk — size position accordingly. Wide spread compensates but deal failure is material risk.</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.4rem'>🔴  HIGH break risk, size position accordingly. Wide spread compensates but deal failure is material risk.</div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # METHODOLOGY
@@ -383,14 +383,14 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 &nbsp;&nbsp;&nbsp;Limitation: assumes linear payoff, single break scenario, no partial outcomes<br><br>
 <strong style='color:#c8d8e8'>Annualised return</strong><br>
 &nbsp;&nbsp;&nbsp;Ann_return = Spread% ÷ Days_to_completion × 365<br>
-&nbsp;&nbsp;&nbsp;Days_to_completion is user-input (not from DB) — affects ann return but not implied prob<br><br>
+&nbsp;&nbsp;&nbsp;Days_to_completion is user-input (not from DB), affects ann return but not implied prob<br><br>
 <strong style='color:#c8d8e8'>Expected value per share</strong><br>
 &nbsp;&nbsp;&nbsp;EV = p × (Deal_px − Current_px) + (1−p) × (Break_px − Current_px)<br>
-&nbsp;&nbsp;&nbsp;Where Break_px = Current_px × (1 + Break%) — assumed fall on deal failure<br>
+&nbsp;&nbsp;&nbsp;Where Break_px = Current_px × (1 + Break%), assumed fall on deal failure<br>
 &nbsp;&nbsp;&nbsp;At market price, EV = 0 by construction (the implied prob is derived from this)<br><br>
 <strong style='color:#c8d8e8'>Reward : Risk framing</strong><br>
-&nbsp;&nbsp;&nbsp;Expressed as Spread% : |Break%| — standard arb desk convention<br>
-&nbsp;&nbsp;&nbsp;A ratio of 2%:15% means risking 15 to make 2 — gross R/R = 0.13×<br>
+&nbsp;&nbsp;&nbsp;Expressed as Spread% : |Break%|, standard arb desk convention<br>
+&nbsp;&nbsp;&nbsp;A ratio of 2%:15% means risking 15 to make 2, gross R/R = 0.13×<br>
 &nbsp;&nbsp;&nbsp;Low R/R is acceptable when implied probability is very high (e.g. 90%+)<br><br>
 <strong style='color:#c8d8e8'>Share deal hedge ratio</strong><br>
 &nbsp;&nbsp;&nbsp;For stock consideration deals: short acquirer shares × exchange_ratio per target share<br>

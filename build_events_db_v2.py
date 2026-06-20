@@ -648,11 +648,28 @@ def build():
         WHERE event_type='rights_issue'
         AND event_id IN (SELECT event_id FROM rights_details WHERE rights_type='OPEN_OFFER')
     """)
-    # 3. Open offers are non-renounceable — they have no tradeable nil-paid line.
+    # 3. Open offers are non-renounceable - they have no tradeable nil-paid line.
     c.execute("""
         UPDATE rights_details SET nil_paid_value=NULL, nil_paid_ticker=NULL
         WHERE rights_type='OPEN_OFFER'
     """)
+    # 4. Corporate action dates fall on business days. Snap any date that landed
+    #    on a weekend to the nearest weekday: Sat (strftime %w = 6) back to Fri,
+    #    Sun (0) forward to Mon.
+    for _tbl, _col in [("events","announcement_date"),("events","ex_date"),
+                       ("events","record_date"),("events","election_deadline"),
+                       ("events","payment_date"),("events","settlement_date"),
+                       ("merger_details","court_sanction_date"),("merger_details","long_stop_date")]:
+        try:
+            c.execute(f"""
+                UPDATE {_tbl} SET {_col} = CASE strftime('%w', {_col})
+                    WHEN '6' THEN date({_col}, '-1 day')
+                    WHEN '0' THEN date({_col}, '+1 day')
+                    ELSE {_col} END
+                WHERE {_col} IS NOT NULL AND strftime('%w', {_col}) IN ('0','6')
+            """)
+        except Exception:
+            pass
 
     conn.commit()
 

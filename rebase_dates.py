@@ -65,6 +65,28 @@ for table, col in DATE_COLS:
 
 # Update stored ref_date so next run is incremental
 c.execute("INSERT OR REPLACE INTO meta VALUES ('ref_date', ?)", (TARGET_DATE.isoformat(),))
+
+# ── Snap any date that landed on a weekend to the nearest business day ─────────
+# Corporate action dates (ex, record, deadline, payment, etc.) fall on business
+# days; a fixed-offset shift can land them on a Saturday or Sunday. strftime('%w')
+# gives 0=Sun..6=Sat, so Sat→Fri (−1) and Sun→Mon (+1), the nearest weekday.
+print("\nSnapping weekend dates to business days:")
+for table, col in DATE_COLS:
+    try:
+        c.execute(f"""
+            UPDATE {table}
+            SET {col} = CASE strftime('%w', {col})
+                WHEN '6' THEN date({col}, '-1 day')
+                WHEN '0' THEN date({col}, '+1 day')
+                ELSE {col} END
+            WHERE {col} IS NOT NULL
+              AND strftime('%w', {col}) IN ('0','6')
+        """)
+        if c.rowcount > 0:
+            print(f"  ✓ {table}.{col}: {c.rowcount} weekend dates snapped")
+    except Exception as e:
+        print(f"  ✗ {table}.{col}: {e}")
+
 conn.commit()
 conn.close()
 print(f"\nDone. Next rebase will shift from {TARGET_DATE}.")

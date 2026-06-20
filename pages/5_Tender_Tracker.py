@@ -131,21 +131,21 @@ elif is_dutch and tp_lo and tp_hi:
     k5.metric("Days to Deadline",f"{ddl_days}d" if ddl_days is not None else "—")
 
 # ── Annualised-return caveat ──────────────────────────────────────────────────
-_recyc = (f" — i.e. the {prem:.1f}% spread over {ddl_days}d scaled by 365/{ddl_days}≈{365/ddl_days:.0f}×"
+_recyc = (f", i.e. the {prem:.1f}% spread over {ddl_days}d scaled by 365/{ddl_days}≈{365/ddl_days:.0f}×"
           if is_fixed and prem and ddl_days and ddl_days > 0 else "")
 st.markdown(
     f"<div style='font-family:IBM Plex Mono;font-size:0.62rem;color:#6a8090;"
     f"background:#0e1825;border-left:2px solid #304050;padding:0.5rem 0.7rem;"
     f"margin:0.2rem 0 0.9rem;line-height:1.7'>"
     f"<span style='color:#c8d8e8'>On annualised return:</span> this is an annualised-<em>equivalent</em>{_recyc}. "
-    f"It assumes capital recycles into comparable tenders at that rate, which rarely holds — so it overstates "
+    f"It assumes capital recycles into comparable tenders at that rate, which rarely holds, so it overstates "
     f"a realised annual return on short tenors. The absolute spread and holding period are the figures that "
     f"actually clear; where proration applies, the <span style='color:#c8d8e8'>Eff Ann</span> column "
     f"(gross × acceptance) is the expected-value return."
     f"</div>",
     unsafe_allow_html=True
 )
-with st.expander("◆  Tender Scanner — Ranked by Proration-Adjusted Return", expanded=True):
+with st.expander("◆  Tender Scanner · Ranked by Proration-Adjusted Return", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
     fixed_n   = len(df[df["tender_type"]=="FIXED"])
     dutch_n   = len(df[df["tender_type"]=="DUTCH_AUCTION"])
@@ -201,7 +201,7 @@ with st.expander("◆  Tender Scanner — Ranked by Proration-Adjusted Return", 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — ECONOMICS DEEP-DIVE
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", expanded=True):
+with st.expander(f"◆  Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     col_l, col_r = st.columns(2)
     with col_l:
         st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Economics</p>", unsafe_allow_html=True)
@@ -236,7 +236,7 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
             # Odd lot arb callout
             if odd_thresh and odd_guar==1 and pos_shares and pos_shares <= odd_thresh and tp and cur_px:
                 odd_pnl = pos_shares * (tp - cur_px)
-                st.success(f"◆  ODD LOT ARB — {pos_shares:,} shares ≤ {int(odd_thresh):,} threshold: guaranteed fill, zero proration. P&L: {ev['currency']} {odd_pnl:+,.2f} ({prem:+.1f}%)")
+                st.success(f"◆  ODD LOT ARB, {pos_shares:,} shares ≤ {int(odd_thresh):,} threshold: guaranteed fill, zero proration. P&L: {ev['currency']} {odd_pnl:+,.2f} ({prem:+.1f}%)")
 
         elif is_dutch and tp_lo and tp_hi:
             mid  = (tp_lo+tp_hi)/2
@@ -272,7 +272,7 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
             dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=470)
 
     with col_r:
-        st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L — {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
+        st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L · {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
         if pos_shares > 0 and cur_px:
 
             if is_fixed and tp:
@@ -347,7 +347,7 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
 # SECTION 3 — PRORATION ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 if is_fixed and pro_exp==1 and proration and tp and cur_px:
-    with st.expander("◆  Proration Modelling — P&L at All Fill Rates", expanded=True):
+    with st.expander("◆  Proration Modelling · P&L at All Fill Rates", expanded=True):
         col_pt, col_pc = st.columns([2,3])
         with col_pt:
             spread_abs = tp - cur_px
@@ -474,15 +474,15 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 <strong style='color:#c8d8e8'>Spread and annualised return (fixed price)</strong><br>
 &nbsp;&nbsp;&nbsp;Spread%     = (Tender_price − Market_price) ÷ Market_price × 100<br>
 &nbsp;&nbsp;&nbsp;Ann_return  = Spread% ÷ Days_to_deadline × 365<br>
-&nbsp;&nbsp;&nbsp;This is the key ranking metric — normalises different deadlines to a comparable basis<br><br>
+&nbsp;&nbsp;&nbsp;This is the key ranking metric, normalises different deadlines to a comparable basis<br><br>
 <strong style='color:#c8d8e8'>Effective premium after proration</strong><br>
 &nbsp;&nbsp;&nbsp;Accepted    = N_tendered × Proration_rate<br>
 &nbsp;&nbsp;&nbsp;Eff_price   = (Accepted × Tender_px + Returned × Market_px) ÷ N_tendered<br>
 &nbsp;&nbsp;&nbsp;Eff_prem%   = Eff_price ÷ Market_px − 1<br>
 &nbsp;&nbsp;&nbsp;Eff_ann     = Eff_prem% ÷ Days × 365<br><br>
 <strong style='color:#c8d8e8'>Odd lot arbitrage</strong><br>
-&nbsp;&nbsp;&nbsp;Odd lot positions (≤ threshold) are guaranteed full fill at tender price — no proration<br>
-&nbsp;&nbsp;&nbsp;Odd_lot_P&L = (Tender_px − Market_px) × N_shares — no fill uncertainty<br>
+&nbsp;&nbsp;&nbsp;Odd lot positions (≤ threshold) are guaranteed full fill at tender price, no proration<br>
+&nbsp;&nbsp;&nbsp;Odd_lot_P&L = (Tender_px − Market_px) × N_shares, no fill uncertainty<br>
 &nbsp;&nbsp;&nbsp;Risk-free spread capture if position ≤ threshold and deadline risk is acceptable<br><br>
 <strong style='color:#c8d8e8'>Dutch auction expected value (EV) model</strong><br>
 &nbsp;&nbsp;&nbsp;Assumption: clearing price uniformly distributed across the range; in an issuer tender the holder is filled when clearing is at or above their bid<br>

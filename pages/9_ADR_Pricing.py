@@ -166,7 +166,7 @@ st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — SCANNER TABLE
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  ADR Arb Scanner — All Pairs", expanded=True):
+with st.expander("◆  ADR Arb Scanner · All Pairs", expanded=True):
     scan_rows = []; scan_hl = {}
     for i,r in enumerate(processed):
         # Direction abbreviated: ▲ = buy local/sell ADR, ▼ = buy ADR/sell local
@@ -271,7 +271,7 @@ detail_rows = [
     ("FX rate",               f"{r['local_ccy']}→USD {r['spot_fx']:.6f}", "Market spot rate applied"),
     ("Local price (USD)",     f"USD {r['local_usd']:.4f}",            "Local price converted at spot"),
     ("ADR/alt price",         f"USD {r['adr_px']:.4f}" if r.get('adr_ccy','USD')=='USD' else f"{r.get('adr_ccy','USD')} {r['adr_px']:.4f}", f"Last traded on {r['adr_exch']}"),
-    ("ADR implied local",     f"USD {r['implied_local_usd']:.4f}",    "ADR price ÷ ratio — what local should trade at"),
+    ("ADR implied local",     f"USD {r['implied_local_usd']:.4f}",    "ADR price ÷ ratio, what local should trade at"),
     ("Gross arb",             f"{r['arb_pct']:+.4f}%",                "(Implied − local) ÷ local × 100"),
     ("Round-trip friction",   f"{r['friction']:.2f}%",                "Est. conversion fees + bid-ask + timing"),
     ("Net arb",               f"{r['net_arb']:+.4f}%",                "Gross arb minus round-trip friction"),
@@ -313,6 +313,6 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 <strong style='color:#c8d8e8'>Limitations of this model</strong><br>
 &nbsp;&nbsp;&nbsp;Does not account for dividend entitlement timing differences between ADR and local<br>
 &nbsp;&nbsp;&nbsp;Does not model borrowing costs for short positions<br>
-&nbsp;&nbsp;&nbsp;Assumes simultaneous execution — in practice, leg 2 carries short-term market risk<br>
+&nbsp;&nbsp;&nbsp;Assumes simultaneous execution, in practice, leg 2 carries short-term market risk<br>
 &nbsp;&nbsp;&nbsp;Corporate events (dividends, splits) can temporarily widen the spread
 </div>""", unsafe_allow_html=True)

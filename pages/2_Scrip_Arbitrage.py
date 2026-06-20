@@ -101,7 +101,7 @@ st.markdown(
     f"{'⚡' if action_count>0 else '·'} &nbsp;"
     f"<span style='color:{'#ff3355' if action_count>0 else '#304050'}'>"
     f"<strong style='color:{'#c8d8e8' if action_count>0 else '#304050'}'>{action_count} events</strong>"
-    f" default to CASH but scrip election gives higher value — active instruction required"
+    f" default to CASH but scrip election gives higher value, active instruction required"
     f"</span></div>",
     unsafe_allow_html=True
 )
@@ -114,7 +114,7 @@ st.markdown(
     f" &nbsp;·&nbsp; Ex-date: <span style='color:#c8d8e8'>{fmt_date(ev['ex_date'])}</span>"
     f" &nbsp;·&nbsp; Deadline: <span style='color:#{'ff3355' if ddl_days is not None and ddl_days<=3 else 'f5a623' if ddl_days is not None and ddl_days<=7 else 'c8d8e8'}'>{fmt_date(ev['election_deadline'])} ({ddl_days}d)</span>"
     f" &nbsp;·&nbsp; Default: <span style='color:{'ff3355' if action_req else '6a8090'}'>{default_el}</span>"
-    f" &nbsp;·&nbsp; {'⚡ ACTION REQUIRED — elect ' + calc_opt if action_req else 'No action required'}"
+    f" &nbsp;·&nbsp; {'⚡ ACTION REQUIRED, elect ' + calc_opt if action_req else 'No action required'}"
     f"</div>",
     unsafe_allow_html=True
 )
@@ -138,7 +138,7 @@ k6.metric("Ratio",             str(ev["scrip_ratio"]) if ev["scrip_ratio"] and s
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — OPPORTUNITY SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Opportunity Scanner — All Live Scrip Events", expanded=True):
+with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=True):
     sc1,sc2,sc3,sc4 = st.columns(4)
     must_elect_n = int(df["_action_req"].sum())
     wht_n = len(df[df["withholding_tax_pct"].apply(sf).apply(lambda x: x is not None and x>0)])
@@ -187,7 +187,7 @@ with st.expander("◆  Opportunity Scanner — All Live Scrip Events", expanded=
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — ECONOMICS DEEP-DIVE
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Economics — {ev['ticker']} / {ev['company_name']}", expanded=True):
+with st.expander(f"◆  Economics · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if cash_amt and scrip_px and rd and current_px > 0:
         nshares_per = rn / rd
         be_price    = cash_net / nshares_per if (cash_net and nshares_per) else 0
@@ -206,14 +206,14 @@ with st.expander(f"◆  Economics — {ev['ticker']} / {ev['company_name']}", ex
                 ("Scrip premium",        f"{prem:+.2f}%" if prem else "—",            "◆ SCRIP BETTER" if prem and prem>0 else "CASH BETTER"),
                 ("Break-even price",     f"{ev['currency']} {be_price:.2f}" if be_price else "—", "Below this → take CASH"),
                 ("Election default",     default_el,                                  "If no instruction received"),
-                ("Action required",      "YES — elect SCRIP" if action_req else "No — default is optimal", ""),
+                ("Action required",      "YES, elect SCRIP" if action_req else "No, default is optimal", ""),
             ]
             hl = {7:{1:pct_colour(prem),2:'#00d4aa' if prem and prem>0 else '#f5a623'},
                   10:{1:'#ff3355' if action_req else '#00d4aa', 2:'#ff3355' if action_req else '#304050'}}
             dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=420)
 
         with col_r:
-            st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L — {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
+            st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position P&L · {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
             if pos_shares > 0:
                 total_cash  = pos_shares * cash_net if cash_net else 0
                 new_shares  = pos_shares * nshares_per
@@ -237,13 +237,13 @@ with st.expander(f"◆  Economics — {ev['ticker']} / {ev['company_name']}", ex
                         f"<div style='border-left:2px solid #ff3355;background:#ff335508;"
                         f"padding:0.35rem 0.7rem;font-family:IBM Plex Mono;font-size:0.68rem;"
                         f"color:#ff3355;margin-top:0.4rem'>"
-                        f"⚡  Election default is {default_el} — you will leave "
+                        f"⚡  Election default is {default_el}, you will leave "
                         f"{ev['currency']} {abs(delta):,.2f} on the table if no instruction sent. "
                         f"Instruct SCRIP before {fmt_date(ev['election_deadline'])}.</div>",
                         unsafe_allow_html=True
                     )
                 elif prem and prem > 0:
-                    st.success(f"◆  Scrip premium {prem:.2f}% — elect SCRIP for +{ev['currency']} {delta:,.2f}")
+                    st.success(f"◆  Scrip premium {prem:.2f}%: elect SCRIP for +{ev['currency']} {delta:,.2f}")
             else:
                 st.markdown("<p style='color:#304050;font-size:0.7rem'>Enter position size in sidebar.</p>", unsafe_allow_html=True)
 
@@ -251,11 +251,11 @@ with st.expander(f"◆  Economics — {ev['ticker']} / {ev['company_name']}", ex
 # SECTION 3 — WHT IMPACT ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 if wht > 0:
-    with st.expander(f"◆  Withholding Tax Impact — {wht:.0f}% WHT applies", expanded=True):
+    with st.expander(f"◆  Withholding Tax Impact · {wht:.0f}% WHT applies", expanded=True):
         st.markdown(
             f"<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.8;margin-bottom:0.6rem'>"
             f"This event carries <span style='color:#ff3355'>{wht:.0f}% WHT</span> on cash dividends. "
-            f"In most jurisdictions, <strong style='color:#c8d8e8'>scrip dividends are WHT-exempt</strong> — making the tax advantage of electing scrip material at this rate."
+            f"In most jurisdictions, <strong style='color:#c8d8e8'>scrip dividends are WHT-exempt</strong>, making the tax advantage of electing scrip material at this rate."
             f"</div>",
             unsafe_allow_html=True
         )
@@ -301,11 +301,11 @@ if wht > 0:
                 if wht >= 30:
                     st.success(f"◆  At {wht:.0f}% WHT, scrip advantage on {pos_shares:,} shares is {ev['currency']} {pos_shares*nshares_per*current_px - pos_shares*cash_net:,.2f}")
 else:
-    with st.expander("◆  Withholding Tax — 0% WHT applies", expanded=False):
+    with st.expander("◆  Withholding Tax · 0% WHT applies", expanded=False):
         st.markdown(
             f"<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.8'>"
             f"<strong style='color:#c8d8e8'>0% withholding tax</strong> applies to this event. "
-            f"Cash and scrip elections are compared on a gross basis — no tax drag on the cash alternative. "
+            f"Cash and scrip elections are compared on a gross basis, no tax drag on the cash alternative. "
             f"The scrip premium shown in Section 1 reflects the pure economic difference with no WHT adjustment.<br><br>"
             f"Countries with significant WHT typically include: France (30%), Switzerland (35%), "
             f"Belgium (30%), Spain (19%), Germany (26.375%). "
@@ -365,7 +365,7 @@ with st.expander("◆  Break-even Analysis", expanded=True):
             f"Break-even: <span style='color:#c8d8e8'>{ev['currency']} {be_price:.2f}</span>"
             f" &nbsp;·&nbsp; Current is <span style='color:{verdict_col}'>{'above' if current_px>be_price else 'below'} break-even</span>"
             f" &nbsp;·&nbsp; <span style='color:{verdict_col}'>Elect {'SCRIP' if current_px>be_price else 'CASH'}</span>"
-            f"{'  ·  ' + '<span style=\"color:#ff3355\">⚡ Must actively instruct — default is ' + default_el + '</span>' if action_req else ''}"
+            f"{'  ·  ' + '<span style=\"color:#ff3355\">⚡ Must actively instruct, default is ' + default_el + '</span>' if action_req else ''}"
             f"</p>",
             unsafe_allow_html=True
         )
@@ -379,7 +379,7 @@ with st.expander("◆  Lender Conflict & Recall Assessment", expanded=False):
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>Mechanics</span><br><br>
 Shares on loan over record date (<span style='color:#c8d8e8'>{fmt_date(ev["ex_date"])}</span>): borrower receives the dividend.
-Lender receives a <strong style='color:#f5a623'>manufactured dividend</strong> equal to cash amount — <strong style='color:#f5a623'>scrip election unavailable on lent stock</strong>.<br><br>
+Lender receives a <strong style='color:#f5a623'>manufactured dividend</strong> equal to cash amount, <strong style='color:#f5a623'>scrip election unavailable on lent stock</strong>.<br><br>
 If scrip election is optimal and stock is lent, every basis point of premium is a direct cost to the lender.
 </div>""", unsafe_allow_html=True)
 
@@ -411,9 +411,9 @@ Recall by: <span style='color:#{"ff3355" if _recall_by not in ("—","T−2 from
 
     if prem and prem > 0 and pos_shares > 0:
         alpha_val = (scrip_val - cash_net) * pos_shares if scrip_val and cash_net else 0
-        st.success(f"◆  RECALL WARRANTED — scrip premium {prem:.2f}% · Alpha: {ev['currency']} {alpha_val:,.4f} on {pos_shares:,} sh · Deadline: {fmt_date(ev['election_deadline'])}")
+        st.success(f"◆  RECALL WARRANTED: scrip premium {prem:.2f}% · Alpha: {ev['currency']} {alpha_val:,.4f} on {pos_shares:,} sh · Deadline: {fmt_date(ev['election_deadline'])}")
     if ddl_days is not None and 0 <= ddl_days <= 3:
-        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  URGENT — election deadline {ddl_days}d. Recall settlement window closing.</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  URGENT, election deadline {ddl_days}d. Recall settlement window closing.</div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # METHODOLOGY
@@ -436,7 +436,7 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 &nbsp;&nbsp;&nbsp;If P_current > B/E → SCRIP better; if P_current < B/E → CASH better<br><br>
 <strong style='color:#c8d8e8'>Action required flag</strong><br>
 &nbsp;&nbsp;&nbsp;Action_required = (election_default ≠ optimal_election)<br>
-&nbsp;&nbsp;&nbsp;i.e. the company's default election is suboptimal — instruction must be sent<br><br>
+&nbsp;&nbsp;&nbsp;i.e. the company's default election is suboptimal, instruction must be sent<br><br>
 <strong style='color:#c8d8e8'>Inferred market price</strong><br>
 &nbsp;&nbsp;&nbsp;P_inferred = Scrip_issue_price ÷ (1 + discount%)<br>
 &nbsp;&nbsp;&nbsp;Used when no live market price is available (reverse-engineered from issue discount)

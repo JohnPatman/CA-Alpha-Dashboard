@@ -48,6 +48,21 @@ def test_event_type_agrees_with_rights_type():
     assert n == 0, f"{n} open offers mis-tagged as rights_issue"
 
 
+def test_no_event_dates_on_weekends():
+    """Corporate action dates fall on business days. After rebase + snap, no
+       date column should land on a Saturday or Sunday (strftime %w 6 or 0)."""
+    c = _conn()
+    cols = [("events","ex_date"),("events","record_date"),("events","election_deadline"),
+            ("events","payment_date"),("merger_details","court_sanction_date")]
+    offenders = []
+    for tbl, col in cols:
+        n = c.execute(f"""SELECT COUNT(*) FROM {tbl}
+            WHERE {col} IS NOT NULL AND strftime('%w',{col}) IN ('0','6')""").fetchone()[0]
+        if n: offenders.append(f"{tbl}.{col}={n}")
+    c.close()
+    assert not offenders, f"weekend dates found: {offenders}"
+
+
 def test_parse_ratio_handles_scrip_and_rights_formats():
     """Canonical parse_ratio must handle both 'N per M' (scrip) and 'N for M'
        (rights). The rights page relies on the shared helper, not a local copy."""

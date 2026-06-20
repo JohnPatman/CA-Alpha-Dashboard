@@ -62,6 +62,25 @@ n3 = c.execute("""
 print(f"✓  open-offer nil-paid cleared: {n3} row(s) fixed."
       if n3 else "–  nil-paid: no open offers carry a nil-paid line (already patched).")
 
+# ── Fix 4: snap any corporate-action date that landed on a weekend to a weekday ─
+n4 = 0
+for _tbl, _col in [("events","announcement_date"),("events","ex_date"),
+                   ("events","record_date"),("events","election_deadline"),
+                   ("events","payment_date"),("events","settlement_date"),
+                   ("merger_details","court_sanction_date"),("merger_details","long_stop_date")]:
+    try:
+        n4 += c.execute(f"""
+            UPDATE {_tbl} SET {_col} = CASE strftime('%w', {_col})
+                WHEN '6' THEN date({_col}, '-1 day')
+                WHEN '0' THEN date({_col}, '+1 day')
+                ELSE {_col} END
+            WHERE {_col} IS NOT NULL AND strftime('%w', {_col}) IN ('0','6')
+        """).rowcount
+    except Exception:
+        pass
+print(f"✓  weekend dates snapped to business days: {n4} cell(s) fixed."
+      if n4 else "–  dates: none fall on a weekend (already patched).")
+
 conn.commit()
 conn.close()
 print("\n✓  Review data fixes committed.")

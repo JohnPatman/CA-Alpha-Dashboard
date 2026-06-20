@@ -333,7 +333,7 @@ def render_cards(df_section):
             if t == "fx_election":
                 if row.get("optimal_election") and str(row["optimal_election"]) != "nan":
                     parts.append(f"Optimal  {row['optimal_election']}")
-            else:  # scrip_dividend — canonical decision, not stored field
+            else:  # scrip_dividend, canonical decision, not stored field
                 _prem, _opt, _act, _ = scrip_decision(
                     row.get("cash_amount"), row.get("scrip_issue_price"), row.get("scrip_ratio"),
                     row.get("scrip_discount_pct"), row.get("withholding_tax_pct"), row.get("election_default"))
@@ -554,7 +554,7 @@ with st.expander("◆  Deadline Countdown", expanded=True):
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — LIVE EVENT FEED (active events, default = Table)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Live Event Feed  —  {len(df_active)} events  (+ {len(df_passed)} passed deadline — see below)", expanded=True):
+with st.expander(f"◆  Live Event Feed  ·  {len(df_active)} events  (+ {len(df_passed)} passed deadline · see below)", expanded=True):
     view = st.radio("View", ["Table", "Cards"], index=0, horizontal=True, label_visibility="collapsed")
 
     if view == "Table":
@@ -579,7 +579,7 @@ with st.expander(f"◆  Live Event Feed  —  {len(df_active)} events  (+ {len(d
 # SECTION 3 — PASSED DEADLINES (collapsed by default)
 # ═════════════════════════════════════════════════════════════════════════════
 if len(df_passed) > 0:
-    with st.expander(f"◆  Passed Deadlines  —  {len(df_passed)} events", expanded=False):
+    with st.expander(f"◆  Passed Deadlines  ·  {len(df_passed)} events", expanded=False):
         render_cards(df_passed)
 
 # ═════════════════════════════════════════════════════════════════════════════

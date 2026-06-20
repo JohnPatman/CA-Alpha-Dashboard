@@ -75,7 +75,7 @@ ddl_days = days_to(ev["election_deadline"])
 dot      = tdot(ddl_days)
 _rn_raw, _rd_raw = parse_ratio(ev["rights_ratio"])
 if (_rn_raw is None or _rd_raw is None) and ev["rights_ratio"] and str(ev["rights_ratio"]) != "nan":
-    st.warning(f"Rights ratio '{ev['rights_ratio']}' could not be parsed — TERP, nil-paid, and dilution calculations use 1:1 fallback. Verify ratio format.")
+    st.warning(f"Rights ratio '{ev['rights_ratio']}' could not be parsed, TERP, nil-paid, and dilution calculations use 1:1 fallback. Verify ratio format.")
 rn, rd = _rn_raw or 1, _rd_raw or 1
 
 # Calculate TERP from first principles
@@ -105,7 +105,7 @@ k3.metric("TERP",           f"{ev['currency']} {terp_calc:.2f}" if terp_calc els
           help=f"({rd}×{cur_px:.0f} + {rn}×{sub_px:.0f}) / {rd+rn}" if cur_px and sub_px else "")
 if is_open_offer:
     k4.metric("Nil-Paid Value", "N/A", delta="Non-renounceable", delta_color="off",
-              help="Open offers are non-renounceable — the entitlement cannot be sold")
+              help="Open offers are non-renounceable, the entitlement cannot be sold")
 else:
     k4.metric("Nil-Paid Value", f"{ev['currency']} {nil_calc:.2f}" if nil_calc else "—",
               delta="Tradeable" if nil_calc and nil_calc>0 else None, delta_color="normal")
@@ -116,7 +116,7 @@ k6.metric("Proceeds",       f"{ev['currency']} {proceeds:,.0f}m" if proceeds els
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Rights Issue Scanner — All Live Events", expanded=True):
+with st.expander("◆  Rights Issue Scanner · All Live Events", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
     deep_n   = len(df[df["discount_to_terp_pct"].apply(sf).apply(lambda x: x is not None and x<-25)])
     rights_n = len(df[df["rights_type"]=="RIGHTS_ISSUE"])
@@ -165,7 +165,7 @@ with st.expander("◆  Rights Issue Scanner — All Live Events", expanded=True)
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — TERP & POSITION ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name']}", expanded=True):
+with st.expander(f"◆  TERP & Economics · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if sub_px and cur_px:
         col_l, col_r = st.columns(2)
         with col_l:
@@ -175,7 +175,7 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
                 ("Current price",         f"{ev['currency']} {cur_px:.2f}",                 "Pre-rights cum price"),
                 ("Subscription price",    f"{ev['currency']} {sub_px:.2f}",                 "Price to take up rights"),
                 ("TERP (calculated)",     f"{ev['currency']} {terp_calc:.2f}",               f"({rd}×{cur_px:.2f} + {rn}×{sub_px:.2f}) / {rd+rn}"),
-                ("Nil-paid value",        "N/A" if is_open_offer else f"{ev['currency']} {nil_calc:.2f}",  "Non-renounceable — cannot be sold" if is_open_offer else "TERP − sub price  (market value of right)"),
+                ("Nil-paid value",        "N/A" if is_open_offer else f"{ev['currency']} {nil_calc:.2f}",  "Non-renounceable, cannot be sold" if is_open_offer else "TERP − sub price  (market value of right)"),
                 ("Discount of sub to TERP",f"{disc_calc:+.1f}%",                             "How deep the issue is priced"),
                 ("Current vs TERP",       f"{prem_terp:+.1f}%" if prem_terp else "—",       "Current price premium above TERP"),
                 ("Underwriter",           str(ev["underwriter"]) if ev["underwriter"] and str(ev["underwriter"])!='nan' else "—", ""),
@@ -189,7 +189,7 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
             dark_table(econ_rows, ["Parameter","Value","Note"], hl, height=430)
 
         with col_r:
-            st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position analysis — {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
+            st.markdown("<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:#304050;margin-bottom:0.4rem'>Position analysis · {:,.0f} shares</p>".format(pos_shares), unsafe_allow_html=True)
             if pos_shares > 0:
                 new_ent    = int(pos_shares * rn / rd)
                 sub_cost   = new_ent * sub_px
@@ -212,18 +212,18 @@ with st.expander(f"◆  TERP & Economics — {ev['ticker']} / {ev['company_name'
 
                 if is_open_offer:
                     if cur_px and sub_px and cur_px > sub_px:
-                        st.success(f"◆  Take up — sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Open offer is non-renounceable: take up or let lapse, the entitlement cannot be sold.")
+                        st.success(f"◆  Take up: sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Open offer is non-renounceable: take up or let lapse, the entitlement cannot be sold.")
                     else:
-                        st.warning("⚠  Sub price near or above TERP — taking up offers little benefit; lapse is reasonable. (Non-renounceable — no nil-paid to sell.)")
+                        st.warning("⚠  Sub price near or above TERP, taking up offers little benefit; lapse is reasonable. (Non-renounceable, no nil-paid to sell.)")
                 elif nil_calc > 0 and cur_px > sub_px:
-                    st.success(f"◆  Take up rights — sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Nil-paid value: {ev['currency']} {nil_tot:,.2f}")
+                    st.success(f"◆  Take up rights: sub {ev['currency']} {sub_px:.2f} < TERP {terp_calc:.2f}. Nil-paid value: {ev['currency']} {nil_tot:,.2f}")
                 else:
-                    st.warning("⚠  Sub price near or above TERP — consider selling nil-paid rights")
+                    st.warning("⚠  Sub price near or above TERP, consider selling nil-paid rights")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — TAKE-UP vs SELL CHART
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Take-up Economics — P&L at Different Share Prices", expanded=True):
+with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expanded=True):
     if sub_px and cur_px and terp_calc:
         lo = sub_px * 0.80
         hi = cur_px * 1.30
@@ -264,11 +264,11 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
         st.plotly_chart(fig, use_container_width=True)
         if is_open_offer:
             _cap = (f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
-                    f" &nbsp;·&nbsp; <span style='color:#6a8090'>Non-renounceable — take up or lapse only</span>")
+                    f" &nbsp;·&nbsp; <span style='color:#6a8090'>Non-renounceable, take up or lapse only</span>")
         elif cur_px > sub_px:
             _cap = (f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
                     f" &nbsp;·&nbsp; Nil-paid value today: <span style='color:#00d4aa'>{ev['currency']} {nil_calc:.2f}/right</span>"
-                    f" &nbsp;·&nbsp; <span style='color:#00d4aa'>Take up rights — positive P&L at current price</span>")
+                    f" &nbsp;·&nbsp; <span style='color:#00d4aa'>Take up rights, positive P&L at current price</span>")
         else:
             _cap = (f"Break-even: <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
                     f" &nbsp;·&nbsp; <span style='color:#f5a623'>Consider selling nil-paid rights in market</span>")
@@ -282,7 +282,7 @@ with st.expander("◆  Take-up Economics — P&L at Different Share Prices", exp
             st.markdown(
                 "<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;"
                 "color:#304050;margin-top:0.8rem;margin-bottom:0.3rem'>"
-                f"Portfolio P&L — {pos_shares:,} shares — {'take-up vs lapse' if is_open_offer else 'take-up vs lapse vs sell rights'}</p>",
+                f"Portfolio P&L, {pos_shares:,} shares, {'take-up vs lapse' if is_open_offer else 'take-up vs lapse vs sell rights'}</p>",
                 unsafe_allow_html=True
             )
             rights_ent = pos_shares * rn / rd
@@ -396,9 +396,9 @@ with st.expander("◆  Settlement & Lender Considerations", expanded=False):
                 _recall_by_ri = _rb2.isoformat()
             except Exception:
                 _recall_by_ri = "T−2 from record"
-        _np_trading = "Entitlement non-renounceable — cannot be traded" if is_open_offer else "Nil-paid trading opens: ex-date"
+        _np_trading = "Entitlement non-renounceable, cannot be traded" if is_open_offer else "Nil-paid trading opens: ex-date"
         _np_ticker = str(ev["nil_paid_ticker"]) if ev["nil_paid_ticker"] and str(ev["nil_paid_ticker"])!='nan' else "Check prospectus"
-        _np_tail = ("<span style='color:#6a8090'>Non-renounceable — no nil-paid instrument</span>" if is_open_offer
+        _np_tail = ("<span style='color:#6a8090'>Non-renounceable, no nil-paid instrument</span>" if is_open_offer
                     else f"Nil-paid ticker: <span style='color:#c8d8e8'>{_np_ticker}</span><br>Current nil-paid value: <span style='color:#00d4aa'>{ev['currency']} {nil_calc:.2f}</span>")
         st.markdown(f"""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:1.9'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase'>Timeline</span><br><br>
@@ -420,7 +420,7 @@ Payment/settlement: <span style='color:#c8d8e8'>{fmt_date(ev["payment_date"])}</
                 "participate, the lender must recall before record date to become holder of record "
                 "and decide take-up vs lapse.<br><br>"
                 f"Recall by: {_recall_html}<br><br>"
-                "No nil-paid value to capture — the recall decision turns on the take-up opportunity "
+                "No nil-paid value to capture, the recall decision turns on the take-up opportunity "
                 "(subscribe below TERP), not on selling rights."
             )
         else:
@@ -428,7 +428,7 @@ Payment/settlement: <span style='color:#c8d8e8'>{fmt_date(ev["payment_date"])}</
                 "Shares on loan over ex-date: borrower receives nil-paid rights. "
                 "Lender receives <strong style='color:#f5a623'>manufactured nil-paid rights</strong> from borrower.<br><br>"
                 "Lender must instruct borrower on election before deadline. "
-                "If stock not recalled, election instruction must go via borrower — coordination critical.<br><br>"
+                "If stock not recalled, election instruction must go via borrower, coordination critical.<br><br>"
                 f"Recall by: {_recall_html}<br><br>"
                 f"Recall if nil-paid value ({ev['currency']} {nil_calc:.2f}/right × {int(pos_shares*rn/rd):,} rights = "
                 f"<span style='color:#00d4aa'>{ev['currency']} {int(pos_shares*rn/rd)*nil_calc:,.0f}</span>) exceeds lending income."
@@ -440,7 +440,7 @@ Payment/settlement: <span style='color:#c8d8e8'>{fmt_date(ev["payment_date"])}</
 
     if ddl_days is not None and 0 <= ddl_days <= 5:
         _imm_tail = "election window closing imminently" if is_open_offer else "nil-paid rights trading closing imminently"
-        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  Subscription deadline {ddl_days}d — {_imm_tail}.</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.3rem 0.7rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#ff3355;margin-top:0.3rem'>🔴  Subscription deadline {ddl_days}d, {_imm_tail}.</div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # METHODOLOGY
@@ -451,13 +451,13 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 <strong style='color:#c8d8e8'>Theoretical Ex-Rights Price (TERP)</strong><br>
 &nbsp;&nbsp;&nbsp;TERP = (N_existing × P_cum + N_new × Sub_price) ÷ (N_existing + N_new)<br>
 &nbsp;&nbsp;&nbsp;Assumption: no market impact, no signalling effect, linear share dilution<br>
-&nbsp;&nbsp;&nbsp;Example — 1 for 4 at 80p, current 120p: TERP = (4×120 + 1×80) ÷ 5 = 112p<br><br>
+&nbsp;&nbsp;&nbsp;Example, 1 for 4 at 80p, current 120p: TERP = (4×120 + 1×80) ÷ 5 = 112p<br><br>
 <strong style='color:#c8d8e8'>Nil-paid value (value of the right itself)</strong><br>
 &nbsp;&nbsp;&nbsp;Nil_paid = max(0, TERP − Sub_price)<br>
 &nbsp;&nbsp;&nbsp;This is the intrinsic value of the right to subscribe at Sub_price when stock trades at TERP<br>
 &nbsp;&nbsp;&nbsp;Traded in the market as a separate instrument between ex-date and subscription deadline<br><br>
 <strong style='color:#c8d8e8'>Discount to TERP</strong><br>
-&nbsp;&nbsp;&nbsp;Disc% = Sub_price ÷ TERP − 1  (typically negative — deeper = more dilutive)<br>
+&nbsp;&nbsp;&nbsp;Disc% = Sub_price ÷ TERP − 1  (typically negative, deeper = more dilutive)<br>
 &nbsp;&nbsp;&nbsp;Reflects how aggressively the issue is priced to ensure take-up<br><br>
 <strong style='color:#c8d8e8'>Maximum dilution (if all rights taken up)</strong><br>
 &nbsp;&nbsp;&nbsp;Dilution_max = N_new ÷ (N_existing + N_new)<br>

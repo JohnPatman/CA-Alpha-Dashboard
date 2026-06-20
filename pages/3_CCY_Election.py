@@ -19,7 +19,7 @@ def migrate_db():
         conn.execute("ALTER TABLE scrip_details ADD COLUMN rate_pre_deadline INTEGER DEFAULT 0")
         conn.commit()
     except Exception:
-        pass  # column already exists — that's fine
+        pass  # column already exists, that's fine
 
     # Step 2: ALWAYS set correct flags regardless of column state
     # This runs whether column was just created or already existed
@@ -71,8 +71,8 @@ if df.empty:
         f"border:1px solid #182436;background:#080c12;padding:0.7rem 1rem;margin-top:0.5rem'>"
         f"<strong style='color:#c8d8e8'>No confirmed pre-deadline fixed rate events in dataset.</strong><br><br>"
         f"This module only shows CCY elections where the company announces a fixed FX reference rate "
-        f"before the election deadline — creating a genuine arb vs spot. "
-        f"<br><span style='color:#304050'>{total_ccy} events excluded — rate set at or after deadline (no locked-in arb).</span>"
+        f"before the election deadline, creating a genuine arb vs spot. "
+        f"<br><span style='color:#304050'>{total_ccy} events excluded, rate set at or after deadline (no locked-in arb).</span>"
         f"</div>",
         unsafe_allow_html=True
     )
@@ -128,7 +128,7 @@ uplift  = co_gbp - mkt_gbp if co_gbp and mkt_gbp else None
 uplift_bps = uplift / mkt_gbp * 10000 if uplift and mkt_gbp else None
 
 # ── page header ───────────────────────────────────────────────────────────────
-st.title("◆ CCY Election Optimiser — Pre-Deadline Fixed Rate Only")
+st.title("◆ CCY Election Optimiser · Pre-Deadline Fixed Rate Only")
 
 # Pre-deadline filter banner — this is the defining analytical choice of this module
 total_ccy = len(df) + excluded_n
@@ -139,9 +139,9 @@ st.markdown(
     f"<strong style='color:#00d4aa'>◆ Analytical filter:</strong> "
     f"showing <strong style='color:#c8d8e8'>{len(df)} of {total_ccy} CCY elections</strong> "
     f"where the company <strong style='color:#c8d8e8'>announced a fixed FX reference rate "
-    f"at the time of the dividend declaration</strong> — before the election deadline. "
+    f"at the time of the dividend declaration</strong>, before the election deadline. "
     f"This locks in the arb vs spot. The {excluded_n} excluded events have rates set "
-    f"at or after the deadline (no locked-in arb — currency preference only, not arbitrage)."
+    f"at or after the deadline (no locked-in arb, currency preference only, not arbitrage)."
     f"</div>",
     unsafe_allow_html=True
 )
@@ -152,7 +152,7 @@ if action_n > 0:
     st.markdown(
         f"<div style='font-family:IBM Plex Mono;font-size:0.72rem;color:#ff3355;"
         f"padding:0.35rem 0.6rem;border:1px solid #ff335540;background:#ff335508;margin-bottom:0.8rem'>"
-        f"⚡ &nbsp;<strong style='color:#c8d8e8'>{action_n} events</strong> default to wrong currency — "
+        f"⚡ &nbsp;<strong style='color:#c8d8e8'>{action_n} events</strong> default to wrong currency, "
         f"alpha is forfeited unless you actively elect. Check Action column below.</div>",
         unsafe_allow_html=True
     )
@@ -189,7 +189,7 @@ k6.metric("Cost of Inaction",
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — ARB SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Arb Scanner — All Live CCY Elections", expanded=True):
+with st.expander("◆  Arb Scanner · All Live CCY Elections", expanded=True):
     sc1,sc2,sc3,sc4 = st.columns(4)
     action_n  = int(df["_action"].sum())
     high_arb  = len(df[df["fx_arbitrage_pct"].apply(sf).apply(lambda x: x is not None and x>2.0)])
@@ -248,7 +248,7 @@ with st.expander("◆  Arb Scanner — All Live CCY Elections", expanded=True):
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — CURRENCY ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Currency Analysis — {ev['ticker']} / {ev['company_name']}", expanded=True):
+with st.expander(f"◆  Currency Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if cash_amt and co_rate and mkt_rate:
         # Identify which non-base currency has a stored rate (GBP)
         gbp_ccy = "GBP" if "GBP" in currencies else (next((c for c in currencies if c != base_ccy), None))
@@ -298,7 +298,7 @@ with st.expander(f"◆  Currency Analysis — {ev['ticker']} / {ev['company_name
                        ccy_hl, height=max(len(currencies)*36+55,130))
 
             if any("*" in c for c in bar_ccys):
-                st.markdown("<p style='font-family:IBM Plex Mono;font-size:0.6rem;color:#304050;margin-top:0.2rem'>* Rate estimated — only USD/GBP rate stored. Treat non-GBP values as proxy.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='font-family:IBM Plex Mono;font-size:0.6rem;color:#304050;margin-top:0.2rem'>* Rate estimated, only USD/GBP rate stored. Treat non-GBP values as proxy.</p>", unsafe_allow_html=True)
 
         with col_r:
             colours_co  = ["#00d4aa" if c.rstrip("*")==optimal else "#243548" for c in bar_ccys]
@@ -322,13 +322,13 @@ with st.expander(f"◆  Currency Analysis — {ev['ticker']} / {ev['company_name
             st.markdown(
                 f"<div style='border-left:2px solid #ff3355;background:#ff335508;padding:0.35rem 0.7rem;"
                 f"font-family:IBM Plex Mono;font-size:0.68rem;color:#ff3355;margin-top:0.3rem'>"
-                f"⚡  Default is <strong>{default_el}</strong> — you must actively elect <strong style='color:#c8d8e8'>{optimal}</strong>. "
+                f"⚡  Default is <strong>{default_el}</strong>, you must actively elect <strong style='color:#c8d8e8'>{optimal}</strong>. "
                 f"{'Cost of inaction on ' + str(pos_shares) + ' shares: GBP ' + f'{inaction_cost:,.4f}' if inaction_cost else 'Set position size for cost calculation.'}"
                 f"</div>",
                 unsafe_allow_html=True
             )
         elif arb_pct and arb_pct > 0:
-            st.success(f"◆  Elect {optimal} — {arb_pct:.2f}% / {arb_pct*100:.0f}bps arb vs {base_ccy} at spot")
+            st.success(f"◆  Elect {optimal}: {arb_pct:.2f}% / {arb_pct*100:.0f}bps arb vs {base_ccy} at spot")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — FX SENSITIVITY
@@ -402,7 +402,7 @@ with st.expander("◆  FX Sensitivity Analysis", expanded=True):
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4 — POSITION P&L
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander(f"◆  Position P&L — {pos_shares:,} shares", expanded=True):
+with st.expander(f"◆  Position P&L · {pos_shares:,} shares", expanded=True):
     if pos_shares > 0 and cash_amt and co_rate and mkt_rate:
         co_tot  = pos_shares * cash_amt * co_rate  * (1-wht/100)
         mkt_tot = pos_shares * cash_amt * mkt_rate * (1-wht/100)
@@ -417,7 +417,7 @@ with st.expander(f"◆  Position P&L — {pos_shares:,} shares", expanded=True):
             ("GBP @ market rate",    f"GBP {mkt_tot:,.4f}",                 f"@ {mkt_rate:.4f} spot"),
             ("Arb uplift",           f"GBP {uplift_tot:+,.4f}",             f"{arb_pct:+.2f}% / {bps_tot:.0f}bps"),
             ("Uplift per share",     f"GBP {uplift_tot/pos_shares:.6f}",    ""),
-            ("Cost of inaction",     f"GBP {uplift_tot:+,.4f}" if action_req else "N/A — default is optimal", "If no election made"),
+            ("Cost of inaction",     f"GBP {uplift_tot:+,.4f}" if action_req else "N/A, default is optimal", "If no election made"),
         ]
         hl = {4:{1:'#00d4aa' if uplift_tot>0 else '#f5a623',2:'#00d4aa' if uplift_tot>0 else '#f5a623'},
               6:{1:'#ff3355' if action_req else '#304050',2:'#ff3355' if action_req else '#304050'}}
@@ -432,12 +432,12 @@ with st.expander(f"◆  Position P&L — {pos_shares:,} shares", expanded=True):
                 unsafe_allow_html=True
             )
         else:
-            st.success(f"◆  Elect {optimal} — GBP {uplift_tot:,.4f} ({bps_tot:.0f}bps) captured on {pos_shares:,} shares")
+            st.success(f"◆  Elect {optimal}: GBP {uplift_tot:,.4f} ({bps_tot:.0f}bps) captured on {pos_shares:,} shares")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 5 — PORTFOLIO AGGREGATOR
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Portfolio Alpha Aggregator — All CCY Elections", expanded=False):
+with st.expander("◆  Portfolio Alpha Aggregator · All CCY Elections", expanded=False):
     st.markdown("<p style='font-size:0.7rem;color:#6a8090;margin-bottom:0.5rem'>Aggregate arb across the universe at a uniform position. Action-required events listed first.</p>", unsafe_allow_html=True)
     agg_shares = st.number_input("Uniform position (shares)", min_value=0, value=100000, step=10000, key="agg")
 
@@ -502,7 +502,7 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
     st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>
 <span style='color:#c8d8e8;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase'>CCY Election Arbitrage</span><br><br>
 <strong style='color:#c8d8e8'>The key condition for a genuine arb</strong><br>
-&nbsp;&nbsp;&nbsp;The company must publish a fixed FX reference rate at dividend announcement — before the election deadline.<br>
+&nbsp;&nbsp;&nbsp;The company must publish a fixed FX reference rate at dividend announcement, before the election deadline.<br>
 &nbsp;&nbsp;&nbsp;If the rate is set at or after the deadline, there is no locked-in arb (rate_pre_deadline = 0, excluded).<br><br>
 <strong style='color:#c8d8e8'>Arbitrage percentage</strong><br>
 &nbsp;&nbsp;&nbsp;Arb% = (Co_rate ÷ Mkt_rate − 1) × 100<br>

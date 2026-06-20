@@ -99,7 +99,7 @@ def get_briefing():
                 continue
             d["prem"] = prem
             d["optimal_election"] = opt
-        else:  # fx_election — CCY arb logic already correct in the module
+        else:  # fx_election, CCY arb logic already correct in the module
             deflt = str(d["election_default"]).upper() if d["election_default"] else ""
             opt   = str(d["optimal_election"]).upper() if d["optimal_election"] else ""
             if deflt == opt:
@@ -196,7 +196,7 @@ for r in scrip_rows:
     if r["event_type"]=="scrip_dividend":
         opt = str(r.get("optimal_election","")).upper()
         if wht > 0 and opt == "SCRIP" and (prem is None or prem < 1.0):
-            val = f"WHT {wht:.0f}% uplift — elect scrip for full dividend value"
+            val = f"WHT {wht:.0f}% uplift, elect scrip for full dividend value"
         else:
             val = f"{prem:+.2f}% scrip premium" if prem is not None else "Scrip premium"
     elif r["event_type"]=="fx_election" and arb:
@@ -229,7 +229,7 @@ if critical_items:
     critical_items.sort(key=lambda x: x[0])
     st.markdown(
         "<p style='font-size:0.52rem;letter-spacing:0.16em;text-transform:uppercase;"
-        "color:#ff3355;margin-bottom:0.4rem'>🔴  Critical — deadline ≤3 days</p>",
+        "color:#ff3355;margin-bottom:0.4rem'>🔴  Critical: deadline ≤3 days</p>",
         unsafe_allow_html=True
     )
     cols = st.columns(min(len(critical_items), 3))
@@ -248,12 +248,12 @@ for r in scrip_rows:
     wht_w = sf(r["wht"]) or 0
     if r["event_type"]=="scrip_dividend":
         opt = str(r.get("optimal_election","")).upper()
-        val = f"WHT {wht_w:.0f}% uplift — elect scrip" if (wht_w > 0 and opt == "SCRIP" and (prem is None or prem < 1.0)) else (f"{prem:+.2f}% scrip premium" if prem is not None else "Scrip premium")
+        val = f"WHT {wht_w:.0f}% uplift, elect scrip" if (wht_w > 0 and opt == "SCRIP" and (prem is None or prem < 1.0)) else (f"{prem:+.2f}% scrip premium" if prem is not None else "Scrip premium")
     elif r["event_type"]=="fx_election" and arb:
         val = f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb"
     else:
         val = "—"
-    action = f"Elect {r['optimal_election']} — default {r['election_default']}"
+    action = f"Elect {r['optimal_election']}, default {r['election_default']}"
     week_items.append((d, event_card(r["ticker"],r["company_name"],r["event_type"],d,action,val)))
 
 for r in tender_rows:
@@ -277,7 +277,7 @@ if week_items:
     week_items.sort(key=lambda x: x[0])
     st.markdown(
         "<p style='font-size:0.52rem;letter-spacing:0.16em;text-transform:uppercase;"
-        "color:#d4c200;margin-bottom:0.4rem'>🟡  This week — deadline 4–7 days</p>",
+        "color:#d4c200;margin-bottom:0.4rem'>🟡  This week: deadline 4–7 days</p>",
         unsafe_allow_html=True
     )
     cols = st.columns(min(len(week_items), 3))
@@ -302,7 +302,7 @@ if merger_rows:
         risk_col = {"LOW":"#00d4aa","MEDIUM":"#d4c200","HIGH":"#ff3355"}.get(
             str(r["break_risk"]).upper(),"#6a8090")
         reg_txt = str(r["reg"]).upper() if r["reg"] and str(r["reg"])!="nan" else "PENDING"
-        action  = "Monitor spread — no election required" if str(r["consid"])=="CASH" else \
+        action  = "Monitor spread, no election required" if str(r["consid"])=="CASH" else \
                   "Consider share/mixed election optimisation"
         val_txt = (f"{spread:+.2f}% spread  ·  {ann_m:.0f}% ann" if ann_m
                    else f"{spread:+.2f}% spread") if spread else "—"
@@ -317,7 +317,7 @@ if merger_rows:
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4 — ALPHA SUMMARY TABLE (all action items ranked by urgency)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Full Action List — All Events Requiring Instruction", expanded=False):
+with st.expander("◆  Full Action List · All Events Requiring Instruction", expanded=False):
     all_items = []
     for r in scrip_rows:
         d   = sf(r["days"])
@@ -372,7 +372,7 @@ st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 st.markdown(
     "<p style='font-family:IBM Plex Mono;font-size:0.55rem;color:#304050'>"
     "Priority Briefing pulls live data across all nine modules. Urgency is determined by "
-    "election deadline proximity. Alpha estimates assume default position size — "
+    "election deadline proximity. Alpha estimates assume default position size, "
     "navigate to individual modules for position-specific P&L. All data synthetic.</p>",
     unsafe_allow_html=True
 )

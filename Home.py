@@ -480,7 +480,7 @@ with m2:
         st.switch_page("pages/2_Scrip_Arbitrage.py")
 with m3:
     st.markdown("**◆ CCY Election Optimiser**")
-    st.markdown("Pre-deadline fixed-rate filter only — genuine FX arb vs spot, cost of inaction. Formulas included.")
+    st.markdown("Pre-deadline fixed-rate filter only, genuine FX arb vs spot, cost of inaction. Formulas included.")
     if st.button("Open CCY Optimiser →", key="m3"):
         st.switch_page("pages/3_CCY_Election.py")
 
@@ -505,17 +505,17 @@ st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
 m7,m8,m9 = st.columns(3)
 with m7:
     st.markdown("**◆ Closed Events**")
-    st.markdown("Post-deadline lifecycle view — election outcomes, alpha captured vs forfeited, feedback loop.")
+    st.markdown("Post-deadline lifecycle view, election outcomes, alpha captured vs forfeited, feedback loop.")
     if st.button("Open Closed Events →", key="m7"):
         st.switch_page("pages/7_Closed_Events.py")
 with m8:
     st.markdown("**◆ Priority Briefing**")
-    st.markdown("Cross-module morning brief — all action-required elections ranked by urgency and alpha.")
+    st.markdown("Cross-module morning brief, all action-required elections ranked by urgency and alpha.")
     if st.button("Open Priority Briefing →", key="m8"):
         st.switch_page("pages/8_Priority_Briefing.py")
 with m9:
     st.markdown("**◆ ADR / Cross-Listed**")
-    st.markdown("Conversion-adjusted ADR vs primary listing arb — gross arb, friction, net signal. Methodology included.")
+    st.markdown("Conversion-adjusted ADR vs primary listing arb, gross arb, friction, net signal. Methodology included.")
     if st.button("Open ADR Analyser →", key="m9"):
         st.switch_page("pages/9_ADR_Pricing.py")
 
@@ -539,8 +539,8 @@ st.markdown(
     "across nine modules: scrip dividend arbitrage, currency election optimisation, "
     "rights issue valuation, tender offer spread analysis, merger &amp; scheme arbitrage, "
     "closed event outcomes, cross-module priority briefing, and ADR / cross-listed pricing. "
-    "Analytical frameworks — TERP from first principles, implied deal probability, CCY arb "
-    "detection, annualised return modelling, lender recall logic, and ADR conversion arb — "
+    "Analytical frameworks, TERP from first principles, implied deal probability, CCY arb "
+    "detection, annualised return modelling, lender recall logic, and ADR conversion arb, "
     "reflect genuine market methodology applied to a synthetic dataset. "
     "Built in Python using Streamlit, SQLite, Pandas, and Plotly. "
     "<a href='https://github.com/JohnPatman/CA-Alpha-Dashboard' "

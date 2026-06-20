@@ -75,7 +75,7 @@ def scrip_outcome(ev, det):
         if opt and opt != default_:
             return ("ELECTED " + opt, "alpha",
                     f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb captured" if arb else "Arb captured")
-        return ("DEFAULT ACCEPTED", "neutral", "Default was optimal — no action needed")
+        return ("DEFAULT ACCEPTED", "neutral", "Default was optimal, no action needed")
 
     # scrip_dividend — compute the premium canonically (net of WHT) so a small
     # negative gross that WHT turns net-positive is recognised, and a genuinely
@@ -85,7 +85,7 @@ def scrip_outcome(ev, det):
         det.get("scrip_discount_pct"), det.get("withholding_tax_pct"), det.get("election_default"))
     if action_req and prem is not None and prem > 0:
         return ("ELECTED " + opt, "alpha", f"{prem:+.2f}% scrip premium captured")
-    return ("DEFAULT ACCEPTED", "neutral", "Default was optimal — no action needed")
+    return ("DEFAULT ACCEPTED", "neutral", "Default was optimal, no action needed")
 
 def rights_outcome(ev, det):
     sub = sf(det.get("subscription_price"))
@@ -101,7 +101,7 @@ def rights_outcome(ev, det):
                 f"Sold rights at {ev['currency']} {nil:.2f}/right  ·  disc to TERP {disc:.1f}%" if disc else
                 f"Nil-paid rights sold in market")
     else:
-        return ("LAPSED — RIGHTS FORFEITED", "loss", "Subscription price exceeded market — rights worthless")
+        return ("LAPSED, RIGHTS FORFEITED", "loss", "Subscription price exceeded market, rights worthless")
 
 def tender_outcome(ev, det):
     tp   = sf(det.get("tender_price"))
@@ -113,7 +113,7 @@ def tender_outcome(ev, det):
     if tp and cur:
         eff_prem = prem * (pro/100) if pro else prem
         ann_r    = eff_prem/max(sf(det.get("days_ago_approx",14)),1)*365 if eff_prem else None
-        note = (f"Full fill — guaranteed (odd lot ≤{int(odd)})" if odd and guar==1
+        note = (f"Full fill, guaranteed (odd lot ≤{int(odd)})" if odd and guar==1
                 else f"~{pro:.0f}% fill accepted at tender price" if pro else "Shares accepted at tender price")
         return ("SETTLED AT TENDER PRICE", "alpha",
                 f"{ev['currency']} {tp:.2f} tender price  ·  +{prem:.1f}% premium  ·  {note}")
@@ -147,11 +147,11 @@ n_neutral = sum(1 for *_, outcome_type, _ in outcomes if outcome_type == "neutra
 n_loss    = sum(1 for *_, outcome_type, _ in outcomes if outcome_type == "loss")
 
 # ── Header ────────────────────────────────────────────────────────────────────
-st.title("◆ Closed Events — Trade Outcomes")
+st.title("◆ Closed Events · Trade Outcomes")
 st.markdown(
     f"<div style='font-family:IBM Plex Mono;font-size:0.70rem;color:#6a8090;"
     f"padding:0.3rem 0 0.7rem;border-bottom:1px solid #182436;margin-bottom:0.8rem'>"
-    f"Elections that have closed — deadline passed, payment pending or settled. "
+    f"Elections that have closed, deadline passed, payment pending or settled. "
     f"Shows whether the model recommendation was actionable and what outcome was achieved."
     f"</div>",
     unsafe_allow_html=True
@@ -206,7 +206,7 @@ else:
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — CLOSED EVENTS TABLE (sortable)
 # ═════════════════════════════════════════════════════════════════════════════
-with st.expander("◆  Closed Events — Full Table", expanded=False):
+with st.expander("◆  Closed Events · Full Table", expanded=False):
     table_rows = []
     hl = {}
     for i, (ev, det, label, o_type, detail) in enumerate(outcomes):
@@ -243,11 +243,11 @@ with st.expander("◆  How this module works", expanded=False):
         "This module shows events in that post-deadline window: the election is closed, "
         "the outcome is determined, but the event remains LIVE until payment date passes.<br><br>"
         "<strong style='color:#c8d8e8'>Outcome classification</strong><br>"
-        "<span style='color:#00d4aa'>✓ Alpha Captured</span> — the model's non-default recommendation "
+        "<span style='color:#00d4aa'>✓ Alpha Captured</span>: the model's non-default recommendation "
         "was available to act on, resulting in a better outcome than the default election.<br>"
-        "<span style='color:#6a8090'>— Neutral</span> — default election was optimal, "
+        "<span style='color:#6a8090'>— Neutral</span>: default election was optimal, "
         "or no actionable spread above friction costs.<br>"
-        "<span style='color:#ff3355'>✗ Loss / Forfeit</span> — rights lapsed, "
+        "<span style='color:#ff3355'>✗ Loss / Forfeit</span>: rights lapsed, "
         "or election deadline missed (instructive: shows cost of inaction).<br><br>"
         "<strong style='color:#c8d8e8'>Feedback loop</strong><br>"
         "As events close and new ones open, this module tracks whether the signal "

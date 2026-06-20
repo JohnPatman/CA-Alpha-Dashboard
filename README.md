@@ -3,10 +3,10 @@
 **Live app:** [ca-alpha-dashboard.streamlit.app](https://ca-alpha-dashboard.streamlit.app)  
 **Stack:** Python · Streamlit · SQLite · Pandas · Plotly
 
-A CA desk decision tool built to demonstrate corporate actions analytics methodology across nine modules. Most CA tools stop at showing an event list. This one adds the decision layer — for each event type, what action is needed, what is the value of taking it, and what does doing nothing cost.
+A CA desk decision tool built to demonstrate corporate actions analytics methodology across nine modules. Most CA tools stop at showing an event list. This one adds the decision layer: for each event type, what action is needed, what is the value of taking it, and what does doing nothing cost.
 
-![CA Alpha Dashboard — Priority Briefing](docs/priority_briefing.png)
-<sub>Priority Briefing — the cross-module morning brief ranking every action-required election by urgency and alpha.</sub>
+![CA Alpha Dashboard Priority Briefing](docs/priority_briefing.png)
+<sub>Priority Briefing: the cross-module morning brief ranking every action-required election by urgency and alpha.</sub>
 
 ---
 
@@ -34,8 +34,8 @@ Action_req     = election_default ≠ optimal_election
 
 Covers withholding tax drag (0% WHT shown explicitly rather than silently hidden), break-even analysis, lender conflict and recall assessment with T−2 recall deadlines calculated dynamically from record date, and position-level P&L. Scanner shows all live events ranked by urgency with action flags.
 
-### ◆ CCY Election Optimiser — Pre-Deadline Fixed Rate Only
-Currency election analysis. The defining analytical choice: only events where the company announced a fixed FX reference rate *before* the election deadline are shown. This locks in the arbitrage against spot. Events where the rate is set at or after the deadline are excluded — those represent currency preference, not arbitrage.
+### ◆ CCY Election Optimiser: Pre-Deadline Fixed Rate Only
+Currency election analysis. The defining analytical choice: only events where the company announced a fixed FX reference rate *before* the election deadline are shown. This locks in the arbitrage against spot. Events where the rate is set at or after the deadline are excluded. Those represent currency preference, not arbitrage.
 
 ```
 Arb%             = (Co_rate ÷ Mkt_rate − 1) × 100
@@ -81,13 +81,13 @@ Reward:Risk    = Spread% : |Break%|                  [standard arb desk framing]
 
 Annualised returns use actual days to court sanction date per deal where available, falling back to the user-input assumption only when no date is set. Deals where the sanction date has passed show "SETTLING" rather than a misleading annualised figure. Bubble chart plots spread vs implied probability for all live deals, sized by break risk.
 
-### ◆ Closed Events — Trade Outcomes
+### ◆ Closed Events: Trade Outcomes
 Post-deadline lifecycle view classifying each closed election:
-- **Alpha Captured** — non-default election was available and would have been taken
-- **Neutral / Default** — default election was already optimal; no action needed
-- **Rights Lapsed** — rights lapsed or deadline missed
+- **Alpha Captured**: non-default election was available and would have been taken
+- **Neutral / Default**: default election was already optimal; no action needed
+- **Rights Lapsed**: rights lapsed or deadline missed
 
-Without this page the system only shows signals before elections. With it, the feedback loop closes — outcomes tracked after the deadline, showing whether the model recommendation was right.
+Without this page the system only shows signals before elections. With it, the feedback loop closes: outcomes tracked after the deadline, showing whether the model recommendation was right.
 
 ### ◆ Priority Briefing
 Cross-module morning brief pulling all nine modules into one prioritised view:
@@ -109,7 +109,7 @@ Net_arb%       = Gross_arb% − Round_trip_friction%
 Action flag    = |net_arb| ≥ 0.10%
 ```
 
-10 pairs: 8 UK ADR pairs (BP, Shell, AZN, GSK, HSBC, BAT, Unilever, Rio Tinto ADR) and 2 dual-primary cross-listings (BHP and Rio Tinto LSE/ASX). ADR arbs typically ±0.2–0.6% gross; cross-listing spreads 1.7–3.0% (structural — due to different shareholder bases, Australian franking credits, and cross-currency settlement mechanics). Deep-dive shows the arb waterfall chart, full price breakdown, and trade direction.
+10 pairs: 8 UK ADR pairs (BP, Shell, AZN, GSK, HSBC, BAT, Unilever, Rio Tinto ADR) and 2 dual-primary cross-listings (BHP and Rio Tinto LSE/ASX). ADR arbs typically ±0.2–0.6% gross; cross-listing spreads 1.7–3.0% (structural, due to different shareholder bases, Australian franking credits, and cross-currency settlement mechanics). Deep-dive shows the arb waterfall chart, full price breakdown, and trade direction.
 
 ---
 
@@ -140,7 +140,7 @@ CA Project/
     └── ui.py                    ← apply_theme(), dark_table() with sort JS
 ```
 
-**DB schema — 8 tables:**
+**DB schema (8 tables):**
 
 | Table | Rows | Contents |
 |---|---|---|
@@ -179,13 +179,13 @@ python3 rebase_dates.py           # shifts dates to today
 
 ## Key design decisions
 
-**CCY pre-deadline filter.** Of the CCY elections in the universe, roughly half are excluded because the company sets the FX reference rate at or after the election deadline — meaning there is no locked-in arb, just currency preference. Including them would inflate the opportunity count and misrepresent the economics. The filter is explained prominently in the module rather than buried in small print.
+**CCY pre-deadline filter.** Of the CCY elections in the universe, roughly half are excluded because the company sets the FX reference rate at or after the election deadline, meaning there is no locked-in arb, just currency preference. Including them would inflate the opportunity count and misrepresent the economics. The filter is explained prominently in the module rather than buried in small print.
 
-**TERP from first principles, not DB lookup.** Every rights issue calculation uses `(N_existing × P_cum + N_new × Sub_price) ÷ (N_existing + N_new)` from live price and stored subscription price, falling back to the stored value only if either is missing. The check uses `is not None` rather than truthiness — a zero subscription price is valid data, not a missing value, and a naive `if sub_px` would silently fall back to a stale DB figure for zero-price events.
+**TERP from first principles, not DB lookup.** Every rights issue calculation uses `(N_existing × P_cum + N_new × Sub_price) ÷ (N_existing + N_new)` from live price and stored subscription price, falling back to the stored value only if either is missing. The check uses `is not None` rather than truthiness: a zero subscription price is valid data, not a missing value, and a naive `if sub_px` would silently fall back to a stale DB figure for zero-price events.
 
-**Merger ann return from actual deal days.** The annualised return in the scanner uses `julianday(court_sanction_date)` per deal rather than a single user-input assumption applied uniformly. A deal with a sanction date 14 days away and a deal with a sanction date 180 days away should not show the same annualised return for the same spread. Deals past their sanction date are flagged "SETTLING" — showing a live annualised return at that point is misleading.
+**Merger ann return from actual deal days.** The annualised return in the scanner uses `julianday(court_sanction_date)` per deal rather than a single user-input assumption applied uniformly. A deal with a sanction date 14 days away and a deal with a sanction date 180 days away should not show the same annualised return for the same spread. Deals past their sanction date are flagged "SETTLING"; showing a live annualised return at that point is misleading.
 
-**Lender recall as a first-class concern.** Both scrip and rights modules compute the recall deadline dynamically as `record_date − 2 business days` (weekday-aware). Most CA tools treat this as a footnote. For a securities lending desk or a long-short fund with shares on loan, the recall deadline is operationally the most important date on the card — missing it forfeits the entire election alpha.
+**Lender recall as a first-class concern.** Both scrip and rights modules compute the recall deadline dynamically as `record_date − 2 business days` (weekday-aware). Most CA tools treat this as a footnote. For a securities lending desk or a long-short fund with shares on loan, the recall deadline is operationally the most important date on the card: missing it forfeits the entire election alpha.
 
 **Rebase correctness.** The original implementation applied `(today − original_build_date)` as the offset on each weekly run, causing dates to drift by a compounding multiple of the original offset. The fix stores the last-run date in a `meta` table and applies only the incremental delta each time, so each weekly run shifts dates forward by exactly 7 days regardless of when the original build happened.
 
@@ -193,9 +193,9 @@ python3 rebase_dates.py           # shifts dates to today
 
 ## Data
 
-All companies, tickers, prices, spreads, FX rates, ratios, and deadlines are **entirely synthetic** — generated for illustrative purposes only. They do not represent real corporate actions or real securities. Nothing on this dashboard constitutes investment advice or should be relied upon for any financial, legal, or investment decision.
+All companies, tickers, prices, spreads, FX rates, ratios, and deadlines are **entirely synthetic**, generated for illustrative purposes only. They do not represent real corporate actions or real securities. Nothing on this dashboard constitutes investment advice or should be relied upon for any financial, legal, or investment decision.
 
-The dataset is structured to be realistic in character — event types, geography, corporate action mechanics, and pricing relationships reflect genuine market conventions — while all specific values are fabricated.
+The dataset is structured to be realistic in character: event types, geography, corporate action mechanics, and pricing relationships reflect genuine market conventions, while all specific values are fabricated.
 
 ---
 
