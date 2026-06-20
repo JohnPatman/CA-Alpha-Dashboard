@@ -240,7 +240,9 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
 
         elif is_dutch and tp_lo and tp_hi:
             mid  = (tp_lo+tp_hi)/2
-            my_bid = bid_price if bid_price>0 else mid
+            raw_bid = bid_price if bid_price>0 else mid
+            my_bid  = max(tp_lo, min(tp_hi, raw_bid))   # bids outside the range are meaningless
+            bid_clamped = (abs(raw_bid - my_bid) > 1e-9)
             # Uniform-clearing EV model. Issuer Dutch tender: the holder names the
             # minimum price they'll accept; they're filled when the clearing price
             # is ≥ that bid. So P(fill)=P(clearing ≥ bid)=(ceiling−bid)/(ceiling−floor),
@@ -257,7 +259,7 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
                 ("Current price",  f"{ev['currency']} {cur_px:.2f}" if cur_px else "—", ""),
                 ("Prem at mid",    f"{((mid/cur_px)-1)*100:+.1f}%" if cur_px else "—", ""),
                 ("Ann ret at mid", f"{ann_ret(((mid/cur_px)-1)*100 if cur_px else 0, ddl_days):.0f}%" if cur_px and ddl_days and ddl_days>0 else "—", ""),
-                ("Your bid",       f"{ev['currency']} {my_bid:.2f}",           "Set in sidebar"),
+                ("Your bid",       f"{ev['currency']} {my_bid:.2f}",           "Clamped to range" if bid_clamped else "Set in sidebar"),
                 ("P(fill)",        f"{p_fill*100:.0f}%",                        "P(clearing ≥ bid), uniform"),
                 ("Exp clearing | fill", f"{ev['currency']} {exp_clr_fill:.2f}", "(bid + ceiling) ÷ 2"),
                 ("EV / share",     f"{ev['currency']} {ev_ps:+.3f}" if ev_ps is not None else "—", "P(fill) × (clearing − mkt) × proration"),
@@ -312,20 +314,28 @@ with st.expander(f"◆  Analysis — {ev['ticker']} / {ev['company_name']}", exp
                 dark_table(pnl_rows, ["Metric","Value","Detail"], hl2, height=220)
 
             elif is_dutch and tp_lo and tp_hi:
-                my_bid = bid_price if bid_price>0 else (tp_lo+tp_hi)/2
-                pro_r  = (proration or 80)/100
+                raw_bid = bid_price if bid_price>0 else (tp_lo+tp_hi)/2
+                my_bid  = max(tp_lo, min(tp_hi, raw_bid))      # bids outside the range are meaningless
+                clamped = (abs(raw_bid - my_bid) > 1e-9)
+                pro_r   = (proration or 80)/100
                 accepted = int(pos_shares * pro_r)
-                pnl_r  = accepted * (my_bid - cur_px) if cur_px else 0
+                p_fill  = max(0.0, min(1.0, (tp_hi - my_bid)/(tp_hi - tp_lo))) if tp_hi > tp_lo else 0.0
+                exp_clr = (my_bid + tp_hi) / 2                 # expected clearing GIVEN fill
+                # In a Dutch tender you receive the clearing price (not your bid), and only if filled.
+                pnl_if_fill = accepted * (exp_clr - cur_px) if cur_px else 0
+                exp_pnl     = p_fill * pnl_if_fill             # probability-weighted
                 pnl_rows = [
-                    ("Shares tendered",   f"{pos_shares:,}",                           ""),
-                    ("Your bid",          f"{ev['currency']} {my_bid:.2f}",            "Set in sidebar"),
-                    ("Est. proration",    f"~{proration:.0f}%" if proration else "~80%",""),
-                    ("Est. accepted",     f"{accepted:,}",                             ""),
-                    ("Est. proceeds",     f"{ev['currency']} {accepted*my_bid:,.2f}",  ""),
-                    ("Est. P&L",          f"{ev['currency']} {pnl_r:+,.2f}",           "If clears at bid"),
+                    ("Shares tendered",   f"{pos_shares:,}",                           "Full position"),
+                    ("Your bid",          f"{ev['currency']} {my_bid:.2f}",            "Clamped to range" if clamped else "Set in sidebar"),
+                    ("P(fill)",           f"{p_fill*100:.0f}%",                        "P(clearing ≥ bid)"),
+                    ("Est. accepted",     f"{accepted:,}",                             f"~{proration:.0f}% proration" if proration else "~80% proration"),
+                    ("Exp clearing | fill", f"{ev['currency']} {exp_clr:.2f}",         "Received price, not bid"),
+                    ("P&L if filled",     f"{ev['currency']} {pnl_if_fill:+,.2f}",     f"{ev['currency']} {exp_clr-cur_px:+.2f}/sh vs mkt" if cur_px else ""),
+                    ("Expected P&L",      f"{ev['currency']} {exp_pnl:+,.2f}",         "P(fill)-weighted"),
                 ]
-                hl2 = {5:{1:'#00d4aa' if pnl_r>0 else '#ff3355'}}
-                dark_table(pnl_rows, ["Metric","Value","Detail"], hl2, height=240)
+                hl2 = {5:{1:'#00d4aa' if pnl_if_fill>0 else '#ff3355'},
+                       6:{1:'#00d4aa' if exp_pnl>0 else '#6a8090'}}
+                dark_table(pnl_rows, ["Metric","Value","Detail"], hl2, height=280)
 
             # Alpha callout
             if is_fixed and ann and ann > 50:
@@ -422,22 +432,22 @@ if is_dutch and tp_lo and tp_hi:
             pro_rate_d = (proration or 80) / 100
             _sh = pos_shares or 10000
             bid_levels = [
-                (tp_lo,                        "Floor",      "Fill only if floor clears"),
-                (tp_lo+(tp_hi-tp_lo)*0.25,     "Low (25%)",  ""),
-                ((tp_lo+tp_hi)/2,              "Mid (50%)",  "Balanced risk/reward"),
-                (tp_lo+(tp_hi-tp_lo)*0.75,     "High (75%)", "Higher fill probability"),
-                (tp_hi,                        "Ceiling",    "Max fill probability"),
+                (tp_lo,                        "Floor",   "Always fills; lowest clearing"),
+                (tp_lo+(tp_hi-tp_lo)*0.25,     "Low",     "High fill probability"),
+                ((tp_lo+tp_hi)/2,              "Mid",     "Balanced risk/reward"),
+                (tp_lo+(tp_hi-tp_lo)*0.75,     "High",    "Lower fill, higher clearing"),
+                (tp_hi,                        "Ceiling", "Fills only at top of range"),
             ]
-            # EV model: P(fill) = (bid-floor)/(ceil-floor); expected clearing = (floor+bid)/2
+            # EV model: filled when clearing ≥ bid, so P(fill) = (ceiling-bid)/(ceiling-floor);
+            # expected clearing given fill = (bid+ceiling)/2.
             # EV = P(fill) × (expected_clearing - cur_px) × shares × proration
             bid_rows = []; bid_hl = {}
             for k, (px, lbl, note) in enumerate(bid_levels):
-                p_fill  = min(1.0, max(0.0, (px - tp_lo) / (tp_hi - tp_lo))) if (tp_hi - tp_lo) > 0 else 0
-                exp_clr = (tp_lo + px) / 2          # expected clearing price below your bid
+                p_fill  = min(1.0, max(0.0, (tp_hi - px) / (tp_hi - tp_lo))) if (tp_hi - tp_lo) > 0 else 0
+                exp_clr = (px + tp_hi) / 2          # expected clearing at or above your bid
                 ev_ps   = p_fill * (exp_clr - (cur_px or exp_clr))     # EV per share
                 ev_tot  = ev_ps * _sh * pro_rate_d
                 col_ev  = '#00d4aa' if ev_tot > 0 else '#6a8090'
-                col_bid = '#00d4aa' if k >= 3 else '#d4c200' if k == 2 else '#f5a623'
                 bid_rows.append([
                     f"{ev['currency']} {px:.2f}",
                     lbl,
@@ -445,12 +455,12 @@ if is_dutch and tp_lo and tp_hi:
                     f"{ev['currency']} {exp_clr:.2f}",
                     f"{ev['currency']} {ev_tot:+,.0f}" if cur_px else "—",
                 ])
-                bid_hl[k] = {0:col_bid, 1:col_bid, 2:'#6a8090', 3:'#304050', 4:col_ev}
+                bid_hl[k] = {0:'#c8d8e8', 1:'#6a8090', 2:'#6a8090', 3:'#304050', 4:col_ev}
             dark_table(bid_rows, ["Bid","Level","P(Fill)","Exp Clearing","EV"], bid_hl, height=220)
             st.markdown(
                 f"<p style='font-family:IBM Plex Mono;font-size:0.62rem;color:#6a8090;margin-top:0.3rem'>"
                 f"Range: {ev['currency']} {tp_lo:.2f}–{tp_hi:.2f} · "
-                f"P(fill) = (bid−floor)÷range · Exp clearing = (floor+bid)÷2 · "
+                f"P(fill) = (ceiling−bid)÷range · Exp clearing = (bid+ceiling)÷2 · "
                 f"EV = P(fill) × (exp_clearing − market_px) × {_sh:,} shares × ~{pro_rate_d*100:.0f}% proration</p>",
                 unsafe_allow_html=True
             )
@@ -475,9 +485,9 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 &nbsp;&nbsp;&nbsp;Odd_lot_P&L = (Tender_px − Market_px) × N_shares — no fill uncertainty<br>
 &nbsp;&nbsp;&nbsp;Risk-free spread capture if position ≤ threshold and deadline risk is acceptable<br><br>
 <strong style='color:#c8d8e8'>Dutch auction expected value (EV) model</strong><br>
-&nbsp;&nbsp;&nbsp;Assumption: clearing price uniformly distributed between range floor and your bid<br>
-&nbsp;&nbsp;&nbsp;P(fill)          = (Bid − Floor) ÷ (Ceiling − Floor)<br>
-&nbsp;&nbsp;&nbsp;Expected clearing = (Floor + Bid) ÷ 2<br>
+&nbsp;&nbsp;&nbsp;Assumption: clearing price uniformly distributed across the range; in an issuer tender the holder is filled when clearing is at or above their bid<br>
+&nbsp;&nbsp;&nbsp;P(fill)          = (Ceiling − Bid) ÷ (Ceiling − Floor)<br>
+&nbsp;&nbsp;&nbsp;Expected clearing | fill = (Bid + Ceiling) ÷ 2<br>
 &nbsp;&nbsp;&nbsp;EV               = P(fill) × (Exp_clearing − Market_px) × N_shares × Proration_rate<br>
-&nbsp;&nbsp;&nbsp;Limitation: assumes uniform clearing distribution; actual clearing reflects demand curve
+&nbsp;&nbsp;&nbsp;Limitation: assumes uniform clearing distribution; actual clearing reflects the demand curve
 </div>""", unsafe_allow_html=True)
