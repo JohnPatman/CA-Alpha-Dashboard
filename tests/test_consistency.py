@@ -161,12 +161,20 @@ def test_adr_friction_erodes_toward_zero():
 
 def test_scrip_consumers_use_canonical_helper():
     """Pages that decide/display scrip optimality must import scrip_decision, so
-       none silently revert to reading the stored scrip_discount_pct as a premium."""
-    consumers = ["Home.py", "pages/1_Event_Pipeline.py", "pages/2_Scrip_Arbitrage.py",
-                 "pages/7_Closed_Events.py", "pages/8_Priority_Briefing.py"]
-    for rel in consumers:
-        src = (ROOT / rel).read_text()
-        assert "scrip_decision" in src, f"{rel} no longer imports/uses scrip_decision"
+       none silently revert to reading the stored scrip_discount_pct as a premium.
+       Pages are resolved by name (glob) so a page reorder can't break this."""
+    import glob
+    from pathlib import Path
+    def find(stub):
+        if stub == "Home":
+            return ROOT / "Home.py"
+        hits = sorted(glob.glob(str(ROOT / "pages" / f"*{stub}*.py")))
+        assert hits, f"no page file matching *{stub}*.py"
+        return Path(hits[0])
+    consumers = ["Home", "Event_Pipeline", "Scrip_Arbitrage", "Closed_Events", "Priority_Briefing"]
+    for stub in consumers:
+        src = find(stub).read_text()
+        assert "scrip_decision" in src, f"{stub} no longer imports/uses scrip_decision"
 
 
 def _run_all():

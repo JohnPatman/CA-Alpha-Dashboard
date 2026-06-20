@@ -34,7 +34,7 @@ h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weigh
 h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
 p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
 strong{color:var(--text-primary)!important;font-weight:500!important;}
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;}
+[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;min-height:4.4rem!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;}
 [data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
 [data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
 [data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
@@ -162,3 +162,88 @@ def dark_table(rows, headers, highlights=None, height=None):
         '</body></html>'
     )
     _c.html(html, height=h_px, scrolling=True)
+
+
+def dark_table_select(rows, headers, ns, key_values, highlights=None, key_col=0, height=None):
+    """Selectable variant of dark_table.
+
+    Renders in the MAIN document (not an iframe) so each key_col cell can be a
+    real link that drives a Streamlit rerun. Clicking a key_col cell sets
+    ?{ns}_sel=<value>; clicking a header sorts the table server-side via
+    ?{ns}_sort / ?{ns}_dir. Styling mirrors dark_table. The trade-off versus
+    dark_table is that sorting is server-side (a rerun) rather than instant JS.
+
+    Returns the currently selected key value (str) or "" if none.
+    """
+    import streamlit as st, re, html as _h
+    from urllib.parse import quote
+    highlights = highlights or {}
+    qp = st.query_params
+    sel_cur  = qp.get(f"{ns}_sel", "") or ""
+    sort_raw = qp.get(f"{ns}_sort")
+    sort_dir = qp.get(f"{ns}_dir", "a")
+
+    # bundle row + its key + its highlight dict, so a server-side sort keeps them aligned
+    bundle = [(rows[i], key_values[i], highlights.get(i, {})) for i in range(len(rows))]
+    if sort_raw is not None:
+        try:
+            ci = int(sort_raw)
+            def _key(b):
+                v = str(b[0][ci]) if ci < len(b[0]) else ""
+                num = re.sub(r"[^0-9.\-]", "", v)
+                try:    return (0, float(num), "")
+                except: return (1, 0.0, v.lower())
+            bundle.sort(key=_key, reverse=(sort_dir == "d"))
+        except Exception:
+            pass
+
+    keep_sort = (f"&{ns}_sort={_h.escape(str(sort_raw))}&{ns}_dir={sort_dir}"
+                 if sort_raw is not None else "")
+    keep_sel  = f"&{ns}_sel={quote(sel_cur)}" if sel_cur else ""
+
+    # header cells: links that toggle sort direction and preserve current selection
+    th = ""
+    for j, hd in enumerate(headers):
+        is_sorted = (str(sort_raw) == str(j))
+        nd = "d" if (is_sorted and sort_dir == "a") else "a"
+        arrow = (" \u25b2" if sort_dir == "a" else " \u25bc") if is_sorted else ""
+        href = f"?{ns}_sort={j}&{ns}_dir={nd}{keep_sel}"
+        th += (f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;letter-spacing:0.1em;'
+               f'text-transform:uppercase;background:#04060a;border-bottom:1px solid #243548;'
+               f'text-align:left;white-space:nowrap">'
+               f'<a href="{href}" target="_self" style="color:#304050;text-decoration:none">'
+               f'{_h.escape(str(hd))}<span style="color:#00d4aa">{arrow}</span></a></th>')
+
+    # body cells: key_col is a link that sets the selection (preserving sort)
+    tb = ""
+    for ridx, (row, kv, hl) in enumerate(bundle):
+        bg = "#080c12" if ridx % 2 == 0 else "#04060a"
+        is_sel = (str(kv) == str(sel_cur))
+        cells = ""
+        for j, v in enumerate(row):
+            col = hl.get(j, "#c8d8e8")
+            txt = _h.escape(str(v)) if v is not None else "\u2014"
+            if j == key_col:
+                href = f"?{ns}_sel={quote(str(kv))}{keep_sort}"
+                inner = (f'<a href="{href}" target="_self" '
+                         f'style="color:{col};text-decoration:none;font-weight:500">{txt}</a>')
+            else:
+                inner = f'<span style="color:{col}">{txt}</span>'
+            cells += (f'<td style="padding:0.28rem 0.7rem;font-size:0.7rem;background:{bg};'
+                      f'border-bottom:1px solid #0e1825;white-space:nowrap">{inner}</td>')
+        rowstyle = "background:#0e182580;" if is_sel else ""
+        tb += f'<tr style="{rowstyle}">{cells}</tr>'
+
+    cls = f"dts_{ns}"
+    html = (
+        f'<style>'
+        f'.{cls}{{width:100%;overflow-x:auto;border:1px solid #182436;}}'
+        f'.{cls} table{{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",monospace;}}'
+        f'.{cls} tr:hover td{{background:#0e1825!important;}}'
+        f'.{cls} th a:hover{{color:#6a8090!important;}}'
+        f'.{cls} td a:hover{{text-decoration:underline!important;}}'
+        f'</style>'
+        f'<div class="{cls}"><table><thead><tr>{th}</tr></thead><tbody>{tb}</tbody></table></div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+    return sel_cur

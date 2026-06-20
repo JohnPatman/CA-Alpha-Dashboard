@@ -477,29 +477,29 @@ with m2:
     st.markdown("**◆ Scrip Arbitrage**")
     st.markdown("Cash vs scrip valuation, WHT impact, break-even analysis, lender recall logic. Formulas included.")
     if st.button("Open Scrip Arbitrage →", key="m2"):
-        st.switch_page("pages/2_Scrip_Arbitrage.py")
+        st.switch_page("pages/3_Scrip_Arbitrage.py")
 with m3:
     st.markdown("**◆ CCY Election Optimiser**")
     st.markdown("Pre-deadline fixed-rate filter only, genuine FX arb vs spot, cost of inaction. Formulas included.")
     if st.button("Open CCY Optimiser →", key="m3"):
-        st.switch_page("pages/3_CCY_Election.py")
+        st.switch_page("pages/4_CCY_Election.py")
 
 m4,m5,m6 = st.columns(3)
 with m4:
     st.markdown("**◆ Rights Issue Analyser**")
     st.markdown("TERP from first principles, nil-paid valuation, portfolio take-up vs sell vs lapse. Formulas included.")
     if st.button("Open Rights Analyser →", key="m4"):
-        st.switch_page("pages/4_Rights_Issue.py")
+        st.switch_page("pages/5_Rights_Issue.py")
 with m5:
     st.markdown("**◆ Tender Tracker**")
     st.markdown("Proration modelling, Dutch auction EV, odd lot arb, annualised return ranking. Formulas included.")
     if st.button("Open Tender Tracker →", key="m5"):
-        st.switch_page("pages/5_Tender_Tracker.py")
+        st.switch_page("pages/6_Tender_Tracker.py")
 with m6:
     st.markdown("**◆ Merger & Scheme Tracker**")
     st.markdown("Implied probability, reward:risk framing, consideration election optimiser. Formulas included.")
     if st.button("Open Merger Tracker →", key="m6"):
-        st.switch_page("pages/6_Merger_Tracker.py")
+        st.switch_page("pages/7_Merger_Tracker.py")
 
 st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
 m7,m8,m9 = st.columns(3)
@@ -507,17 +507,17 @@ with m7:
     st.markdown("**◆ Closed Events**")
     st.markdown("Post-deadline lifecycle view, election outcomes, alpha captured vs forfeited, feedback loop.")
     if st.button("Open Closed Events →", key="m7"):
-        st.switch_page("pages/7_Closed_Events.py")
+        st.switch_page("pages/9_Closed_Events.py")
 with m8:
     st.markdown("**◆ Priority Briefing**")
     st.markdown("Cross-module morning brief, all action-required elections ranked by urgency and alpha.")
     if st.button("Open Priority Briefing →", key="m8"):
-        st.switch_page("pages/8_Priority_Briefing.py")
+        st.switch_page("pages/2_Priority_Briefing.py")
 with m9:
     st.markdown("**◆ ADR / Cross-Listed**")
     st.markdown("Conversion-adjusted ADR vs primary listing arb, gross arb, friction, net signal. Methodology included.")
     if st.button("Open ADR Analyser →", key="m9"):
-        st.switch_page("pages/9_ADR_Pricing.py")
+        st.switch_page("pages/8_ADR_Pricing.py")
 
 st.markdown("---")
 st.markdown(
