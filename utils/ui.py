@@ -34,7 +34,10 @@ h1{font-family:var(--font-mono)!important;font-size:0.82rem!important;font-weigh
 h2{font-family:var(--font-mono)!important;font-size:0.55rem!important;font-weight:600!important;letter-spacing:0.2em!important;text-transform:uppercase!important;color:var(--text-muted)!important;margin-top:1.4rem!important;margin-bottom:0.4rem!important;padding-bottom:0.25rem!important;border-bottom:1px solid var(--border)!important;}
 p{color:var(--text-secondary)!important;font-size:0.72rem!important;font-family:var(--font-mono)!important;line-height:1.5!important;}
 strong{color:var(--text-primary)!important;font-weight:500!important;}
-[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;min-height:4.4rem!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;}
+[data-testid="stColumn"]:has([data-testid="stMetric"]){display:flex!important;flex-direction:column!important;}
+[data-testid="stColumn"]:has([data-testid="stMetric"]) > [data-testid="stVerticalBlock"]{flex:1 1 auto!important;}
+[data-testid="stColumn"]:has([data-testid="stMetric"]) [data-testid="stElementContainer"]:has([data-testid="stMetric"]){flex:1 1 auto!important;}
+[data-testid="stMetric"]{background:var(--bg-card)!important;border:1px solid var(--border-mid)!important;border-top:1px solid var(--border-bright)!important;border-radius:0!important;padding:0.5rem 0.8rem!important;min-height:4.4rem!important;height:100%!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;}
 [data-testid="stMetric"] label{font-family:var(--font-mono)!important;font-size:0.52rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--text-muted)!important;}
 [data-testid="stMetric"] [data-testid="stMetricValue"]{font-family:var(--font-mono)!important;font-size:1.2rem!important;font-weight:400!important;color:var(--text-primary)!important;line-height:1.1!important;}
 [data-testid="stMetricDelta"] svg{display:none!important;}[data-testid="stMetricDelta"]{font-family:var(--font-mono)!important;font-size:0.6rem!important;}
