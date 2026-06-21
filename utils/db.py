@@ -18,7 +18,7 @@ def days_to(date_str):
         return None
     try:
         return int((date.fromisoformat(date_str) - date.today()).days)
-    except:
+    except (ValueError, TypeError):
         return None
 
 def traffic_light(days):

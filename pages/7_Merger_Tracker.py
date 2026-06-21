@@ -91,7 +91,7 @@ dot      = tdot(ddl_days)
 ann_days_actual = ddl_days if ddl_days and ddl_days > 0 else days_to_comp
 ann_ret_pct = spread / ann_days_actual * 365 if spread and ann_days_actual > 0 else None
 imp_prob    = implied_prob(spread, break_assume)
-# Express R/R as "making X% to risk Y%" — standard arb desk framing
+# Express R/R as "making X% to risk Y%", standard arb desk framing
 rr_display  = f"{spread:.2f}% : {abs(break_assume):.0f}%" if spread and break_assume else "—"
 rr_ratio    = abs(spread / break_assume) if spread and break_assume else None
 
@@ -125,7 +125,7 @@ k5.metric("Reward : Risk",
 k6.metric("Sanction Date",  sanction)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — DEAL SCANNER
+# SECTION 1, DEAL SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Deal Scanner · All Live M&A  ·  Ranked by Risk-Adjusted Return", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
@@ -155,7 +155,7 @@ with st.expander("◆  Deal Scanner · All Live M&A  ·  Ranked by Risk-Adjusted
         terms  = f"{r['currency']} {cps:.2f}" if cps else (str(r["share_ratio"]) if r["share_ratio"] and str(r["share_ratio"])!='nan' else "—")
         ann_d  = d if d and d > 0 else days_to_comp
         ann_   = sp/ann_d*365 if sp and ann_d>0 else None
-        # Flag deals where court sanction date has passed (d <= 0) — in settlement
+        # Flag deals where court sanction date has passed (d <= 0), in settlement
         is_settling = d is not None and d <= 0
         ann_display = "SETTLING" if is_settling else (f"{ann_:.1f}%" if ann_ else "—")
         prob_  = implied_prob(sp, break_assume)
@@ -190,7 +190,7 @@ with st.expander("◆  Deal Scanner · All Live M&A  ·  Ranked by Risk-Adjusted
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — DEAL DEEP-DIVE + P&L
+# SECTION 2, DEAL DEEP-DIVE + P&L
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Deal Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     col_l, col_r = st.columns(2)
@@ -263,7 +263,7 @@ with st.expander(f"◆  Deal Analysis · {ev['ticker']} / {ev['company_name']}",
                 st.success(f"◆  {spread:.2f}% spread · {ann_ret_pct:.1f}% ann · {imp_prob:.0f}% implied completion · {brk} break risk")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — RETURN vs PROBABILITY CHART (Bubble)
+# SECTION 3, RETURN vs PROBABILITY CHART (Bubble)
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Deal Universe · Spread vs Implied Probability", expanded=True):
     chart_data = []
@@ -320,7 +320,7 @@ with st.expander("◆  Deal Universe · Spread vs Implied Probability", expanded
         )
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — RISK SCENARIOS
+# SECTION 4, RISK SCENARIOS
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Scenario Analysis & CA Desk Actions", expanded=False):
     col_a, col_b = st.columns(2)

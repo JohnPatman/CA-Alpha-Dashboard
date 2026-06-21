@@ -1,9 +1,9 @@
-name: Weekly Event Date Refresh
+name: Daily Event Date Refresh
 
 on:
   schedule:
-    # Runs every Monday at 06:00 UTC
-    - cron: '0 6 * * 1'
+    # Runs daily at 06:00 UTC (keeps relative-time data within ~1 day of today)
+    - cron: '0 6 * * *'
   workflow_dispatch:
     # Manual trigger from GitHub Actions tab
 
@@ -34,6 +34,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit — DB already current"
           else
-            git commit -m "chore: weekly event date rebase [skip ci]"
+            git commit -m "chore: daily event date rebase [skip ci]"
             git push
           fi

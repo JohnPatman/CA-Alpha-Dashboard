@@ -11,6 +11,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# NOTE: this page keeps its own standalone CSS and does NOT call utils.ui.apply_theme().
+# Any styling change made to the shared theme in utils/ui.py will NOT reach this page; it
+# must be mirrored here by hand. (Event Pipeline is the only other page in this situation.)
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
@@ -195,7 +198,7 @@ _c.html("""
 
 DB = "data/events.db"
 
-# ── HTML table renderer (replaces st.dataframe — avoids white bg) ─────────────
+# ── HTML table renderer (replaces st.dataframe, avoids white bg) ─────────────
 def html_table(df):
     cols = list(df.columns)
     rows_html = ""
@@ -532,7 +535,7 @@ st.markdown(
     "color:#6a8090;line-height:1.9;margin-top:0.8rem;"
     "border-top:1px solid #0e1825;padding-top:0.7rem'>"
 
-    # — About block —
+    #, About block, 
     "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
     "text-transform:uppercase'>About this project</span><br>"
     "A personal portfolio project built to demonstrate corporate actions analytics methodology "
@@ -548,7 +551,7 @@ st.markdown(
 
     "<br><br>"
 
-    # — Data block —
+    #, Data block, 
     "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
     "text-transform:uppercase'>Data</span><br>"
     "All companies, tickers, event terms, prices, ratios, spreads, FX rates, and deadlines are "
@@ -559,7 +562,7 @@ st.markdown(
 
     "<br><br>"
 
-    # — Affiliation block —
+    #, Affiliation block, 
     "<span style='color:#304050;font-size:0.52rem;letter-spacing:0.16em;"
     "text-transform:uppercase'>Affiliation</span><br>"
     "This project is independent and was built in personal time. All views and "

@@ -199,7 +199,7 @@ with st.expander("◆  Tender Scanner · Ranked by Proration-Adjusted Return", e
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — ECONOMICS DEEP-DIVE
+# SECTION 2, ECONOMICS DEEP-DIVE
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     col_l, col_r = st.columns(2)
@@ -221,7 +221,7 @@ with st.expander(f"◆  Analysis · {ev['ticker']} / {ev['company_name']}", expa
                 ("Est. proration",    f"~{proration:.0f}%" if proration else "—","% of tendered shares bought"),
                 ("Days to deadline",  f"{ddl_days}d" if ddl_days is not None else "—", fmt_date(ev["election_deadline"])),
             ]
-            # Odd lot row — show when threshold is set
+            # Odd lot row, show when threshold is set
             if odd_thresh:
                 odd_label = f"◆ Guaranteed fill ≤ {int(odd_thresh):,} shares" if odd_guar==1 else f"Priority fill ≤ {int(odd_thresh):,} shares"
                 odd_note  = "No proration risk on odd lot position" if odd_guar==1 else "May receive priority allocation"
@@ -344,7 +344,7 @@ with st.expander(f"◆  Analysis · {ev['ticker']} / {ev['company_name']}", expa
                 st.markdown(f"<div style='border-left:2px solid #d4c200;background:#d4c20010;padding:0.3rem 0.6rem;font-family:IBM Plex Mono;font-size:0.66rem;color:#d4c200'>{prem:.1f}% spread / {ddl_days}d = {ann:.0f}% annualised</div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — PRORATION ANALYSIS
+# SECTION 3, PRORATION ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 if is_fixed and pro_exp==1 and proration and tp and cur_px:
     with st.expander("◆  Proration Modelling · P&L at All Fill Rates", expanded=True):
@@ -399,7 +399,7 @@ if is_fixed and pro_exp==1 and proration and tp and cur_px:
             )
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — DUTCH AUCTION BID STRATEGY
+# SECTION 4, DUTCH AUCTION BID STRATEGY
 # ═════════════════════════════════════════════════════════════════════════════
 if is_dutch and tp_lo and tp_hi:
     with st.expander("◆  Dutch Auction Bid Strategy", expanded=True):

@@ -15,6 +15,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# NOTE: this page keeps its own standalone CSS and does NOT call utils.ui.apply_theme().
+# Any styling change made to the shared theme in utils/ui.py will NOT reach this page; it
+# must be mirrored here by hand. (Home is the only other page in this situation.) The metric
+# box-equalisation rules below were mirrored from utils/ui.py for exactly this reason.
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
@@ -243,7 +247,7 @@ def safe_int(v):
     try:
         if v is None or str(v) == "nan": return None
         return int(v)
-    except: return None
+    except (ValueError, TypeError): return None
 
 def alpha_flag(row):
     flags = []
@@ -252,7 +256,7 @@ def alpha_flag(row):
         arb  = row.get("fx_arbitrage_pct")
         if arb and float(arb) > 1.5:   flags.append(f"CCY arb {float(arb):.2f}%")
     if t == "scrip_dividend":
-        # Canonical scrip decision (net of WHT) — not the stored scrip_discount_pct,
+        # Canonical scrip decision (net of WHT), not the stored scrip_discount_pct,
         # which is an issue-price input, not the premium. Flag only when scrip is
         # the optimal election and the company default would forfeit it.
         prem, opt, action_req, _ = scrip_decision(
@@ -459,7 +463,7 @@ df = df[df["event_type"] != "odd_lot_offer"]
 if alpha_only:
     df = df[df["alpha_flag"] != ""]
 
-# sort — passed deadlines always to bottom
+# sort, passed deadlines always to bottom
 if sort_by == "Election deadline (soonest)":
     df_active = df[df["days_to_deadline"].isna() | (df["days_to_deadline"] >= 0)]
     df_passed = df[df["days_to_deadline"].notna() & (df["days_to_deadline"] < 0)]
@@ -494,7 +498,7 @@ mc4.metric("Urgent ≤7d",  len(df_active[df_active["days_to_deadline"].notna() 
 mc5.metric("Alpha Flags", len(df[df["alpha_flag"] != ""]))
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — DEADLINE COUNTDOWN
+# SECTION 1, DEADLINE COUNTDOWN
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Deadline Countdown", expanded=True):
     df_bars_all = df_active[df_active["days_to_deadline"].notna()].copy().sort_values("days_to_deadline")
@@ -555,7 +559,7 @@ with st.expander("◆  Deadline Countdown", expanded=True):
         st.info("No active events with election deadlines.")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — LIVE EVENT FEED (active events, default = Table)
+# SECTION 2, LIVE EVENT FEED (active events, default = Table)
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Live Event Feed  ·  {len(df_active)} events  (+ {len(df_passed)} passed deadline · see below)", expanded=True):
     view = st.radio("View", ["Table", "Cards"], index=0, horizontal=True, label_visibility="collapsed")
@@ -579,14 +583,14 @@ with st.expander(f"◆  Live Event Feed  ·  {len(df_active)} events  (+ {len(df
         render_cards(df_active)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — PASSED DEADLINES (collapsed by default)
+# SECTION 3, PASSED DEADLINES (collapsed by default)
 # ═════════════════════════════════════════════════════════════════════════════
 if len(df_passed) > 0:
     with st.expander(f"◆  Passed Deadlines  ·  {len(df_passed)} events", expanded=False):
         render_cards(df_passed)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — DISTRIBUTION BY COUNTRY (collapsed by default)
+# SECTION 4, DISTRIBUTION BY COUNTRY (collapsed by default)
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Distribution by Country", expanded=False):
     cc = df.groupby("country").size().reset_index(name="events")

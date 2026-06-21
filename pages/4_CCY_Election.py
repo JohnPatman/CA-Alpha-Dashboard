@@ -130,7 +130,7 @@ uplift_bps = uplift / mkt_gbp * 10000 if uplift and mkt_gbp else None
 # ── page header ───────────────────────────────────────────────────────────────
 st.title("◆ CCY Election Optimiser · Pre-Deadline Fixed Rate Only")
 
-# Pre-deadline filter banner — this is the defining analytical choice of this module
+# Pre-deadline filter banner, this is the defining analytical choice of this module
 total_ccy = len(df) + excluded_n
 st.markdown(
     f"<div style='font-family:IBM Plex Mono;font-size:0.70rem;color:#6a8090;"
@@ -187,7 +187,7 @@ k6.metric("Cost of Inaction",
           help=f"Lost on {pos_shares:,} shares if default ({default_el}) kept")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — ARB SCANNER
+# SECTION 1, ARB SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Arb Scanner · All Live CCY Elections", expanded=True):
     sc1,sc2,sc3,sc4 = st.columns(4)
@@ -246,7 +246,7 @@ with st.expander("◆  Arb Scanner · All Live CCY Elections", expanded=True):
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — CURRENCY ANALYSIS
+# SECTION 2, CURRENCY ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Currency Analysis · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if cash_amt and co_rate and mkt_rate:
@@ -331,7 +331,7 @@ with st.expander(f"◆  Currency Analysis · {ev['ticker']} / {ev['company_name'
             st.success(f"◆  Elect {optimal}: {arb_pct:.2f}% / {arb_pct*100:.0f}bps arb vs {base_ccy} at spot")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — FX SENSITIVITY
+# SECTION 3, FX SENSITIVITY
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  FX Sensitivity Analysis", expanded=True):
     if cash_amt and co_rate and mkt_rate:
@@ -400,7 +400,7 @@ with st.expander("◆  FX Sensitivity Analysis", expanded=True):
             st.plotly_chart(fig2, use_container_width=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — POSITION P&L
+# SECTION 4, POSITION P&L
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Position P&L · {pos_shares:,} shares", expanded=True):
     if pos_shares > 0 and cash_amt and co_rate and mkt_rate:
@@ -435,7 +435,7 @@ with st.expander(f"◆  Position P&L · {pos_shares:,} shares", expanded=True):
             st.success(f"◆  Elect {optimal}: GBP {uplift_tot:,.4f} ({bps_tot:.0f}bps) captured on {pos_shares:,} shares")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 5 — PORTFOLIO AGGREGATOR
+# SECTION 5, PORTFOLIO AGGREGATOR
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Portfolio Alpha Aggregator · All CCY Elections", expanded=False):
     st.markdown("<p style='font-size:0.7rem;color:#6a8090;margin-bottom:0.5rem'>Aggregate arb across the universe at a uniform position. Action-required events listed first.</p>", unsafe_allow_html=True)

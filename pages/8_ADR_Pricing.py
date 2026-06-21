@@ -164,7 +164,7 @@ k4.metric("Avg Gross Arb",     f"{avg_gross:.2f}%", help="Absolute average befor
 st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — SCANNER TABLE
+# SECTION 1, SCANNER TABLE
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  ADR Arb Scanner · All Pairs", expanded=True):
     scan_rows = []; scan_hl = {}
@@ -202,7 +202,7 @@ with st.expander("◆  ADR Arb Scanner · All Pairs", expanded=True):
     )
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — DEEP-DIVE (selected pair)
+# SECTION 2, DEEP-DIVE (selected pair)
 # ═════════════════════════════════════════════════════════════════════════════
 st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 sel_tickers = [f"{r['ticker_l']} / {r['ticker_a']}  ·  {r['company']}" for r in processed]
@@ -230,7 +230,7 @@ c5.metric("Net Arb",         f"{r['net_arb']:+.3f}%",
           delta="◆ ACTIONABLE" if r["actionable"] else "Below threshold",
           delta_color="normal" if r["actionable"] else "off")
 
-# Arb breakdown bar chart — percentages only (prices are incomparable scale)
+# Arb breakdown bar chart, percentages only (prices are incomparable scale)
 fig = go.Figure()
 bar_labels = ["Gross Arb", "Round-trip Friction", "Net Arb"]
 bar_values = [r["arb_pct"], -math.copysign(r["friction"], r["arb_pct"]), r["net_arb"]]
@@ -287,7 +287,7 @@ for i, row_d in enumerate(detail_rows):
 dark_table(detail_rows, ["Parameter","Value","Note"], hl_d, height=480)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — METHODOLOGY
+# SECTION 3, METHODOLOGY
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Methodology & Formulas", expanded=False):
     st.markdown("""<div style='font-family:IBM Plex Mono;font-size:0.7rem;color:#6a8090;line-height:2.0'>

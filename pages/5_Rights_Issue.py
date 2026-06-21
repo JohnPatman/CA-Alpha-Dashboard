@@ -114,7 +114,7 @@ k5.metric("Disc to TERP",   f"{disc_calc:+.1f}%" if disc_calc is not None else "
 k6.metric("Proceeds",       f"{ev['currency']} {proceeds:,.0f}m" if proceeds else "—")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — SCANNER
+# SECTION 1, SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Rights Issue Scanner · All Live Events", expanded=True):
     s1,s2,s3,s4 = st.columns(4)
@@ -163,7 +163,7 @@ with st.expander("◆  Rights Issue Scanner · All Live Events", expanded=True):
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — TERP & POSITION ANALYSIS
+# SECTION 2, TERP & POSITION ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  TERP & Economics · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if sub_px and cur_px:
@@ -221,7 +221,7 @@ with st.expander(f"◆  TERP & Economics · {ev['ticker']} / {ev['company_name']
                     st.warning("⚠  Sub price near or above TERP, consider selling nil-paid rights")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — TAKE-UP vs SELL CHART
+# SECTION 3, TAKE-UP vs SELL CHART
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expanded=True):
     if sub_px and cur_px and terp_calc:
@@ -277,7 +277,7 @@ with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expa
             unsafe_allow_html=True
         )
 
-        # Portfolio-level P&L — at position size from sidebar
+        # Portfolio-level P&L, at position size from sidebar
         if pos_shares > 0:
             st.markdown(
                 "<p style='font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;"
@@ -330,7 +330,7 @@ with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expa
             )
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — DILUTION TABLE
+# SECTION 4, DILUTION TABLE
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Dilution Analysis", expanded=False):
     if sub_px and cur_px and rn and rd:
@@ -376,7 +376,7 @@ Taking up rights preserves economic position.
 </div>""", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 5 — SETTLEMENT & LENDER
+# SECTION 5, SETTLEMENT & LENDER
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Settlement & Lender Considerations", expanded=False):
     col_a, col_b = st.columns(2)

@@ -10,7 +10,7 @@ DB    = "data/events.db"
 TODAY = date.today()
 
 # ═════════════════════════════════════════════════════════════════════════════
-# DATA — pull top alpha opportunities cross-module
+# DATA, pull top alpha opportunities cross-module
 # ═════════════════════════════════════════════════════════════════════════════
 @st.cache_data(ttl=300)
 def get_briefing():
@@ -68,7 +68,7 @@ def get_briefing():
         LIMIT 6
     """, (today, today, today)).fetchall()
 
-    # ── Mergers: best risk-adjusted — LOW risk first, highest spread ──────────
+    # ── Mergers: best risk-adjusted, LOW risk first, highest spread ──────────
     mergers = c.execute("""
         SELECT e.event_id, e.ticker, e.company_name, e.country, e.currency,
                m.spread_to_terms_pct AS spread, m.break_risk, m.regulatory_status AS reg,
@@ -151,7 +151,7 @@ k4.metric("Live M&A Deals", len(merger_rows), help="Active merger/scheme positio
 st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — CRITICAL: ≤3d
+# SECTION 1, CRITICAL: ≤3d
 # ═════════════════════════════════════════════════════════════════════════════
 def urgency_badge(days):
     if days is None: return ""
@@ -238,7 +238,7 @@ if critical_items:
     st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — THIS WEEK: 4–7d
+# SECTION 2, THIS WEEK: 4–7d
 # ═════════════════════════════════════════════════════════════════════════════
 week_items = []
 for r in scrip_rows:
@@ -286,7 +286,7 @@ if week_items:
     st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — ACTIVE MONITORING: M&A positions
+# SECTION 3, ACTIVE MONITORING: M&A positions
 # ═════════════════════════════════════════════════════════════════════════════
 if merger_rows:
     st.markdown(
@@ -315,7 +315,7 @@ if merger_rows:
         m_cols[i % 3].markdown(card, unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — ALPHA SUMMARY TABLE (all action items ranked by urgency)
+# SECTION 4, ALPHA SUMMARY TABLE (all action items ranked by urgency)
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Full Action List · All Events Requiring Instruction", expanded=False):
     all_items = []

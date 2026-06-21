@@ -11,7 +11,7 @@ DB    = "data/events.db"
 TODAY = date.today()
 
 # ═════════════════════════════════════════════════════════════════════════════
-# DATA — events with passed deadlines (the closed pipeline)
+# DATA, events with passed deadlines (the closed pipeline)
 # ═════════════════════════════════════════════════════════════════════════════
 @st.cache_data(ttl=300)
 def get_closed():
@@ -77,7 +77,7 @@ def scrip_outcome(ev, det):
                     f"{arb:+.2f}% / {int(abs(arb or 0)*100)}bps CCY arb captured" if arb else "Arb captured")
         return ("DEFAULT ACCEPTED", "neutral", "Default was optimal, no action needed")
 
-    # scrip_dividend — compute the premium canonically (net of WHT) so a small
+    # scrip_dividend, compute the premium canonically (net of WHT) so a small
     # negative gross that WHT turns net-positive is recognised, and a genuinely
     # negative premium is never shown as captured alpha.
     prem, opt, action_req, _ = scrip_decision(
@@ -171,7 +171,7 @@ type_map = {"scrip_dividend":"Scrip Dividend","fx_election":"CCY Election",
 st.markdown("<div style='height:0.4rem'></div>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — OUTCOME CARDS (most recent first)
+# SECTION 1, OUTCOME CARDS (most recent first)
 # ═════════════════════════════════════════════════════════════════════════════
 def outcome_card(ev, det, outcome_label, outcome_type, outcome_detail):
     o_col  = {"alpha":"#00d4aa","neutral":"#6a8090","loss":"#ff3355"}.get(outcome_type,"#6a8090")
@@ -204,7 +204,7 @@ else:
     st.info("No closed events found.")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — CLOSED EVENTS TABLE (sortable)
+# SECTION 2, CLOSED EVENTS TABLE (sortable)
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Closed Events · Full Table", expanded=False):
     table_rows = []
@@ -232,7 +232,7 @@ with st.expander("◆  Closed Events · Full Table", expanded=False):
                    hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — LIFECYCLE NOTE
+# SECTION 3, LIFECYCLE NOTE
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  How this module works", expanded=False):
     st.markdown(

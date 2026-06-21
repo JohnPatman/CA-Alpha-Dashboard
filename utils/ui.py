@@ -14,6 +14,9 @@ import streamlit.components.v1 as _c
 
 
 # ── Shared dark terminal theme ───────────────────────────────────────────────
+# Consumed by every page via apply_theme() EXCEPT Home.py and pages/1_Event_Pipeline.py,
+# which keep their own standalone CSS. If you change a rule here that those two pages also
+# use, mirror it into their inline CSS blocks too, or the change will not appear there.
 
 _MODULE_CSS = """<style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');

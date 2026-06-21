@@ -136,7 +136,7 @@ k5.metric("Election Default",  default_el,
 k6.metric("Ratio",             str(ev["scrip_ratio"]) if ev["scrip_ratio"] and str(ev["scrip_ratio"])!='nan' else "—")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — OPPORTUNITY SCANNER
+# SECTION 1, OPPORTUNITY SCANNER
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=True):
     sc1,sc2,sc3,sc4 = st.columns(4)
@@ -185,7 +185,7 @@ with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=T
                scan_hl)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — ECONOMICS DEEP-DIVE
+# SECTION 2, ECONOMICS DEEP-DIVE
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander(f"◆  Economics · {ev['ticker']} / {ev['company_name']}", expanded=True):
     if cash_amt and scrip_px and rd and current_px > 0:
@@ -248,7 +248,7 @@ with st.expander(f"◆  Economics · {ev['ticker']} / {ev['company_name']}", exp
                 st.markdown("<p style='color:#304050;font-size:0.7rem'>Enter position size in sidebar.</p>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — WHT IMPACT ANALYSIS
+# SECTION 3, WHT IMPACT ANALYSIS
 # ═════════════════════════════════════════════════════════════════════════════
 if wht > 0:
     with st.expander(f"◆  Withholding Tax Impact · {wht:.0f}% WHT applies", expanded=True):
@@ -371,7 +371,7 @@ with st.expander("◆  Break-even Analysis", expanded=True):
         )
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SECTION 5 — LENDER CONFLICT & RECALL
+# SECTION 5, LENDER CONFLICT & RECALL
 # ═════════════════════════════════════════════════════════════════════════════
 with st.expander("◆  Lender Conflict & Recall Assessment", expanded=False):
     col_a, col_b = st.columns(2)
