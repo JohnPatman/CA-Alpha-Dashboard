@@ -311,7 +311,7 @@ with st.expander("◆  Deal Universe · Spread vs Implied Probability", expanded
         )
         fig.update_xaxes(title_text=f"Implied completion probability (break={break_assume}%)",gridcolor="#0e1825",tickfont=dict(size=9),range=[50,102])
         fig.update_yaxes(title_text="Spread to terms (%)",gridcolor="#0e1825",tickfont=dict(size=9))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown(
             f"<p style='font-family:IBM Plex Mono;font-size:0.62rem;color:#304050'>"
             f"Bubble size = break risk (larger = higher risk)  ·  Teal = reg cleared  ·  Amber = reg pending  ·  "

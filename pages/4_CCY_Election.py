@@ -315,7 +315,7 @@ with st.expander(f"◆  Currency Analysis · {ev['ticker']} / {ev['company_name'
             )
             fig.update_xaxes(gridcolor="#0e1825",tickfont=dict(size=11,color="#c8d8e8"))
             fig.update_yaxes(title_text="Div/sh (net WHT)",gridcolor="#0e1825",tickfont=dict(size=9))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         if action_req:
             inaction_cost = uplift * pos_shares if uplift and pos_shares > 0 else None
@@ -397,7 +397,7 @@ with st.expander("◆  FX Sensitivity Analysis", expanded=True):
             )
             fig2.update_xaxes(title_text="USD/GBP Spot",gridcolor="#0e1825",tickfont=dict(size=9))
             fig2.update_yaxes(title_text="Arb % vs USD",gridcolor="#0e1825",tickfont=dict(size=9))
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width='stretch')
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4, POSITION P&L

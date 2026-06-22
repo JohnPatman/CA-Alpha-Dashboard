@@ -358,7 +358,7 @@ with st.expander("◆  Break-even Analysis", expanded=True):
         )
         fig.update_xaxes(title_text=f"Share price ({ev['currency']})", gridcolor="#0e1825", tickfont=dict(size=9))
         fig.update_yaxes(title_text="Value per share", gridcolor="#0e1825", tickfont=dict(size=9))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         verdict_col = "#00d4aa" if current_px > be_price else "#f5a623"
         st.markdown(
             f"<p style='font-family:IBM Plex Mono;font-size:0.68rem;color:#6a8090'>"

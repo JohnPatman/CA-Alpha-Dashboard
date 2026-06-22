@@ -40,10 +40,13 @@ ADR_DATA = [
          typ="ADR",  local_px=2680.0, local_ccy="GBX", local_exch="LSE", local_mkt_cap=162.1,
          adr_px=67.55,  adr_ratio=2, spot_fx=_FX, friction=0.20, adr_exch="NYSE"),
 
-    # AZN.L/AZN: 11920p, 1:1 (ADS = 1 ordinary) → local_usd=$150.73, actual=$151.24 → +0.34% gross
+    # AZN.L/AZN: direct NYSE listing since 2 Feb 2026. The harmonised listing replaced the former
+    # 2:1 Nasdaq ADR; LSE and NYSE now trade the same fungible ordinary share, so this arbs to parity
+    # (tight), unlike the non-fungible dual-primaries below. 11920p → local_usd=$150.75, NYSE=$151.24 → +0.32%
     dict(ticker_l="AZN.L",   ticker_a="AZN",   company="AstraZeneca PLC",
-         typ="ADR",  local_px=11920.0,local_ccy="GBX", local_exch="LSE", local_mkt_cap=196.0,
-         adr_px=151.24, adr_ratio=1, spot_fx=_FX, friction=0.20, adr_exch="NASDAQ"),
+         typ="CROSS", local_px=11920.0,local_ccy="GBX", local_exch="LSE", local_mkt_cap=196.0,
+         adr_px=151.24, adr_ratio=1, spot_fx=_FX, friction=0.20,
+         adr_exch="NYSE", adr_ccy="USD", adr_spot=1.0),
 
     # GSK.L/GSK: 1720p, 2:1 → local_usd=$21.75, fair_adr=$43.50, actual=$43.73 → +0.53% gross
     dict(ticker_l="GSK.L",   ticker_a="GSK",   company="GSK PLC",
@@ -260,7 +263,7 @@ fig.update_layout(
 )
 fig.update_xaxes(gridcolor="#0e1825")
 fig.update_yaxes(gridcolor="#0e1825", zeroline=False)
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width='stretch')
 
 # Detail table
 detail_rows = [
@@ -306,10 +309,14 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 &nbsp;&nbsp;&nbsp;Friction includes: ADR conversion fees (typically 0.01–0.03 USD/share),<br>
 &nbsp;&nbsp;&nbsp;bid-ask spread on both legs (~0.05–0.10% each), FX conversion cost (~0.05%),<br>
 &nbsp;&nbsp;&nbsp;and timing risk between execution legs (~0.05%)<br><br>
-<strong style='color:#c8d8e8'>Dual-primary cross-listings (e.g. BHP LSE/ASX)</strong><br>
-&nbsp;&nbsp;&nbsp;Both classes are equivalent economic interests in the same company<br>
-&nbsp;&nbsp;&nbsp;Arb = (GBX price in USD) vs (AUD price in USD) at current spot rates<br>
-&nbsp;&nbsp;&nbsp;Higher friction due to currency conversion on both legs and settlement differences<br><br>
+<strong style='color:#c8d8e8'>Cross-listings: fungible vs non-fungible</strong><br>
+&nbsp;&nbsp;&nbsp;Fungible listings (e.g. AZN LSE/NYSE, direct-listed on the NYSE since 2 Feb 2026,<br>
+&nbsp;&nbsp;&nbsp;replacing its former Nasdaq ADR) are the same transferable share, so they arb to near parity;<br>
+&nbsp;&nbsp;&nbsp;residual edge is just FX timing and transfer friction<br>
+&nbsp;&nbsp;&nbsp;Non-fungible dual-primaries (e.g. BHP LSE/ASX) are separate lines in the same company<br>
+&nbsp;&nbsp;&nbsp;Arb = (GBX price in USD) vs (other-currency price in USD) at current spot rates<br>
+&nbsp;&nbsp;&nbsp;These carry persistent structural gaps (franking credits, index weights, distinct holder bases)<br>
+&nbsp;&nbsp;&nbsp;and higher friction from currency conversion and settlement differences on both legs<br><br>
 <strong style='color:#c8d8e8'>Limitations of this model</strong><br>
 &nbsp;&nbsp;&nbsp;Does not account for dividend entitlement timing differences between ADR and local<br>
 &nbsp;&nbsp;&nbsp;Does not model borrowing costs for short positions<br>

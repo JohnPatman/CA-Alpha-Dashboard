@@ -177,6 +177,53 @@ def test_scrip_consumers_use_canonical_helper():
         assert "scrip_decision" in src, f"{stub} no longer imports/uses scrip_decision"
 
 
+def test_no_orphan_detail_rows():
+    """Every detail row must have a parent event. Orphans (event_id absent from
+       events) are inert cruft from trimmed event sets and must not accumulate."""
+    c = _conn()
+    tables = ["scrip_details","rights_details","tender_details",
+              "merger_details","spinoff_details","split_details"]
+    offenders = []
+    for t in tables:
+        n = c.execute(f"""SELECT COUNT(*) FROM {t} d
+            WHERE NOT EXISTS (SELECT 1 FROM events e WHERE e.event_id = d.event_id)""").fetchone()[0]
+        if n: offenders.append(f"{t}={n}")
+    c.close()
+    assert not offenders, f"orphan detail rows: {offenders}"
+
+
+def test_no_duplicate_events():
+    """No two events should share ticker + event_type + ex_date. A name appearing
+       twice for the same corporate action (e.g. two FX-elections on one ex-date)
+       is a seeding collision, not a real event."""
+    c = _conn()
+    dups = c.execute("""SELECT ticker, event_type, ex_date, COUNT(*) n
+        FROM events WHERE ex_date IS NOT NULL
+        GROUP BY ticker, event_type, ex_date HAVING n > 1""").fetchall()
+    c.close()
+    assert not dups, f"duplicate events: {[(d['ticker'],d['event_type'],d['ex_date']) for d in dups]}"
+
+
+def test_derived_percentages_match_prices():
+    """Stored derived percentages must agree with what the prices imply, so a viewer
+       can never see a premium/discount that the prices don't support."""
+    c = _conn()
+    bad = []
+    # tender premium vs (tender_price/current_price - 1)
+    for r in c.execute("""SELECT event_id,tender_price tp,current_price cp,premium_to_mkt_pct pm
+        FROM tender_details WHERE tender_price IS NOT NULL AND current_price IS NOT NULL
+        AND premium_to_mkt_pct IS NOT NULL"""):
+        if abs((r["tp"]/r["cp"]-1)*100 - r["pm"]) > 1.0: bad.append(f"tender {r['event_id']}")
+    # scrip fx arb magnitude vs company/market fx
+    for r in c.execute("""SELECT event_id,company_fx_rate cf,market_fx_rate mf,fx_arbitrage_pct fa
+        FROM scrip_details WHERE company_fx_rate IS NOT NULL AND market_fx_rate IS NOT NULL
+        AND fx_arbitrage_pct IS NOT NULL"""):
+        if min(abs((r["cf"]/r["mf"]-1)*100 - r["fa"]), abs((r["mf"]/r["cf"]-1)*100 - r["fa"])) > 1.0:
+            bad.append(f"scrip {r['event_id']}")
+    c.close()
+    assert not bad, f"derived %s inconsistent with prices: {bad[:8]}"
+
+
 def _run_all():
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     passed = 0

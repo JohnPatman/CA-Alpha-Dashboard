@@ -78,9 +78,7 @@ PAST_EVENTS = [
      dp(45),dp(29),dp(28),dp(15),d(5), d(6),  "https://novartis.com","2026 AGM DRP — closed"),
     ("P008","BMW.DE","BMW AG","Germany","EUR","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",
      dp(50),dp(34),dp(33),dp(20),d(1), d(2),  "https://bmwgroup.com","2026 AGM dividend option — closed"),
-    # Past CCY elections (3) — rate fixed pre-deadline, now closed
-    ("P009","AAL.L","Anglo American PLC","UK","GBX","fx_election","MANDATORY_WITH_CHOICE","LIVE",
-     dp(30),dp(14),dp(13),dp(4), d(16),d(17), "https://angloamerican.com","2026 USD/GBP — election closed"),
+    # Past CCY elections (2) — rate fixed pre-deadline, now closed
     ("P010","RIO.AX","Rio Tinto Ltd","Australia","AUD","fx_election","MANDATORY_WITH_CHOICE","LIVE",
      dp(28),dp(12),dp(11),dp(9), d(11),d(12), "https://riotinto.com","USD/AUD/GBP — election closed"),
     ("P011","BHP.JO","BHP Group JSE","South Africa","ZAR","fx_election","MANDATORY_WITH_CHOICE","LIVE",
@@ -123,7 +121,6 @@ PAST_SCRIP = [
     ("P006", 0.10, "EUR",   4.2, "1 per 42",  "EUR", None,None,None,"CASH",19.0, -1.1, "SCRIP",0),
     ("P007", 3.90, "CHF", 820.0, "1 per 210", "CHF", None,None,None,"CASH",35.0, -0.7, "SCRIP",0),
     ("P008", 6.00, "EUR",  82.5, "1 per 14",  "EUR", None,None,None,"CASH",26.375,-1.4,"CASH", 0),
-    ("P009", 0.55, "USD", None, None, "GBP|USD",     0.7820,0.7750,0.90,"CASH",0,None,"GBP",1),
     ("P010", 1.55, "USD", None, None, "USD|AUD|GBP", 0.6480,0.6430,0.78,"CASH",0,None,"AUD",1),
     ("P011", 0.72, "USD", None, None, "USD|ZAR|GBP", 0.6510,0.6430,1.24,"CASH",0,None,"GBP",1),
 ]
@@ -131,7 +128,7 @@ c.executemany(
     "INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
     PAST_SCRIP
 )
-for eid in ('P009','P010','P011'):
+for eid in ('P010','P011'):
     c.execute("UPDATE scrip_details SET rate_pre_deadline=1 WHERE event_id=?", (eid,))
 
 PAST_RIGHTS = [

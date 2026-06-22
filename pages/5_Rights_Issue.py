@@ -261,7 +261,7 @@ with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expa
         )
         fig.update_xaxes(title_text=f"Share price ({ev['currency']})",gridcolor="#0e1825",tickfont=dict(size=9))
         fig.update_yaxes(title_text="P&L per right",gridcolor="#0e1825",tickfont=dict(size=9))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         if is_open_offer:
             _cap = (f"Break-even (take-up): <span style='color:#c8d8e8'>{ev['currency']} {sub_px:.2f}</span>"
                     f" &nbsp;·&nbsp; <span style='color:#6a8090'>Non-renounceable, take up or lapse only</span>")
@@ -316,7 +316,7 @@ with st.expander("◆  Take-up Economics · P&L at Different Share Prices", expa
             )
             fig2.update_xaxes(title_text=f"Share price ({ev['currency']})", gridcolor="#0e1825", tickfont=dict(size=9))
             fig2.update_yaxes(title_text=f"Total P&L ({ev['currency']})", gridcolor="#0e1825", tickfont=dict(size=9))
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width='stretch')
             # Callout at current price
             _tu_now  = max(0, cur_px - sub_px) * rights_ent
             _sel_now = max(0, nil_calc) * rights_ent

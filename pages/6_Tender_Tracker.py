@@ -388,7 +388,7 @@ if is_fixed and pro_exp==1 and proration and tp and cur_px:
             )
             fig.update_xaxes(title_text="Proration fill rate",gridcolor="#0e1825",tickfont=dict(size=8,color="#6a8090"))
             fig.update_yaxes(title_text=f"P&L ({ev['currency']})",gridcolor="#0e1825",tickfont=dict(size=9))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
             st.markdown(
                 f"<p style='font-family:IBM Plex Mono;font-size:0.66rem;color:#6a8090'>"
                 f"Est. fill ~{proration:.0f}% · Spread {ev['currency']} {spread_abs:.2f}/sh ({prem:.1f}%) · "
@@ -426,7 +426,7 @@ if is_dutch and tp_lo and tp_hi:
             )
             fig.update_xaxes(title_text=f"Clearing price ({ev['currency']})",gridcolor="#0e1825",tickfont=dict(size=9))
             fig.update_yaxes(title_text="Proceeds",gridcolor="#0e1825",tickfont=dict(size=9))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         with col_dt:
             pro_rate_d = (proration or 80) / 100

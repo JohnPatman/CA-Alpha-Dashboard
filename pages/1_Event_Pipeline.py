@@ -505,9 +505,9 @@ with st.expander("◆  Deadline Countdown", expanded=True):
     _n_all = len(df_bars_all)
     if _n_all > 30:
         _show_all = st.checkbox(f"Show all {_n_all} events (default: top 30 by urgency)", value=False, key="show_all_bars")
-        df_bars = df_bars_all if _show_all else df_bars_all.head(30)
+        df_bars = (df_bars_all if _show_all else df_bars_all.head(30)).copy()
     else:
-        df_bars = df_bars_all
+        df_bars = df_bars_all.copy()
     if not df_bars.empty:
         df_bars["days_int"] = df_bars["days_to_deadline"].apply(safe_int)
         df_bars["label"]    = df_bars.apply(
@@ -549,7 +549,7 @@ with st.expander("◆  Deadline Countdown", expanded=True):
                        tickfont=dict(size=9, color="#8aa0b0"), autorange="reversed"),
             bargap=0.18,
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         st.markdown(
             "<p style='font-family:IBM Plex Mono;font-size:0.58rem;color:#304050;letter-spacing:0.1em'>"
             "RED  ≤3d &nbsp;&nbsp; AMBER  ≤7d &nbsp;&nbsp; YELLOW  ≤14d &nbsp;&nbsp; GREEN  >14d"
@@ -610,4 +610,4 @@ with st.expander("◆  Distribution by Country", expanded=False):
         yaxis=dict(gridcolor="#0e1825", linecolor="#182436", tickfont=dict(size=9, color="#8aa0b0")),
     )
     fig2.update_traces(marker_line_width=0)
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width='stretch')
