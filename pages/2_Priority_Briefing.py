@@ -171,7 +171,8 @@ def event_card(ticker, company, etype, days, action_text, value_text, note="", c
                }.get(etype, etype.upper()[:6])
     return (
         f"<div style='background:#080c12;border:1px solid #182436;border-left:3px solid {e_color};"
-        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono'>"
+        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono;"
+        f"min-height:5.9rem;box-sizing:border-box'>"
         f"<div style='display:flex;justify-content:space-between;align-items:baseline'>"
         f"<span style='font-size:0.75rem;color:#c8d8e8;font-weight:500'>{ticker}</span>"
         f"<span>{badge}</span></div>"

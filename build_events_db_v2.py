@@ -78,9 +78,7 @@ E = [
   ("E001","LMP.L","LondonMetric Property","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(30),dp(14),dp(13),d(5),d(20),d(21),"https://londonmetric.com","Q1 2026 scrip"),
   ("E002","LGEN.L","Legal & General","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(25),dp(10),dp(9),d(8),d(25),d(26),"https://legalandgeneral.com","Final 2025"),
   ("E003","ULVR.L","Unilever PLC","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(20),dp(7),dp(6),d(12),d(30),d(31),"https://unilever.com","Q1 2026"),
-  ("E004","HSBA.L","HSBC Holdings","UK","GBX","fx_election","MANDATORY_WITH_CHOICE","UPCOMING",dp(5),d(14),d(15),d(35),d(55),d(56),"https://hsbc.com","2026 interim"),
   ("E005","SHEL.L","Shell PLC","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(28),dp(12),dp(11),d(3),d(18),d(19),"https://shell.com","Q1 2026"),
-  ("E006","RIO.L","Rio Tinto PLC","UK","GBX","fx_election","MANDATORY_WITH_CHOICE","UPCOMING",dp(3),d(18),d(19),d(40),d(60),d(61),"https://riotinto.com","2026 interim"),
   ("E007","NG.L","National Grid","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(35),dp(18),dp(17),d(2),d(15),d(16),"https://nationalgrid.com","FY2026 final"),
   ("E008","AV.L","Aviva PLC","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","UPCOMING",dp(7),d(21),d(22),d(42),d(65),d(66),"https://aviva.com","2026 interim"),
   ("E009","GSK.L","GSK PLC","UK","GBX","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(22),dp(8),dp(7),d(7),d(22),d(23),"https://gsk.com","Q1 2026"),
@@ -168,7 +166,6 @@ E = [
   ("E110","WDS.AX","Woodside Energy","Australia","AUD","fx_election","MANDATORY_WITH_CHOICE","LIVE",dp(20),dp(6),dp(5),d(9),d(26),d(27),"https://woodside.com","2026 Q1 currency election"),
   ("E111","TLS.AX","Telstra Group","Australia","AUD","scrip_dividend","MANDATORY_WITH_CHOICE","LIVE",dp(15),dp(4),dp(3),d(11),d(29),d(30),"https://telstra.com.au","H1 2026 DRP"),
   ("E112","CSL.AX","CSL Ltd","Australia","AUD","fx_election","MANDATORY_WITH_CHOICE","UPCOMING",dp(3),d(30),d(31),d(52),d(72),d(73),"https://csl.com","2026 interim currency election"),
-  ("E113","BHP.AX","BHP Group Ltd","Australia","AUD","fx_election","MANDATORY_WITH_CHOICE","UPCOMING",dp(5),d(20),d(21),d(42),d(62),d(63),"https://bhp.com","2026 interim currency election"),
 
   # ── AUSTRALIA CCY ELECTIONS (3) ───────────────────────────────────────────
   ("E114","RIO.AX","Rio Tinto Ltd","Australia","AUD","fx_election","MANDATORY_WITH_CHOICE","UPCOMING",dp(3),d(18),d(19),d(40),d(60),d(61),"https://riotinto.com","USD/AUD election"),
@@ -277,9 +274,7 @@ SCRIP = [
   ("E001",3.05,"GBP",181.80,"1 per 59","GBP",None,None,None,"CASH",0,-1.47,"CASH",0),
   ("E002",5.84,"GBP",240.00,"1 per 41","GBP",None,None,None,"CASH",0,-0.83,"CASH",0),
   ("E003",43.50,"GBP",4120.00,"1 per 94","GBP",None,None,None,"CASH",0,0.24,"SCRIP",0),
-  ("E004",0.10,"USD",None,None,"GBP|USD",0.7617,0.7402,2.91,"CASH",0,None,"GBP",0),
   ("E005",34.00,"USD",2465.00,"1 per 72","GBP|USD",0.7920,0.7750,2.19,"CASH",0,-0.62,"CASH",0),
-  ("E006",1.77,"USD",None,None,"GBP|USD|AUD",0.7850,0.7750,1.29,"CASH",0,None,"GBP",0),
   ("E007",17.40,"GBP",1058.00,"1 per 60","GBP",None,None,None,"CASH",0,0.38,"SCRIP",0),
   ("E008",22.50,"GBP",480.00,"1 per 21","GBP",None,None,None,"CASH",0,-0.42,"CASH",0),
   ("E009",16.25,"GBP",1890.00,"1 per 116","GBP",None,None,None,"CASH",0,0.15,"SCRIP",0),
@@ -319,7 +314,6 @@ SCRIP = [
   ("E110",0.60,"USD",None,None,"AUD|USD",0.6420,0.6380,0.63,"CASH",0,None,"AUD",0),
   ("E111",0.09,"AUD",4.05,"1 per 44","AUD",None,None,None,"CASH",0,-0.74,"CASH",0),
   ("E112",1.10,"USD",None,None,"AUD|USD",0.6440,0.6380,0.94,"CASH",0,None,"AUD",0),
-  ("E113",0.72,"USD",None,None,"AUD|USD",0.6420,0.6380,0.63,"CASH",0,None,"AUD",0),
   ("E114",0.72,"USD",None,None,"AUD|USD|GBP",0.6410,0.6380,0.49,"CASH",0,None,"AUD",0),
   ("E115",0.72,"USD",None,None,"USD|AUD|GBP",0.6420,0.6380,0.63,"CASH",0,None,"AUD",0),
   ("E116",0.22,"USD",None,None,"USD|AUD",0.6430,0.6380,0.80,"CASH",0,None,"AUD",0),
@@ -591,14 +585,14 @@ def build():
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", NEW_COVERAGE_EVENTS)
 
     NEW_SCRIP = [
-        ("IE001",3.20,"EUR",None,"1 per 55","EUR",None,None,None,"CASH",0,-0.95,"SCRIP",0),
-        ("FI001",0.85,"EUR",None,"1 per 48","EUR",None,None,None,"CASH",0,-1.10,"SCRIP",0),
-        ("NL003",5.50,"EUR",None,"1 per 38","EUR",None,None,None,"CASH",0,0.18,"SCRIP",0),
-        ("SE003",1.20,"SEK",None,"1 per 62","SEK",None,None,None,"CASH",0,-0.72,"SCRIP",0),
-        ("BE003",2.10,"EUR",None,"1 per 44","EUR",None,None,None,"CASH",0,0.32,"SCRIP",0),
-        ("ES003",0.48,"EUR",None,"1 per 71","EUR",None,None,None,"CASH",0,-0.55,"SCRIP",0),
-        ("IT003",1.65,"EUR",None,"1 per 36","EUR",None,None,None,"CASH",0,0.25,"SCRIP",0),
-        ("HK003",0.28,"HKD",None,"1 per 58","HKD",None,None,None,"CASH",0,-1.20,"SCRIP",0),
+        ("IE001",3.20,"EUR",176.0,"1 per 55","EUR",None,None,None,"CASH",0,-0.95,"SCRIP",0),
+        ("FI001",0.85,"EUR",40.8,"1 per 48","EUR",None,None,None,"CASH",0,-1.10,"SCRIP",0),
+        ("NL003",5.50,"EUR",209.0,"1 per 38","EUR",None,None,None,"CASH",0,0.18,"SCRIP",0),
+        ("SE003",1.20,"SEK",74.4,"1 per 62","SEK",None,None,None,"CASH",0,-0.72,"SCRIP",0),
+        ("BE003",2.10,"EUR",92.4,"1 per 44","EUR",None,None,None,"CASH",0,0.32,"SCRIP",0),
+        ("ES003",0.48,"EUR",34.08,"1 per 71","EUR",None,None,None,"CASH",0,-0.55,"SCRIP",0),
+        ("IT003",1.65,"EUR",59.4,"1 per 36","EUR",None,None,None,"CASH",0,0.25,"SCRIP",0),
+        ("HK003",0.28,"HKD",16.24,"1 per 58","HKD",None,None,None,"CASH",0,-1.20,"SCRIP",0),
     ]
     c.executemany("INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", NEW_SCRIP)
 

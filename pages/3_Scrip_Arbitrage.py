@@ -47,12 +47,6 @@ df["_prem"]       = [e[0] for e in enrich]
 df["_opt"]        = [e[1] for e in enrich]
 df["_action_req"] = [e[2] for e in enrich]
 df["_inferred_px"]= [e[3] for e in enrich]
-# Scrip dividends whose reference (issue) price is not yet struck cannot be valued.
-# All scrip events here carry a ratio, so a missing issue price is the only cause: the
-# reference price is set via a pricing period near the deadline, so these are "awaiting price"
-# rather than missing data. They are excluded from the actionable counts above by construction
-# (premium is None, so _action_req is False and they never enter the >0.5% premium tally).
-df["_tba"] = [sf(r["scrip_issue_price"]) is None for _,r in df.iterrows()]
 
 # ── sidebar ───────────────────────────────────────────────────────────────────
 st.sidebar.markdown("### ◆ Scrip Engine")
@@ -66,7 +60,7 @@ def ev_label(r):
     d    = days_to(r["election_deadline"])
     prem = r["_prem"]
     req  = "⚡" if r["_action_req"] else " "
-    return f"{tdot(d)} {req} {r['ticker']} · {r['company_name'][:18]} · {'TBA' if r['_tba'] else (f'{prem:+.2f}%' if prem else '—')}"
+    return f"{tdot(d)} {req} {r['ticker']} · {r['company_name'][:18]} · {f'{prem:+.2f}%' if prem else '—'}"
 
 labels  = [ev_label(r) for _,r in df_filt.iterrows()]
 sel_idx = st.sidebar.selectbox("Event", range(len(labels)), format_func=lambda i: labels[i])
@@ -120,7 +114,7 @@ st.markdown(
     f" &nbsp;·&nbsp; Ex-date: <span style='color:#c8d8e8'>{fmt_date(ev['ex_date'])}</span>"
     f" &nbsp;·&nbsp; Deadline: <span style='color:#{'ff3355' if ddl_days is not None and ddl_days<=3 else 'f5a623' if ddl_days is not None and ddl_days<=7 else 'c8d8e8'}'>{fmt_date(ev['election_deadline'])} ({ddl_days}d)</span>"
     f" &nbsp;·&nbsp; Default: <span style='color:{'ff3355' if action_req else '6a8090'}'>{default_el}</span>"
-    f" &nbsp;·&nbsp; {'Reference price not yet struck, set near the deadline' if ev['_tba'] else ('⚡ ACTION REQUIRED, elect ' + calc_opt if action_req else 'No action required')}"
+    f" &nbsp;·&nbsp; {'⚡ ACTION REQUIRED, elect ' + calc_opt if action_req else 'No action required'}"
     f"</div>",
     unsafe_allow_html=True
 )
@@ -133,9 +127,9 @@ k2.metric("Cash (net WHT)",    f"{ev['cash_currency']} {cash_net:.4f}" if cash_n
           delta_color="inverse" if wht > 0 else "off")
 k3.metric("Scrip Value",       f"{ev['currency']} {scrip_val:.4f}" if scrip_val else "—")
 k4.metric("Scrip vs Cash",
-          "Price TBA" if ev["_tba"] else (f"{prem:+.2f}%" if prem is not None else "—"),
-          delta="Awaiting reference price" if ev["_tba"] else ("SCRIP BETTER ◆" if prem and prem>0 else ("CASH BETTER" if prem is not None else None)),
-          delta_color="off" if ev["_tba"] else ("normal" if prem and prem>0 else "inverse"))
+          f"{prem:+.2f}%" if prem is not None else "—",
+          delta="SCRIP BETTER ◆" if prem and prem>0 else ("CASH BETTER" if prem is not None else None),
+          delta_color="normal" if prem and prem>0 else "inverse")
 k5.metric("Election Default",  default_el,
           delta="⚡ Must Elect" if action_req else None,
           delta_color="inverse" if action_req else "off")
@@ -164,7 +158,6 @@ with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=T
         default = str(r["election_default"]).upper() if r["election_default"] and str(r["election_default"])!='nan' else "CASH"
         wht_v   = sf(r["withholding_tax_pct"], 0.0)
         cash    = sf(r["cash_amount"])
-        tba     = r["_tba"]
 
         row = [
             f"{tdot(d)} {'⚡' if act_req else ' '} {r['ticker']}",
@@ -175,9 +168,9 @@ with st.expander("◆  Opportunity Scanner · All Live Scrip Events", expanded=T
             f"{r['cash_currency']} {cash:.4f}" if cash else "—",
             str(r["scrip_ratio"]) if r["scrip_ratio"] and str(r["scrip_ratio"])!='nan' else "—",
             f"{wht_v:.0f}%" if wht_v > 0 else "0%",
-            "TBA" if tba else (f"{prem:+.2f}%" if prem is not None else "—"),
+            f"{prem:+.2f}%" if prem is not None else "—",
             default,
-            "Awaiting px" if tba else (f"◆ {opt}" if opt=="SCRIP" else (opt if opt else "—")),
+            f"◆ {opt}" if opt=="SCRIP" else (opt if opt else "—"),
             "⚡ ELECT" if act_req else ("✓" if opt=="SCRIP" else "—"),
         ]
         scan_rows.append(row)
@@ -253,20 +246,6 @@ with st.expander(f"◆  Economics · {ev['ticker']} / {ev['company_name']}", exp
                     st.success(f"◆  Scrip premium {prem:.2f}%: elect SCRIP for +{ev['currency']} {delta:,.2f}")
             else:
                 st.markdown("<p style='color:#304050;font-size:0.7rem'>Enter position size in sidebar.</p>", unsafe_allow_html=True)
-    elif ev["_tba"]:
-        st.markdown(
-            f"<div style='border-left:2px solid #f5a623;background:#f5a62308;"
-            f"padding:0.5rem 0.8rem;font-family:IBM Plex Mono;font-size:0.7rem;"
-            f"color:#c8d8e8;line-height:1.7'>"
-            f"<strong>Reference price not yet struck.</strong> The scrip issue price for "
-            f"{ev['ticker']} is set from a VWAP over a pricing period that runs near the "
-            f"election deadline ({fmt_date(ev['election_deadline'])}), so the scrip-versus-cash "
-            f"premium cannot be valued until it is published. Cash terms, ratio and deadline are "
-            f"known and shown above; the premium populates once the reference price is announced.</div>",
-            unsafe_allow_html=True
-        )
-    else:
-        st.markdown("<p style='color:#304050;font-size:0.7rem'>Insufficient data to value this event.</p>", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3, WHT IMPACT ANALYSIS
@@ -455,11 +434,6 @@ with st.expander("◆  Methodology & Formulas", expanded=False):
 &nbsp;&nbsp;&nbsp;B/E = Cash_net ÷ (N_new ÷ N_existing)<br>
 &nbsp;&nbsp;&nbsp;At P_current = B/E, Scrip_val = Cash_net exactly (indifferent between elections)<br>
 &nbsp;&nbsp;&nbsp;If P_current > B/E → SCRIP better; if P_current < B/E → CASH better<br><br>
-<strong style='color:#c8d8e8'>Reference price timing ("Price TBA")</strong><br>
-&nbsp;&nbsp;&nbsp;The scrip issue (reference) price is struck from a VWAP over a pricing period that runs<br>
-&nbsp;&nbsp;&nbsp;near the election deadline, not at announcement. Events whose pricing period has not yet<br>
-&nbsp;&nbsp;&nbsp;run show "Price TBA": the ratio, cash terms and deadline are known, but the premium cannot<br>
-&nbsp;&nbsp;&nbsp;be computed until the reference price is published. These are excluded from actionable ranks.<br><br>
 <strong style='color:#c8d8e8'>Action required flag</strong><br>
 &nbsp;&nbsp;&nbsp;Action_required = (election_default ≠ optimal_election)<br>
 &nbsp;&nbsp;&nbsp;i.e. the company's default election is suboptimal, instruction must be sent<br><br>

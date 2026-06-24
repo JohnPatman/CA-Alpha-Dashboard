@@ -180,7 +180,8 @@ def outcome_card(ev, det, outcome_label, outcome_type, outcome_detail):
     e_label  = type_map.get(ev["event_type"], ev["event_type"])
     return (
         f"<div style='background:#080c12;border:1px solid #182436;border-top:2px solid {o_col};"
-        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono'>"
+        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono;"
+        f"min-height:6rem;box-sizing:border-box'>"
         f"<div style='display:flex;justify-content:space-between;align-items:baseline'>"
         f"<span style='font-size:0.75rem;color:#c8d8e8;font-weight:500'>{ev['ticker']}</span>"
         f"<span style='font-size:0.55rem;color:#304050'>{days_ago}d ago</span></div>"

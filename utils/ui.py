@@ -110,6 +110,7 @@ def dark_table(rows, headers, highlights=None, height=None):
         f'<th style="padding:0.3rem 0.7rem;font-size:0.52rem;'
         f'letter-spacing:0.1em;text-transform:uppercase;color:#304050;'
         f'background:#04060a;border-bottom:1px solid #243548;'
+        f'position:sticky;top:0;z-index:2;'
         f'text-align:left;white-space:nowrap;cursor:pointer;user-select:none">'
         f'{h}<span class="si" style="color:#00d4aa;font-size:0.5rem"></span></th>'
         for h in headers

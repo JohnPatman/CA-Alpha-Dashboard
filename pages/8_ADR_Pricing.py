@@ -234,35 +234,33 @@ c5.metric("Net Arb",         f"{r['net_arb']:+.3f}%",
           delta_color="normal" if r["actionable"] else "off")
 
 # Arb breakdown bar chart, percentages only (prices are incomparable scale)
-fig = go.Figure()
-bar_labels = ["Gross Arb", "Round-trip Friction", "Net Arb"]
-bar_values = [r["arb_pct"], -math.copysign(r["friction"], r["arb_pct"]), r["net_arb"]]
-bar_colours = [
-    "#00d4aa" if r["arb_pct"] > 0 else "#ff3355",
-    "#ff3355",
-    "#00d4aa" if r["net_arb"] > 0.10 else "#ff3355" if r["net_arb"] < -0.10 else "#6a8090",
-]
-fig.add_trace(go.Bar(
-    x=bar_labels, y=bar_values,
-    marker_color=bar_colours, marker_line_width=0,
-    text=[f"{v:+.3f}%" for v in bar_values],
+_friction_step = -math.copysign(r["friction"], r["arb_pct"]) if r["arb_pct"] else -r["friction"]
+_levels = [0.0, r["arb_pct"], r["net_arb"]]
+_lo, _hi = min(_levels), max(_levels)
+_pad = max((_hi - _lo) * 0.22, 0.3)
+fig = go.Figure(go.Waterfall(
+    orientation="v",
+    measure=["absolute", "relative", "total"],
+    x=["Gross Arb", "Round-trip Friction", "Net Arb"],
+    y=[r["arb_pct"], _friction_step, r["net_arb"]],
+    text=[f"{r['arb_pct']:+.3f}%", f"{_friction_step:+.3f}%", f"{r['net_arb']:+.3f}%"],
     textposition="outside",
     textfont=dict(family="IBM Plex Mono", size=10, color="#c8d8e8"),
-    hovertemplate="%{x}: %{y:+.4f}%<extra></extra>"
+    connector=dict(line=dict(color="#243548", width=1)),
+    increasing=dict(marker=dict(color="#00d4aa")),
+    decreasing=dict(marker=dict(color="#ff3355")),
+    totals=dict(marker=dict(color="#00d4aa" if r["net_arb"] > 0.10 else "#ff3355" if r["net_arb"] < -0.10 else "#6a8090")),
+    hovertemplate="%{x}: %{y:+.4f}%<extra></extra>",
 ))
 fig.add_hline(y=0, line_color="#182436", line_width=1)
-fig.add_hline(y=0.10,  line_color="#00d4aa", line_width=1, line_dash="dot",
-              annotation_text="+0.10% action threshold", annotation_font=dict(color="#00d4aa", size=9, family="IBM Plex Mono"))
-fig.add_hline(y=-0.10, line_color="#ff3355", line_width=1, line_dash="dot",
-              annotation_text="-0.10% action threshold", annotation_font=dict(color="#ff3355", size=9, family="IBM Plex Mono"))
 fig.update_layout(
     paper_bgcolor="#04060a", plot_bgcolor="#080c12",
     font=dict(family="IBM Plex Mono", size=10, color="#6a8090"),
-    height=240, margin=dict(l=8, r=8, t=24, b=30),
+    height=280, margin=dict(l=8, r=8, t=30, b=30),
     showlegend=False, yaxis_ticksuffix="%",
 )
 fig.update_xaxes(gridcolor="#0e1825")
-fig.update_yaxes(gridcolor="#0e1825", zeroline=False)
+fig.update_yaxes(gridcolor="#0e1825", zeroline=False, range=[_lo - _pad, _hi + _pad])
 st.plotly_chart(fig, width='stretch')
 
 # Detail table
