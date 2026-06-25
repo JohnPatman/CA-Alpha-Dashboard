@@ -572,7 +572,6 @@ def build():
         ("SE003","ERIC-B.ST","Ericsson","Sweden","SEK","scrip_dividend","VOLUNTARY","LIVE",dp(20),d(7),d(8),d(24),d(34),d(38),"https://ericsson.com","Scrip dividend"),
         ("SE004","VOLV-B.ST","Volvo AB","Sweden","SEK","rights_issue","VOLUNTARY","UPCOMING",dp(4),d(28),d(29),d(45),d(58),d(62),"https://volvo.com","Rights issue"),
         ("BE003","UCB.BR","UCB SA","Belgium","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(17),d(9),d(10),d(26),d(36),d(40),"https://ucb.com","Scrip dividend"),
-        ("ES003","IBE.MC","Iberdrola","Spain","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(14),d(11),d(12),d(28),d(38),d(42),"https://iberdrola.com","Scrip dividend"),
         ("ES004","SAN.MC","Banco Santander","Spain","EUR","rights_issue","VOLUNTARY","UPCOMING",dp(7),d(26),d(27),d(44),d(56),d(60),"https://santander.com","Capital rights issue"),
         ("IT003","UCG.MI","UniCredit","Italy","EUR","scrip_dividend","VOLUNTARY","LIVE",dp(19),d(4),d(5),d(18),d(28),d(32),"https://unicredit.com","Scrip dividend"),
         ("JP003","6758.T","Sony Group Corp","Japan","JPY","tender_offer","VOLUNTARY","LIVE",dp(16),None,dp(2),d(18),None,d(22),"https://sony.com","Fixed price tender"),
@@ -585,13 +584,12 @@ def build():
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", NEW_COVERAGE_EVENTS)
 
     NEW_SCRIP = [
-        ("IE001",3.20,"EUR",176.0,"1 per 55","EUR",None,None,None,"CASH",0,-0.95,"SCRIP",0),
-        ("FI001",0.85,"EUR",40.8,"1 per 48","EUR",None,None,None,"CASH",0,-1.10,"SCRIP",0),
-        ("NL003",5.50,"EUR",209.0,"1 per 38","EUR",None,None,None,"CASH",0,0.18,"SCRIP",0),
-        ("SE003",1.20,"SEK",74.4,"1 per 62","SEK",None,None,None,"CASH",0,-0.72,"SCRIP",0),
-        ("BE003",2.10,"EUR",92.4,"1 per 44","EUR",None,None,None,"CASH",0,0.32,"SCRIP",0),
-        ("ES003",0.48,"EUR",34.08,"1 per 71","EUR",None,None,None,"CASH",0,-0.55,"SCRIP",0),
-        ("IT003",1.65,"EUR",59.4,"1 per 36","EUR",None,None,None,"CASH",0,0.25,"SCRIP",0),
+        ("IE001",3.20,"EUR",176.0,"1 per 55","EUR",None,None,None,"CASH",25,-0.95,"SCRIP",0),
+        ("FI001",0.85,"EUR",40.8,"1 per 48","EUR",None,None,None,"CASH",30,-1.10,"SCRIP",0),
+        ("NL003",5.50,"EUR",209.0,"1 per 38","EUR",None,None,None,"CASH",15,0.18,"SCRIP",0),
+        ("SE003",1.20,"SEK",74.4,"1 per 62","SEK",None,None,None,"CASH",30,-0.72,"SCRIP",0),
+        ("BE003",2.10,"EUR",92.4,"1 per 44","EUR",None,None,None,"CASH",30,0.32,"SCRIP",0),
+        ("IT003",1.65,"EUR",59.4,"1 per 36","EUR",None,None,None,"CASH",26,0.25,"SCRIP",0),
         ("HK003",0.28,"HKD",16.24,"1 per 58","HKD",None,None,None,"CASH",0,-1.20,"SCRIP",0),
     ]
     c.executemany("INSERT OR IGNORE INTO scrip_details VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", NEW_SCRIP)

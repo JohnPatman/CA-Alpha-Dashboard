@@ -1,3 +1,5 @@
 streamlit==1.52.0
 plotly==6.5.0
 pandas==2.3.3
+
+# rebuild trigger 2026-06-25: force clean reimport of utils/ui.py (sticky table headers)
