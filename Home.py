@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 from datetime import date
 from utils.helpers import sf, scrip_decision
+from utils.ui import render_top_nav
 
 st.set_page_config(
     page_title="CA Alpha Dashboard",
@@ -342,6 +343,7 @@ def get_country_breakdown():
 
 # ── page ──────────────────────────────────────────────────────────────────────
 st.title("◆ Voluntary CA Alpha Dashboard")
+render_top_nav()
 
 s    = get_summary()
 tops = get_top_opportunities()

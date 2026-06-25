@@ -4,10 +4,11 @@ import plotly.graph_objects as go
 import sqlite3, re
 from datetime import date
 from utils.helpers import sf, fmt_date, days_to, tdot, disc_colour, parse_ratio
-from utils.ui import apply_theme, dark_table
+from utils.ui import apply_theme, dark_table, render_top_nav
 
 st.set_page_config(page_title="Rights Issue Analyser · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
+render_top_nav()
 
 DB = "data/events.db"; TODAY = date.today()
 

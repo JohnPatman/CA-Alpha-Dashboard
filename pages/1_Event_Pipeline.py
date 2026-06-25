@@ -1,4 +1,5 @@
 import streamlit as st
+from utils.ui import render_top_nav
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -174,6 +175,7 @@ html body section[data-testid="stSidebar"] *::after {
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
+render_top_nav()
 
 # ── JS: kill sidebar collapse bracket by text content ────────────────────────
 import streamlit.components.v1 as _c

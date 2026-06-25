@@ -2,10 +2,11 @@ import streamlit as st
 import sqlite3
 from datetime import date, timedelta
 from utils.helpers import sf, fmt_date, days_to, tdot, ann_ret, scrip_decision
-from utils.ui import apply_theme
+from utils.ui import apply_theme, render_top_nav
 
 st.set_page_config(page_title="Priority Briefing · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
+render_top_nav()
 DB    = "data/events.db"
 TODAY = date.today()
 

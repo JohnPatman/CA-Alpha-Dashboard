@@ -170,3 +170,22 @@ def dark_table(rows, headers, highlights=None, height=None):
     )
     _c.html(html, height=h_px, scrolling=True)
 
+
+def render_top_nav():
+    items = [
+        ("Home", "/"), ("Pipeline", "/Event_Pipeline"), ("Briefing", "/Priority_Briefing"),
+        ("Scrip", "/Scrip_Arbitrage"), ("CCY", "/CCY_Election"), ("Rights", "/Rights_Issue"),
+        ("Tender", "/Tender_Tracker"), ("Merger", "/Merger_Tracker"), ("ADR", "/ADR_Pricing"),
+        ("Closed", "/Closed_Events"),
+    ]
+    links = "".join(f"<a href='{u}' target='_self' class='canav'>{n}</a>" for n, u in items)
+    st.markdown(
+        "<style>.canavwrap{display:flex;flex-wrap:wrap;align-items:center;gap:0.3rem;"
+        "margin-bottom:0.6rem;padding-bottom:0.45rem;border-bottom:1px solid #182436}"
+        ".canav{background:#080c12;border:1px solid #182436;color:#c8d8e8;"
+        "padding:0.25rem 0.6rem;font-family:IBM Plex Mono;font-size:0.72rem;"
+        "text-decoration:none;white-space:nowrap}"
+        ".canav:hover{border-color:#00d4aa;color:#00d4aa}</style>"
+        f"<div class='canavwrap'>{links}</div>",
+        unsafe_allow_html=True,
+    )

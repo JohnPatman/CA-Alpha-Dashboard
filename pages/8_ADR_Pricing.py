@@ -4,10 +4,11 @@ import plotly.graph_objects as go
 import math
 from datetime import date
 from utils.helpers import sf
-from utils.ui import apply_theme, dark_table
+from utils.ui import apply_theme, dark_table, render_top_nav
 
 st.set_page_config(page_title="ADR Pricing · CA Alpha", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
 apply_theme()
+render_top_nav()
 TODAY = date.today()
 
 # ═════════════════════════════════════════════════════════════════════════════
