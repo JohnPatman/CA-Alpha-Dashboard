@@ -180,8 +180,8 @@ def outcome_card(ev, det, outcome_label, outcome_type, outcome_detail):
     e_label  = type_map.get(ev["event_type"], ev["event_type"])
     return (
         f"<div style='background:#080c12;border:1px solid #182436;border-top:2px solid {o_col};"
-        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono;"
-        f"min-height:6rem;box-sizing:border-box'>"
+        f"padding:0.5rem 0.75rem;font-family:IBM Plex Mono;"
+        f"height:100%;box-sizing:border-box'>"
         f"<div style='display:flex;justify-content:space-between;align-items:baseline'>"
         f"<span style='font-size:0.75rem;color:#c8d8e8;font-weight:500'>{ev['ticker']}</span>"
         f"<span style='font-size:0.55rem;color:#304050'>{days_ago}d ago</span></div>"
@@ -195,12 +195,15 @@ def outcome_card(ev, det, outcome_label, outcome_type, outcome_detail):
         f"</div>"
     )
 
-# Show all closed events in 3-column grid
+# Show all closed events in a 3-column grid (align-items:stretch equalises row heights)
 if outcomes:
-    cols = st.columns(3)
-    for i, (ev, det, label, o_type, detail) in enumerate(outcomes):
-        card_html = outcome_card(ev, det, label, o_type, detail)
-        cols[i % 3].markdown(card_html, unsafe_allow_html=True)
+    cards = [outcome_card(ev, det, label, o_type, detail)
+             for (ev, det, label, o_type, detail) in outcomes]
+    st.markdown(
+        "<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem'>"
+        + "".join(cards) + "</div>",
+        unsafe_allow_html=True,
+    )
 else:
     st.info("No closed events found.")
 

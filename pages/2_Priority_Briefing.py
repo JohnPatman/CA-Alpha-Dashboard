@@ -171,8 +171,8 @@ def event_card(ticker, company, etype, days, action_text, value_text, note="", c
                }.get(etype, etype.upper()[:6])
     return (
         f"<div style='background:#080c12;border:1px solid #182436;border-left:3px solid {e_color};"
-        f"padding:0.5rem 0.75rem;margin-bottom:0.4rem;font-family:IBM Plex Mono;"
-        f"min-height:5.9rem;box-sizing:border-box'>"
+        f"padding:0.5rem 0.75rem;font-family:IBM Plex Mono;"
+        f"height:100%;box-sizing:border-box'>"
         f"<div style='display:flex;justify-content:space-between;align-items:baseline'>"
         f"<span style='font-size:0.75rem;color:#c8d8e8;font-weight:500'>{ticker}</span>"
         f"<span>{badge}</span></div>"
@@ -184,6 +184,19 @@ def event_card(ticker, company, etype, days, action_text, value_text, note="", c
         f"<div style='font-size:0.70rem;color:{e_color};font-weight:500;margin-top:0.1rem'>{value_text}</div>"
         f"{'<div style=\"font-size:0.58rem;color:#304050;margin-top:0.1rem\">' + note + '</div>' if note else ''}"
         f"</div>"
+    )
+
+def render_card_grid(cards):
+    # CSS grid with align-items:stretch (default) makes every card in a row grow
+    # to the tallest card in that row, so side-by-side cards are always equal height
+    # regardless of how many content lines each carries.
+    if not cards:
+        return
+    n = min(len(cards), 3)
+    st.markdown(
+        f"<div style='display:grid;grid-template-columns:repeat({n},1fr);"
+        f"gap:0.4rem;margin-bottom:0.6rem'>{''.join(cards)}</div>",
+        unsafe_allow_html=True,
     )
 
 # Collect all critical items (≤3d)
@@ -233,10 +246,7 @@ if critical_items:
         "color:#ff3355;margin-bottom:0.4rem'>🔴  Critical: deadline ≤3 days</p>",
         unsafe_allow_html=True
     )
-    cols = st.columns(min(len(critical_items), 3))
-    for i, (_, card_html) in enumerate(critical_items):
-        cols[i % 3].markdown(card_html, unsafe_allow_html=True)
-    st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+    render_card_grid([c for _, c in critical_items])
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 2, THIS WEEK: 4–7d
@@ -281,10 +291,7 @@ if week_items:
         "color:#d4c200;margin-bottom:0.4rem'>🟡  This week: deadline 4–7 days</p>",
         unsafe_allow_html=True
     )
-    cols = st.columns(min(len(week_items), 3))
-    for i, (_, card_html) in enumerate(week_items):
-        cols[i % 3].markdown(card_html, unsafe_allow_html=True)
-    st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+    render_card_grid([c for _, c in week_items])
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 3, ACTIVE MONITORING: M&A positions
@@ -295,8 +302,8 @@ if merger_rows:
         "color:#00d4aa;margin-bottom:0.4rem'>🟢  Active M&A monitoring</p>",
         unsafe_allow_html=True
     )
-    m_cols = st.columns(min(len(merger_rows), 3))
-    for i, r in enumerate(merger_rows):
+    m_cards = []
+    for r in merger_rows:
         spread = sf(r["spread"])
         d_close = sf(r["days_to_close"])
         ann_m  = spread/max(d_close,1)*365 if spread and d_close and d_close>0 else None
@@ -309,11 +316,11 @@ if merger_rows:
                    else f"{spread:+.2f}% spread") if spread else "—"
         note_txt = (f"Reg: {reg_txt}  ·  Break risk: {str(r['break_risk']).upper()}  "
                     f"·  Acquirer: {str(r['acquirer'])[:16] if r['acquirer'] else '—'}")
-        card = event_card(r["ticker"], r["company_name"],
+        m_cards.append(event_card(r["ticker"], r["company_name"],
                           "scheme_of_arrangement" if str(r["consid"] or "CASH")=="CASH" else "merger",
                           int(d_close) if d_close and d_close>0 else None,
-                          action, val_txt, note_txt)
-        m_cols[i % 3].markdown(card, unsafe_allow_html=True)
+                          action, val_txt, note_txt))
+    render_card_grid(m_cards)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SECTION 4, ALPHA SUMMARY TABLE (all action items ranked by urgency)
