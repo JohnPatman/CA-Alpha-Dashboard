@@ -172,20 +172,22 @@ def dark_table(rows, headers, highlights=None, height=None):
 
 
 def render_top_nav():
-    items = [
-        ("Home", "/"), ("Pipeline", "/Event_Pipeline"), ("Briefing", "/Priority_Briefing"),
-        ("Scrip", "/Scrip_Arbitrage"), ("CCY", "/CCY_Election"), ("Rights", "/Rights_Issue"),
-        ("Tender", "/Tender_Tracker"), ("Merger", "/Merger_Tracker"), ("ADR", "/ADR_Pricing"),
-        ("Closed", "/Closed_Events"),
+    pages = [
+        ("Home.py", "Home"), ("pages/1_Event_Pipeline.py", "Pipeline"),
+        ("pages/2_Priority_Briefing.py", "Briefing"), ("pages/3_Scrip_Arbitrage.py", "Scrip"),
+        ("pages/4_CCY_Election.py", "CCY"), ("pages/5_Rights_Issue.py", "Rights"),
+        ("pages/6_Tender_Tracker.py", "Tender"), ("pages/7_Merger_Tracker.py", "Merger"),
+        ("pages/8_ADR_Pricing.py", "ADR"), ("pages/9_Closed_Events.py", "Closed"),
     ]
-    links = "".join(f"<a href='{u}' target='_self' class='canav'>{n}</a>" for n, u in items)
     st.markdown(
-        "<style>.canavwrap{display:flex;flex-wrap:wrap;align-items:center;gap:0.3rem;"
-        "margin-bottom:0.6rem;padding-bottom:0.45rem;border-bottom:1px solid #182436}"
-        ".canav{background:#080c12;border:1px solid #182436;color:#c8d8e8;"
-        "padding:0.25rem 0.6rem;font-family:IBM Plex Mono;font-size:0.72rem;"
-        "text-decoration:none;white-space:nowrap}"
-        ".canav:hover{border-color:#00d4aa;color:#00d4aa}</style>"
-        f"<div class='canavwrap'>{links}</div>",
+        "<style>@media(min-width:641px){.st-key-topnav{display:none!important}}"
+        ".st-key-topnav button{font-family:IBM Plex Mono;font-size:0.72rem;min-height:0;"
+        "padding:0.2rem 0.25rem;background:#080c12;border:1px solid #243548;color:#c8d8e8}"
+        ".st-key-topnav [data-testid='stHorizontalBlock']{gap:0.3rem;margin-bottom:0.3rem}</style>",
         unsafe_allow_html=True,
     )
+    with st.container(key="topnav"):
+        cols = st.columns(5) + st.columns(5)
+        for col, (path, label) in zip(cols, pages):
+            if col.button(label, key=f"tn_{label}", use_container_width=True):
+                st.switch_page(path)
