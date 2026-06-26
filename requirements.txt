@@ -2,4 +2,4 @@ streamlit==1.52.0
 plotly==6.5.0
 pandas==2.3.3
 
-# rebuild trigger 2026-06-25b: reload utils/ui.py (page_link nav)
+# rebuild trigger 2026-06-26: even mobile nav spacing

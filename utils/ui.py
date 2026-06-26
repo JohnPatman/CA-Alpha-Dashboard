@@ -187,7 +187,7 @@ def render_top_nav():
         unsafe_allow_html=True,
     )
     with st.container(key="topnav"):
-        cols = st.columns(5) + st.columns(5)
+        cols = st.columns(10)
         for col, (path, label) in zip(cols, pages):
             if col.button(label, key=f"tn_{label}", use_container_width=True):
                 st.switch_page(path)
