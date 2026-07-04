@@ -113,9 +113,9 @@ c.executemany("""INSERT OR IGNORE INTO events(
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", PAST_EVENTS)
 
 PAST_SCRIP = [
-    ("P001", 8.6,  "GBP", 620.0, "1 per 72",  "GBP", None,None,None,"CASH",0,   -1.1, "SCRIP",0),
-    ("P002", 6.5,  "GBP", 740.0, "1 per 114", "GBP", None,None,None,"CASH",0,   -0.8, "SCRIP",0),
-    ("P003", 60.0, "GBP",1060.0, "1 per 18",  "GBP", None,None,None,"CASH",0,   -1.5, "CASH", 0),
+    ("P001", 8.6,  "GBX", 620.0, "1 per 72",  "GBP", None,None,None,"CASH",0,   -1.1, "SCRIP",0),
+    ("P002", 6.5,  "GBX", 740.0, "1 per 114", "GBP", None,None,None,"CASH",0,   -0.8, "SCRIP",0),
+    ("P003", 60.0, "GBX",1060.0, "1 per 18",  "GBP", None,None,None,"CASH",0,   -1.5, "CASH", 0),
     ("P004", 14.4, "EUR", 210.0, "1 per 14",  "EUR", None,None,None,"CASH",26.375,-1.2,"SCRIP",0),
     ("P005", 1.90, "EUR",  28.5, "1 per 15",  "EUR", None,None,None,"CASH",30.0, -0.9, "SCRIP",0),
     ("P006", 0.10, "EUR",   4.2, "1 per 42",  "EUR", None,None,None,"CASH",19.0, -1.1, "SCRIP",0),
@@ -197,10 +197,10 @@ c.executemany("""INSERT OR IGNORE INTO events(
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", URGENT_EVENTS)
 
 URGENT_SCRIP = [
-    ("U001",10.5,"GBP", 420.0,"1 per 40","GBP",None,None,None,"CASH",0,   0.95,"SCRIP",0),
-    ("U002",46.5,"GBP",2840.0,"1 per 61","GBP",None,None,None,"CASH",0,   0.82,"SCRIP",0),
-    ("U003",24.3,"GBP", 820.0,"1 per 34","GBP",None,None,None,"CASH",0,   1.15,"SCRIP",0),
-    ("U004",12.8,"GBP", 380.0,"1 per 30","GBP",None,None,None,"CASH",0,   0.68,"SCRIP",0),
+    ("U001",10.5,"GBX", 420.0,"1 per 40","GBP",None,None,None,"CASH",0,   0.95,"SCRIP",0),
+    ("U002",46.5,"GBX",2840.0,"1 per 61","GBP",None,None,None,"CASH",0,   0.82,"SCRIP",0),
+    ("U003",24.3,"GBX", 820.0,"1 per 34","GBP",None,None,None,"CASH",0,   1.15,"SCRIP",0),
+    ("U004",12.8,"GBX", 380.0,"1 per 30","GBP",None,None,None,"CASH",0,   0.68,"SCRIP",0),
     ("U005",0.44,"USD",None,None,"GBP|USD",0.7845,0.7740,1.36,"CASH",0,None,"GBP",1),
     ("U006",1.77,"USD",None,None,"GBP|USD",0.7855,0.7750,1.35,"CASH",0,None,"GBP",1),
 ]
